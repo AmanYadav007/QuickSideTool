@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "PDF Merger Tool",
+  "version": "3.0",
+  "description": "Manipulate PDFs directly in your browser",
+  "permissions": ["sidePanel", "storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "action": {
+    "default_title": "Open PDF Merger"
+  },
+  "web_accessible_resources": [{
+    "resources": ["pdf.worker.min.js"],
+    "matches": ["<all_urls>"]
+  }]
+}
+
+

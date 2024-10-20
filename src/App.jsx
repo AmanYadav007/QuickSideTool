@@ -1,0 +1,25 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import PDFTool from './pages/PDFTool';
+import ImageTools from './pages/ImageTools';
+import ImageResize from './components/ImageResize';
+import ImageCompressor from './components/ImageCompressor';
+
+import './index.css';
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/pdf-tool" element={<PDFTool />} />
+        <Route path="/image-tools" element={<ImageTools />} />
+        <Route path="/image-tools/resize" element={<ImageResize />} />
+        <Route path="/image-tools/compress" element={<ImageCompressor />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;

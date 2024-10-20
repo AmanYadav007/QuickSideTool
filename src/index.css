@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .text-shadow-frost {
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    
+    .text-shadow-neon {
+      text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ff00de, 0 0 35px #ff00de, 0 0 40px #ff00de, 0 0 50px #ff00de, 0 0 75px #ff00de;
+    }
+    
+    .bg-snow {
+      background-image: 
+        radial-gradient(circle at center, white 0.15rem, transparent 0),
+        radial-gradient(circle at center, white 0.1rem, transparent 0),
+        radial-gradient(circle at center, white 0.05rem, transparent 0);
+      background-size: 5rem 5rem, 3rem 3rem, 2rem 2rem;
+      animation: snow-fall 10s linear infinite;
+    }
+}
+
+@keyframes snow-fall {
+  0% {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 5rem 100vh, 3rem 100vh, 2rem 100vh;
+  }
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-size: 400% 400%;
+    background-position: left center;
+  }
+  50% {
+    background-size: 400% 400%;
+    background-position: right center;
+  }
+}
+
+@keyframes spin-slow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
