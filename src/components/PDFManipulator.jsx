@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { Document, Page } from 'react-pdf';
 import { pdfjs } from 'react-pdf';
 import { PDFDocument } from 'pdf-lib';
-import { FileText, Trash2, Download, X } from 'lucide-react';
+import { FileText, Trash2, Download } from 'lucide-react';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
