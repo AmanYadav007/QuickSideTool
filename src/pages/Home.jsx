@@ -10,7 +10,7 @@ const Home = () => {
         <header className="bg-white bg-opacity-10 text-white p-3 shadow-md backdrop-blur-md">
           <h1 className="text-xl font-bold">QUICK SIDE TOOL</h1>
         </header>
-        <main className="flex-grow overflow-y-auto">
+        <main className="flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-blue-300">
           <div className="container mx-auto p-4">
             <h2 className="text-3xl font-bold mb-2 text-center text-white text-shadow-frost">Your Digital Toolkit</h2>
             <div className="grid sm:grid-cols-2 gap-4 mt-6">
