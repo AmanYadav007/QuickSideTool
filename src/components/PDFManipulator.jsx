@@ -169,7 +169,7 @@ const App = () => {
 
   return (
     <div className="bg-white bg-opacity-10 rounded-xl shadow-lg backdrop-filter backdrop-blur-lg p-8">
-      <h2 className="text-3xl font-bold text-white mb-6">PDF Manipulator</h2>
+      <h2 className="text-3xl font-bold text-white mb-6">PDF ToolBox</h2>
       
       <div 
         {...getRootProps()} 
