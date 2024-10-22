@@ -55,7 +55,7 @@ const ProgressModal = ({ progress, status, currentPage, totalPages, onCancel }) 
   </div>
 );
 
-const PDFManipulator = () => {
+const App = () => {
   const [pages, setPages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -273,7 +273,6 @@ const PDFManipulator = () => {
   };
 
   return (
-<<<<<<< HEAD
     <div className="fixed inset-4 bg-white bg-opacity-10 rounded-xl shadow-lg backdrop-filter backdrop-blur-lg flex flex-col overflow-hidden">
       {/* Header Section */}
       <div className="p-8 pb-4">
@@ -293,20 +292,6 @@ const PDFManipulator = () => {
               : "Drag 'n' drop PDF files or images here, or click to select files"}
           </p>
         </div>
-=======
-    <div className="bg-white bg-opacity-10 rounded-xl shadow-lg backdrop-filter backdrop-blur-lg p-8">
-      <h2 className="text-3xl font-bold text-white mb-6">PDF ToolBox</h2>
-      
-      <div 
-        {...getRootProps()} 
-        className="border-2 border-dashed border-white border-opacity-50 rounded-xl p-8 text-center cursor-pointer mb-8 transition-all duration-300 hover:border-opacity-100"
-      >
-        <input {...getInputProps()} />
-        <FileText className="mx-auto mb-4 text-white" size={48} />
-        <p className="text-white text-lg">
-          {isDragActive ? "Drop the files here ..." : "Drag 'n' drop PDF files or images here, or click to select files"}
-        </p>
->>>>>>> origin/main
       </div>
 
       {/* Main Content Area - Scrollable */}
@@ -412,8 +397,4 @@ const PDFManipulator = () => {
   );
 };
 
-<<<<<<< HEAD
-export default PDFManipulator;
-=======
 export default App;
->>>>>>> origin/main
