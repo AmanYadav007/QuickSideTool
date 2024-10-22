@@ -1,94 +1,67 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { useDropzone } from 'react-dropzone';
-import { Document, Page } from 'react-pdf';
-import { pdfjs } from 'react-pdf';
+import { Document, Page, pdfjs } from 'react-pdf';
 import { PDFDocument } from 'pdf-lib';
 import { FileText, Trash2, Download } from 'lucide-react';
+import * as pdfjsLib from 'pdfjs-dist';
 
+// Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-const App = () => {
+// Progress Modal Component
+const ProgressModal = ({ progress, status, currentPage, totalPages, onCancel }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
+      <h3 className="text-xl font-semibold mb-4">Creating PDF</h3>
+      
+      {/* Main progress */}
+      <div className="mb-6">
+        <div className="flex justify-between mb-2">
+          <span className="text-sm text-gray-600">Overall Progress</span>
+          <span className="text-sm font-medium">{Math.round(progress)}%</span>
+        </div>
+        <div className="w-full h-2 bg-gray-200 rounded-full">
+          <div 
+            className="h-full bg-blue-500 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Current status */}
+      <div className="mb-4">
+        <div className="text-sm text-gray-600 mb-1">{status}</div>
+        <div className="text-sm font-medium">
+          Processing page {currentPage} of {totalPages}
+        </div>
+      </div>
+
+      {/* Time estimate */}
+      {progress > 0 && progress < 100 && (
+        <div className="text-sm text-gray-500 mb-4">
+          Please keep this window open. Large PDFs may take several minutes.
+        </div>
+      )}
+
+      {/* Cancel button */}
+      <button
+        onClick={onCancel}
+        className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+);
+
+const PDFManipulator = () => {
   const [pages, setPages] = useState([]);
-  const [numPages, setNumPages] = useState(0);
-  const [draggedItem, setDraggedItem] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [selectedPages, setSelectedPages] = useState([]);
-
-  const sortPages = (pagesArray) => {
-    return pagesArray.sort((a, b) => {
-      const nameA = a.file.name.toLowerCase();
-      const nameB = b.file.name.toLowerCase();
-      
-      // Extract number from file name (if exists)
-      const numA = parseInt(nameA.match(/\d+/));
-      const numB = parseInt(nameB.match(/\d+/));
-      
-      if (numA && numB) {
-        return numA - numB;
-      } else if (numA) {
-        return -1;
-      } else if (numB) {
-        return 1;
-      } else {
-        return nameA.localeCompare(nameB);
-      }
-    });
-  };
-
-  const onDrop = useCallback(async (acceptedFiles) => {
-    const newPages = [];
-    for (const file of acceptedFiles) {
-      if (file.type === 'application/pdf') {
-        try {
-          const pdf = await PDFDocument.load(await file.arrayBuffer());
-          const pageCount = pdf.getPageCount();
-          for (let i = 0; i < pageCount; i++) {
-            newPages.push({ file, pageIndex: i, type: 'pdf' });
-          }
-        } catch (error) {
-          console.error(`Error loading PDF file ${file.name}:`, error);
-        }
-      } else if (file.type.startsWith('image/')) {
-        if (['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
-          newPages.push({ file, type: 'image' });
-        } else {
-          console.warn(`Unsupported image type: ${file.type}`);
-        }
-      } else {
-        console.warn(`Unsupported file type: ${file.type}`);
-      }
-    }
-    const sortedPages = sortPages([...pages, ...newPages]);
-    setPages(sortedPages);
-  }, [pages]);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
-    onDrop,
-    accept: { 'application/pdf': ['.pdf'], 'image/*': ['.png', '.jpg', '.jpeg', '.gif'] }
-  });
-
-  useEffect(() => {
-    setNumPages(pages.length);
-  }, [pages]);
-
-  const toggleDeleteMode = () => {
-    setIsDeleteMode(!isDeleteMode);
-    setSelectedPages([]);
-  };
-
-  const togglePageSelection = (index) => {
-    setSelectedPages(prevSelected => 
-      prevSelected.includes(index)
-        ? prevSelected.filter(i => i !== index)
-        : [...prevSelected, index]
-    );
-  };
-
-  const deleteSelectedPages = () => {
-    setPages(prevPages => prevPages.filter((_, index) => !selectedPages.includes(index)));
-    setSelectedPages([]);
-    setIsDeleteMode(false);
-  };
+  const [draggedItem, setDraggedItem] = useState(null);
 
   const onDragStart = (e, index) => {
     setDraggedItem(index);
@@ -97,8 +70,6 @@ const App = () => {
 
   const onDragOver = (e, index) => {
     e.preventDefault();
-    const draggedOverItem = pages[index];
-
     if (draggedItem === null || draggedItem === index) {
       return;
     }
@@ -114,152 +85,316 @@ const App = () => {
     setDraggedItem(null);
   };
 
-  const createFinalPDF = async () => {
-    const pdfDoc = await PDFDocument.create();
-    
-    for (const page of pages) {
-      try {
-        if (page.type === 'pdf') {
-          const srcDoc = await PDFDocument.load(await page.file.arrayBuffer());
-          const [copiedPage] = await pdfDoc.copyPages(srcDoc, [page.pageIndex]);
-          pdfDoc.addPage(copiedPage);
-        } else if (page.type === 'image') {
-          const imageBytes = await page.file.arrayBuffer();
-          let image;
-          if (page.file.type === 'image/jpeg' || page.file.type === 'image/jpg') {
-            image = await pdfDoc.embedJpg(imageBytes);
-          } else if (page.file.type === 'image/png') {
-            image = await pdfDoc.embedPng(imageBytes);
-          } else {
-            console.warn(`Unsupported image type: ${page.file.type}`);
-            continue;
-          }
-          
-          const imgWidth = image.width;
-          const imgHeight = image.height;
-          
-          // Create a new page with the exact dimensions of the image
-          const imagePage = pdfDoc.addPage([imgWidth, imgHeight]);
-          
-          // Draw the image on the page at its original size
-          imagePage.drawImage(image, {
-            x: 0,
-            y: 0,
-            width: imgWidth,
-            height: imgHeight,
-          });
-        }
-      } catch (error) {
-        console.error(`Error processing page ${pages.indexOf(page) + 1}:`, error);
-      }
-    }
-  
+  const processFile = async (file) => {
     try {
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'combined.pdf';
-      link.click();
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const totalPages = pdf.numPages;
+      const newPages = [];
+
+      const CHUNK_SIZE = 5;
+      const chunks = Math.ceil(totalPages / CHUNK_SIZE);
+
+      for (let chunk = 0; chunk < chunks; chunk++) {
+        const startPage = chunk * CHUNK_SIZE;
+        const endPage = Math.min((chunk + 1) * CHUNK_SIZE, totalPages);
+        
+        const chunkPromises = [];
+        for (let i = startPage; i < endPage; i++) {
+          chunkPromises.push(
+            pdf.getPage(i + 1).then(async (page) => {
+              const viewport = page.getViewport({ scale: 0.5 });
+              
+              const canvas = document.createElement('canvas');
+              const context = canvas.getContext('2d');
+              canvas.height = viewport.height;
+              canvas.width = viewport.width;
+
+              await page.render({
+                canvasContext: context,
+                viewport: viewport
+              }).promise;
+
+              const blob = await new Promise(resolve => 
+                canvas.toBlob(resolve, 'image/jpeg', 0.5)
+              );
+
+              newPages.push({
+                file,
+                pageIndex: i,
+                type: 'pdf',
+                preview: URL.createObjectURL(blob),
+                dimensions: { width: viewport.width, height: viewport.height }
+              });
+
+              canvas.width = 0;
+              canvas.height = 0;
+            })
+          );
+        }
+
+        await Promise.all(chunkPromises);
+        setLoadingProgress(((chunk + 1) / chunks) * 100);
+        setPages(prev => [...prev, ...newPages.slice(startPage, endPage)]);
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+
+      return newPages;
     } catch (error) {
-      console.error('Error saving PDF:', error);
-      alert('An error occurred while creating the PDF. Please try again.');
+      console.error('Error processing PDF:', error);
+      throw error;
+    }
+  };
+
+  const onDrop = useCallback(async (acceptedFiles) => {
+    setIsLoading(true);
+    setLoadingProgress(0);
+
+    try {
+      for (const file of acceptedFiles) {
+        if (file.type === 'application/pdf') {
+          await processFile(file);
+        } else if (file.type.startsWith('image/')) {
+          const preview = URL.createObjectURL(file);
+          setPages(prev => [...prev, { file, type: 'image', preview }]);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing files:', error);
+      alert('Error processing some files. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setLoadingProgress(0);
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'image/*': ['.png', '.jpg', '.jpeg']
+    }
+  });
+
+  const createFinalPDF = async () => {
+    try {
+      setIsLoading(true);
+      const totalPages = pages.length;
+      const pdfDoc = await PDFDocument.create();
+      let isCancelled = false;
+
+      // Create progress modal container
+      const progressRoot = document.createElement('div');
+      document.body.appendChild(progressRoot);
+      
+      const updateProgress = (progress, status, current) => {
+        ReactDOM.render(
+          <ProgressModal 
+            progress={progress}
+            status={status}
+            currentPage={current}
+            totalPages={totalPages}
+            onCancel={() => {
+              isCancelled = true;
+              document.body.removeChild(progressRoot);
+              setIsLoading(false);
+            }}
+          />,
+          progressRoot
+        );
+      };
+
+      // Process pages in chunks
+      const CHUNK_SIZE = 20;
+      const chunks = Math.ceil(totalPages / CHUNK_SIZE);
+
+      for (let chunk = 0; chunk < chunks && !isCancelled; chunk++) {
+        const startIdx = chunk * CHUNK_SIZE;
+        const endIdx = Math.min((chunk + 1) * CHUNK_SIZE, totalPages);
+        
+        for (let i = startIdx; i < endIdx && !isCancelled; i++) {
+          const page = pages[i];
+          updateProgress(
+            (i / totalPages) * 100,
+            `Processing ${page.type === 'pdf' ? 'PDF page' : 'image'}...`,
+            i + 1
+          );
+
+          if (page.type === 'pdf') {
+            const srcDoc = await PDFDocument.load(await page.file.arrayBuffer());
+            const [copiedPage] = await pdfDoc.copyPages(srcDoc, [page.pageIndex]);
+            pdfDoc.addPage(copiedPage);
+          } else if (page.type === 'image') {
+            const imageBytes = await page.file.arrayBuffer();
+            let image;
+            
+            if (page.file.type.includes('jpeg') || page.file.type.includes('jpg')) {
+              image = await pdfDoc.embedJpg(imageBytes);
+            } else if (page.file.type.includes('png')) {
+              image = await pdfDoc.embedPng(imageBytes);
+            }
+            
+            if (image) {
+              const { width, height } = image.scale(1);
+              const newPage = pdfDoc.addPage([width, height]);
+              newPage.drawImage(image, { x: 0, y: 0, width, height });
+            }
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+      }
+
+      if (!isCancelled) {
+        updateProgress(99, 'Finalizing PDF...', totalPages);
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        
+        updateProgress(100, 'Download starting...', totalPages);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `combined_${totalPages}_pages.pdf`;
+        link.click();
+        
+        URL.revokeObjectURL(url);
+        setTimeout(() => {
+          document.body.removeChild(progressRoot);
+        }, 1000);
+      }
+
+    } catch (error) {
+      console.error('Error creating PDF:', error);
+      alert('Error creating PDF. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-white bg-opacity-10 rounded-xl shadow-lg backdrop-filter backdrop-blur-lg p-8">
-      <h2 className="text-3xl font-bold text-white mb-6">PDF Manipulator</h2>
-      
-      <div 
-        {...getRootProps()} 
-        className="border-2 border-dashed border-white border-opacity-50 rounded-xl p-8 text-center cursor-pointer mb-8 transition-all duration-300 hover:border-opacity-100"
-      >
-        <input {...getInputProps()} />
-        <FileText className="mx-auto mb-4 text-white" size={48} />
-        <p className="text-white text-lg">
-          {isDragActive ? "Drop the files here ..." : "Drag 'n' drop PDF files or images here, or click to select files"}
-        </p>
+    <div className="fixed inset-4 bg-white bg-opacity-10 rounded-xl shadow-lg backdrop-filter backdrop-blur-lg flex flex-col overflow-hidden">
+      {/* Header Section */}
+      <div className="p-8 pb-4">
+        <h2 className="text-3xl font-bold text-white mb-6">PDF ToolBox</h2>
+        
+        <div
+          {...getRootProps()}
+          className={`border-2 border-dashed border-white border-opacity-50 rounded-xl p-8 text-center cursor-pointer mb-4 transition-all duration-300 hover:border-opacity-100 ${
+            isDragActive ? 'border-blue-500' : ''
+          }`}
+        >
+          <input {...getInputProps()} />
+          <FileText className="mx-auto mb-4 text-white" size={48} />
+          <p className="text-white text-lg">
+            {isDragActive
+              ? "Drop the files here ..."
+              : "Drag 'n' drop PDF files or images here, or click to select files"}
+          </p>
+        </div>
       </div>
 
-      {pages.length > 0 && (
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold text-white mb-4">Uploaded Files</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {/* Main Content Area - Scrollable */}
+      <div className="flex-1 px-8 overflow-y-auto">
+        {isLoading && !pages.length && (
+          <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl">
+              <div className="mb-4">Processing... {Math.round(loadingProgress)}%</div>
+              <div className="w-64 h-2 bg-gray-200 rounded">
+                <div
+                  className="h-full bg-blue-500 rounded transition-all duration-300"
+                  style={{ width: `${loadingProgress}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {pages.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pb-20">
             {pages.map((page, index) => (
-              <div 
-                key={`page-${index}`}
+              <div
+                key={index}
                 draggable={!isDeleteMode}
                 onDragStart={(e) => onDragStart(e, index)}
                 onDragOver={(e) => onDragOver(e, index)}
                 onDragEnd={onDragEnd}
-                className="relative bg-white bg-opacity-20 rounded-lg overflow-hidden shadow-md transition-all duration-300 hover:shadow-lg"
-                style={{ aspectRatio: '3/4' }}
+                className={`relative bg-white bg-opacity-20 rounded-lg overflow-hidden shadow-md aspect-[3/4] cursor-move transition-all duration-300 hover:shadow-lg ${
+                  draggedItem === index ? 'opacity-50' : ''
+                }`}
               >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {page.type === 'pdf' ? (
-                    <Document file={page.file}>
-                      <Page 
-                        pageNumber={page.pageIndex + 1} 
-                        width={150}
-                        renderTextLayer={false}
-                        renderAnnotationLayer={false}
-                      />
-                    </Document>
-                  ) : (
-                    <img 
-                      src={URL.createObjectURL(page.file)} 
-                      alt={page.file.name} 
-                      className="max-w-full max-h-full object-contain" 
-                    />
-                  )}
-                </div>
+                <img
+                  src={page.preview}
+                  alt={`Page ${index + 1}`}
+                  className="w-full h-full object-contain"
+                />
                 <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                  {index + 1}/{numPages}
+                  {index + 1}/{pages.length}
                 </div>
                 {isDeleteMode && (
                   <input
                     type="checkbox"
                     checked={selectedPages.includes(index)}
-                    onChange={() => togglePageSelection(index)}
+                    onChange={() => setSelectedPages(prev => 
+                      prev.includes(index) 
+                        ? prev.filter(i => i !== index)
+                        : [...prev, index]
+                    )}
                     className="absolute top-2 right-2 w-5 h-5"
                   />
                 )}
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      <div className="flex justify-center space-x-4">
-        <button 
-          onClick={toggleDeleteMode}
-          className={`px-6 py-2 rounded-full text-white font-medium transition-all duration-300 ${isDeleteMode ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'} flex items-center`}
-        >
-          <Trash2 className="mr-2" size={20} />
-          {isDeleteMode ? 'Cancel Delete' : 'Delete Pages'}
-        </button>
-        {isDeleteMode && (
-          <button 
-            onClick={deleteSelectedPages}
-            className="px-6 py-2 rounded-full bg-red-500 text-white font-medium hover:bg-red-600 transition-all duration-300 flex items-center"
+      {/* Footer Section */}
+      <div className="p-6 bg-white bg-opacity-5 backdrop-blur-sm border-t border-white border-opacity-20">
+        <div className="flex justify-center space-x-4">
+          <button
+            onClick={() => {
+              setIsDeleteMode(!isDeleteMode);
+              setSelectedPages([]);
+            }}
+            className={`px-6 py-2 rounded-full text-white font-medium transition-all duration-300 ${
+              isDeleteMode ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
+            } flex items-center`}
+            disabled={isLoading}
           >
             <Trash2 className="mr-2" size={20} />
-            Confirm Delete ({selectedPages.length})
+            {isDeleteMode ? 'Cancel Delete' : 'Delete Pages'}
           </button>
-        )}
-        {!isDeleteMode && pages.length > 0 && (
-          <button 
-            onClick={createFinalPDF}
-            className="px-6 py-2 rounded-full bg-green-500 text-white font-medium hover:bg-green-600 transition-all duration-300 flex items-center"
-          >
-            <Download className="mr-2" size={20} />
-            Download Combined PDF
-          </button>
-        )}
+          
+          {isDeleteMode && selectedPages.length > 0 && (
+            <button
+              onClick={() => {
+                setPages(prev => prev.filter((_, i) => !selectedPages.includes(i)));
+                setSelectedPages([]);
+                setIsDeleteMode(false);
+              }}
+              className="px-6 py-2 rounded-full bg-red-500 text-white font-medium hover:bg-red-600 transition-all duration-300 flex items-center"
+              disabled={isLoading}
+            >
+              <Trash2 className="mr-2" size={20} />
+              Confirm Delete ({selectedPages.length})
+            </button>
+          )}
+          
+          {!isDeleteMode && pages.length > 0 && (
+            <button
+              onClick={createFinalPDF}
+              className="px-6 py-2 rounded-full bg-green-500 text-white font-medium hover:bg-green-600 transition-all duration-300 flex items-center"
+              disabled={isLoading}
+            >
+              <Download className="mr-2" size={20} />
+              Download Combined PDF
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default App;
+export default PDFManipulator;
