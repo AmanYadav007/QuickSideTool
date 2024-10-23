@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Download, Settings, Link as LinkIcon, Palette, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Download, Settings, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
 const QRCodeGenerator = () => {
@@ -11,7 +11,6 @@ const QRCodeGenerator = () => {
   const [downloadFormat, setDownloadFormat] = useState('png');
   const qrRef = useRef(null);
 
-  // Keep existing function implementations
   const generateQRCode = () => {
     return (
       <QRCodeSVG
@@ -26,7 +25,36 @@ const QRCodeGenerator = () => {
   };
 
   const downloadQRCode = () => {
-    // Keep existing download implementation
+    const svg = qrRef.current.querySelector('svg');
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = qrSize;
+      canvas.height = qrSize;
+      ctx.drawImage(img, 0, 0);
+      let downloadLink;
+      switch(downloadFormat) {
+        case 'svg':
+          downloadLink = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgData)}`;
+          break;
+        case 'jpg':
+          downloadLink = canvas.toDataURL("image/jpeg");
+          break;
+        case 'png':
+        default:
+          downloadLink = canvas.toDataURL("image/png");
+          break;
+      }
+      const link = document.createElement('a');
+      link.href = downloadLink;
+      link.download = `qrcode.${downloadFormat}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+    img.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
   };
 
   return (
@@ -38,129 +66,117 @@ const QRCodeGenerator = () => {
         <div className="absolute w-96 h-96 -bottom-48 -left-48 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-          {/* Back Button */}
-          <Link 
-            to="/" 
-            className="inline-flex items-center px-6 py-2 mb-8 bg-white bg-opacity-10 text-white rounded-full hover:bg-opacity-20 transition-all duration-300 backdrop-blur-md border border-white border-opacity-20"
-          >
-            <ArrowLeft className="mr-2" size={20} />
-            Back to Home
-          </Link>
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* Header */}
+        <header className="bg-white bg-opacity-10 backdrop-blur-md border-b border-white border-opacity-20">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <Link to="/" className="text-white flex items-center hover:text-blue-200 transition-colors">
+              <ArrowLeft className="mr-2" size={20} />
+              Back to Home
+            </Link>
+          </div>
+        </header>
 
-        <div className="max-w-4xl mx-auto w-full">
-          <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-2xl p-8 border border-white border-opacity-20 shadow-xl">
-            <h1 className="text-3xl font-bold text-white mb-8 text-center">QR Code Generator</h1>
-            
-            {/* Input Section */}
-            <div className="mb-8">
-              <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-6 border border-white border-opacity-20">
-                <label htmlFor="qr-input" className="block text-white text-lg font-semibold mb-4 flex items-center">
-                  <LinkIcon className="mr-2" size={20} />
-                  Enter URL or Text
+        {/* Main Content */}
+        <main className="flex-grow container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto ">
+          <div className="flex items-center">
+              <QrCode size={30} className="text-white mr-2 mb-5 " />
+              <h1 className="text-2xl font-bold text-white mb-5">QR Code Generator</h1>
+            </div>
+            <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-2xl p-6 border border-white border-opacity-20 shadow-xl">
+              <div className="mb-6">
+                <label htmlFor="qr-input" className="block text-white text-sm font-bold mb-2">
+                  Enter text or URL for QR Code
                 </label>
                 <input
                   id="qr-input"
                   type="text"
                   value={qrValue}
                   onChange={(e) => setQrValue(e.target.value)}
-                  className="w-full px-4 py-3 bg-white bg-opacity-20 text-white border border-white border-opacity-20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent placeholder-white placeholder-opacity-50 backdrop-blur-md"
+                  className="w-full px-4 py-3 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl text-white placeholder-white placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-30 backdrop-blur-sm"
                   placeholder="Enter text or URL"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              {/* Settings Section */}
-              <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-6 border border-white border-opacity-20">
-                <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
+              <div className="mb-6">
+                <h2 className="text-white text-lg font-semibold mb-4 flex items-center">
                   <Settings className="mr-2" size={20} />
-                  Customize QR Code
+                  QR Code Settings
                 </h2>
-                <div className="space-y-6">
-                  <div>
-                    <label htmlFor="qr-size" className="block text-white text-sm font-medium mb-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-blur-sm">
+                    <label htmlFor="qr-size" className="block text-white text-sm font-bold mb-2">
                       Size (px)
                     </label>
                     <input
                       id="qr-size"
-                      type="range"
+                      type="number"
                       value={qrSize}
                       onChange={(e) => setQrSize(Number(e.target.value))}
-                      className="w-full h-2 bg-white bg-opacity-20 rounded-lg appearance-none cursor-pointer"
+                      className="w-full px-3 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:outline-none"
                       min="128"
                       max="512"
-                      step="8"
                     />
-                    <div className="text-white text-sm mt-1">{qrSize}px</div>
                   </div>
-                  
-                  <div>
-                    <label htmlFor="qr-fg-color" className="block text-white text-sm font-medium mb-2">
-                      QR Code Color
+                  <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-blur-sm">
+                    <label htmlFor="qr-fg-color" className="block text-white text-sm font-bold mb-2">
+                      Foreground Color
                     </label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        id="qr-fg-color"
-                        type="color"
-                        value={qrFgColor}
-                        onChange={(e) => setQrFgColor(e.target.value)}
-                        className="w-12 h-12 rounded-lg cursor-pointer border-2 border-white border-opacity-20"
-                      />
-                      <div className="text-white text-sm">{qrFgColor.toUpperCase()}</div>
-                    </div>
+                    <input
+                      id="qr-fg-color"
+                      type="color"
+                      value={qrFgColor}
+                      onChange={(e) => setQrFgColor(e.target.value)}
+                      className="w-full h-10 rounded-lg cursor-pointer"
+                    />
                   </div>
-                  
-                  <div>
-                    <label htmlFor="qr-bg-color" className="block text-white text-sm font-medium mb-2">
+                  <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-blur-sm">
+                    <label htmlFor="qr-bg-color" className="block text-white text-sm font-bold mb-2">
                       Background Color
                     </label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        id="qr-bg-color"
-                        type="color"
-                        value={qrBgColor}
-                        onChange={(e) => setQrBgColor(e.target.value)}
-                        className="w-12 h-12 rounded-lg cursor-pointer border-2 border-white border-opacity-20"
-                      />
-                      <div className="text-white text-sm">{qrBgColor.toUpperCase()}</div>
-                    </div>
+                    <input
+                      id="qr-bg-color"
+                      type="color"
+                      value={qrBgColor}
+                      onChange={(e) => setQrBgColor(e.target.value)}
+                      className="w-full h-10 rounded-lg cursor-pointer"
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Preview Section */}
-              <div className="flex items-center justify-between space-x-4">
-  <div className="relative">
-    <select
-      value={downloadFormat}
-      onChange={(e) => setDownloadFormat(e.target.value)}
-      className="appearance-none px-6 py-2 bg-blue-500 text-white font-medium rounded-lg cursor-pointer hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 pr-10"
-    >
-      <option value="png">PNG</option>
-      <option value="jpg">JPG</option>
-      <option value="svg">SVG</option>
-    </select>
-    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-      <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 20 20">
-        <path d="M7 10l5 5 5-5H7z"></path>
-      </svg>
-    </div>
-  </div>
-  
-  <button
-    onClick={downloadQRCode}
-    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full transition-all duration-300 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-    disabled={!qrValue}
-  >
-    <Download className="mr-2" size={20} />
-    Download
-  </button>
-</div>
+              <div className="mb-6">
+                <h2 className="text-white text-lg font-semibold mb-4">Generated QR Code</h2>
+                <div className="flex justify-center bg-white bg-opacity-20 p-8 rounded-xl backdrop-blur-sm" ref={qrRef}>
+                  {generateQRCode()}
+                </div>
+              </div>
+
+              <div className="flex justify-center items-center space-x-4">
+                <select
+                  value={downloadFormat}
+                  onChange={(e) => setDownloadFormat(e.target.value)}
+                  className="px-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl text-white focus:outline-none backdrop-blur-sm"
+                >
+                  <option value="png">PNG</option>
+                  <option value="jpg">JPG</option>
+                  <option value="svg">SVG</option>
+                </select>
+                <button
+                  onClick={downloadQRCode}
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-bold py-2 px-6 rounded-xl text-lg transition-all duration-300 flex items-center backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!qrValue}
+                >
+                  <Download className="mr-2" size={20} />
+                  Download QR Code
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </main>
+
+
       </div>
     </div>
   );
