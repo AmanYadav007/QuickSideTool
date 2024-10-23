@@ -63,6 +63,7 @@ const App = () => {
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [selectedPages, setSelectedPages] = useState([]);
   const [draggedItem, setDraggedItem] = useState(null);
+  const [processedPages, setProcessedPages] = useState(new Map());
 
   const onDragStart = (e, index) => {
     setDraggedItem(index);
@@ -85,6 +86,34 @@ const App = () => {
   const onDragEnd = () => {
     setDraggedItem(null);
   };
+ // Optimized page deletion
+ const handleDeletePages = useCallback(() => {
+  setIsLoading(true);
+  try {
+    // Create new processed pages map
+    const newProcessedPages = new Map(processedPages);
+    
+    // Remove deleted pages from the map
+    selectedPages.forEach(index => {
+      newProcessedPages.delete(pages[index].pageIndex);
+    });
+    
+    // Update pages array
+    const remainingPages = pages.filter((_, index) => !selectedPages.includes(index));
+    
+    // Update states
+    setProcessedPages(newProcessedPages);
+    setPages(remainingPages);
+    setSelectedPages([]);
+    setIsDeleteMode(false);
+  } catch (error) {
+    console.error('Error deleting pages:', error);
+  } finally {
+    setIsLoading(false);
+  }
+}, [selectedPages, pages, processedPages]);
+
+
 
   const processFile = async (file) => {
     try {
@@ -177,6 +206,7 @@ const App = () => {
     }
   });
 
+  // Optimized PDF creation
   const createFinalPDF = async () => {
     try {
       setIsLoading(true);
@@ -205,9 +235,12 @@ const App = () => {
         );
       };
 
-      // Process pages in chunks
+      // Process pages in chunks with optimized handling
       const CHUNK_SIZE = 20;
       const chunks = Math.ceil(totalPages / CHUNK_SIZE);
+      
+      // Create cache for loaded PDF documents
+      const pdfCache = new Map();
 
       for (let chunk = 0; chunk < chunks && !isCancelled; chunk++) {
         const startIdx = chunk * CHUNK_SIZE;
@@ -222,23 +255,39 @@ const App = () => {
           );
 
           if (page.type === 'pdf') {
-            const srcDoc = await PDFDocument.load(await page.file.arrayBuffer());
-            const [copiedPage] = await pdfDoc.copyPages(srcDoc, [page.pageIndex]);
-            pdfDoc.addPage(copiedPage);
-          } else if (page.type === 'image') {
-            const imageBytes = await page.file.arrayBuffer();
-            let image;
-            
-            if (page.file.type.includes('jpeg') || page.file.type.includes('jpg')) {
-              image = await pdfDoc.embedJpg(imageBytes);
-            } else if (page.file.type.includes('png')) {
-              image = await pdfDoc.embedPng(imageBytes);
+            try {
+              // Check if we already have this PDF loaded
+              let srcDoc = pdfCache.get(page.file.name);
+              if (!srcDoc) {
+                srcDoc = await PDFDocument.load(await page.file.arrayBuffer());
+                pdfCache.set(page.file.name, srcDoc);
+              }
+
+              const [copiedPage] = await pdfDoc.copyPages(srcDoc, [page.pageIndex]);
+              pdfDoc.addPage(copiedPage);
+            } catch (error) {
+              console.error(`Error processing PDF page ${i}:`, error);
+              continue;
             }
-            
-            if (image) {
-              const { width, height } = image.scale(1);
-              const newPage = pdfDoc.addPage([width, height]);
-              newPage.drawImage(image, { x: 0, y: 0, width, height });
+          } else if (page.type === 'image') {
+            try {
+              const imageBytes = await page.file.arrayBuffer();
+              let image;
+              
+              if (page.file.type.includes('jpeg') || page.file.type.includes('jpg')) {
+                image = await pdfDoc.embedJpg(imageBytes);
+              } else if (page.file.type.includes('png')) {
+                image = await pdfDoc.embedPng(imageBytes);
+              }
+              
+              if (image) {
+                const { width, height } = image.scale(1);
+                const newPage = pdfDoc.addPage([width, height]);
+                newPage.drawImage(image, { x: 0, y: 0, width, height });
+              }
+            } catch (error) {
+              console.error(`Error processing image page ${i}:`, error);
+              continue;
             }
           }
 
@@ -248,7 +297,13 @@ const App = () => {
 
       if (!isCancelled) {
         updateProgress(99, 'Finalizing PDF...', totalPages);
-        const pdfBytes = await pdfDoc.save();
+        const pdfBytes = await pdfDoc.save({
+          useObjectStreams: true,
+          addDefaultPage: false,
+          preserveObjectIds: false,
+          updateFieldAppearances: false
+        });
+        
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         
@@ -259,7 +314,10 @@ const App = () => {
         link.download = `combined_${totalPages}_pages.pdf`;
         link.click();
         
+        // Cleanup
         URL.revokeObjectURL(url);
+        pdfCache.clear();
+        
         setTimeout(() => {
           document.body.removeChild(progressRoot);
         }, 1000);
@@ -273,147 +331,162 @@ const App = () => {
     }
   };
 
-  return (
-    <div className="fixed inset-4 bg-white bg-opacity-10 rounded-xl shadow-lg backdrop-filter backdrop-blur-lg flex flex-col overflow-hidden">
-      
+  // Update the delete button click handler in your JSX
+  // Replace the existing delete button onClick with this:
+  <button
+    onClick={handleDeletePages}
+    className="px-6 py-2 rounded-full bg-red-500 text-white font-medium hover:bg-red-600 transition-all duration-300 flex items-center"
+    disabled={isLoading}
+  >
+    <Trash2 className="mr-2" size={20} />
+    Confirm Delete ({selectedPages.length})
+  </button>
 
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-          {/* Back Button */}
-          <Link 
-            to="/" 
-            className="inline-flex items-center px-6 py-2 mb-8 bg-white bg-opacity-10 text-white rounded-full hover:bg-opacity-20 transition-all duration-300 backdrop-blur-md border border-white border-opacity-20"
-          >
-            <ArrowLeft className="mr-2" size={20} />
-            Back to Home
-          </Link>
-
-
-      <div className="p-8 pb-4">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <h2 className="text-3xl font-bold text-white">PDF ToolBox</h2>
-        </div>
-      </div>
-      <div
-        {...getRootProps()}
-        className={`border-2 border-dashed border-white border-opacity-50 rounded-xl p-8 text-center cursor-pointer mb-4 transition-all duration-300 hover:border-opacity-100 ${
-          isDragActive ? 'border-blue-500' : ''
-        }`}
-      >
-          <input {...getInputProps()} />
-          <FileText className="mx-auto mb-4 text-white" size={48} />
-          <p className="text-white text-lg">
-            {isDragActive
-              ? "Drop the files here ..."
-              : "Drag 'n' drop PDF files or images here, or click to select files"}
-          </p>
-        </div>
+return (
+  <div className="fixed inset-0 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 flex flex-col overflow-hidden">
+    {/* Main wrapper with proper overflow handling */}
+    <div className="flex flex-col h-full">
+      {/* Header Section - Fixed */}
+      <div className="p-4">
+        <Link 
+          to="/" 
+          className="inline-flex items-center px-6 py-2 mb-4 bg-white bg-opacity-10 text-white rounded-full hover:bg-opacity-20 transition-all duration-300 backdrop-blur-md border border-white border-opacity-20"
+        >
+          <ArrowLeft className="mr-2" size={20} />
+          Back to Home
+        </Link>
       </div>
 
-      {/* Main Content Area - Scrollable */}
-      <div className="flex-1 px-8 overflow-y-auto">
-        {isLoading && !pages.length && (
-          <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl">
-              <div className="mb-4">Processing... {Math.round(loadingProgress)}%</div>
-              <div className="w-64 h-2 bg-gray-200 rounded">
-                <div
-                  className="h-full bg-blue-500 rounded transition-all duration-300"
-                  style={{ width: `${loadingProgress}%` }}
-                />
-              </div>
+      {/* Content Container with Scroll */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="bg-white bg-opacity-10 backdrop-blur-md m-4 rounded-xl shadow-lg flex flex-col h-full">
+          {/* Header Content - Fixed */}
+          <div className="p-6 border-b border-white border-opacity-20">
+            <h2 className="text-3xl font-bold text-white mb-6">PDF ToolBox</h2>
+            
+            {/* Upload Area */}
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed border-white border-opacity-50 rounded-xl p-8 text-center cursor-pointer transition-all duration-300 hover:border-opacity-100 ${
+                isDragActive ? 'border-blue-500' : ''
+              }`}
+            >
+              <input {...getInputProps()} />
+              <FileText className="mx-auto mb-4 text-white" size={48} />
+              <p className="text-white text-lg">
+                {isDragActive
+                  ? "Drop the files here ..."
+                  : "Drag 'n' drop PDF files or images here, or click to select files"}
+              </p>
             </div>
           </div>
-        )}
 
-        {pages.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pb-20">
-            {pages.map((page, index) => (
-              <div
-                key={index}
-                draggable={!isDeleteMode}
-                onDragStart={(e) => onDragStart(e, index)}
-                onDragOver={(e) => onDragOver(e, index)}
-                onDragEnd={onDragEnd}
-                className={`relative bg-white bg-opacity-20 rounded-lg overflow-hidden shadow-md aspect-[3/4] cursor-move transition-all duration-300 hover:shadow-lg ${
-                  draggedItem === index ? 'opacity-50' : ''
-                }`}
-              >
-                <img
-                  src={page.preview}
-                  alt={`Page ${index + 1}`}
-                  className="w-full h-full object-contain"
-                />
-                <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                  {index + 1}/{pages.length}
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {isLoading && !pages.length && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white p-6 rounded-lg shadow-xl">
+                  <div className="mb-4">Processing... {Math.round(loadingProgress)}%</div>
+                  <div className="w-64 h-2 bg-gray-200 rounded">
+                    <div
+                      className="h-full bg-blue-500 rounded transition-all duration-300"
+                      style={{ width: `${loadingProgress}%` }}
+                    />
+                  </div>
                 </div>
-                {isDeleteMode && (
-                  <input
-                    type="checkbox"
-                    checked={selectedPages.includes(index)}
-                    onChange={() => setSelectedPages(prev => 
-                      prev.includes(index) 
-                        ? prev.filter(i => i !== index)
-                        : [...prev, index]
-                    )}
-                    className="absolute top-2 right-2 w-5 h-5"
-                  />
-                )}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            )}
 
-      {/* Footer Section */}
-      <div className="p-6 bg-white bg-opacity-5 backdrop-blur-sm border-t border-white border-opacity-20">
-        <div className="flex justify-center space-x-4">
-          <button
-            onClick={() => {
-              setIsDeleteMode(!isDeleteMode);
-              setSelectedPages([]);
-            }}
-            className={`px-6 py-2 rounded-full text-white font-medium transition-all duration-300 ${
-              isDeleteMode ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-            } flex items-center`}
-            disabled={isLoading}
-          >
-            <Trash2 className="mr-2" size={20} />
-            {isDeleteMode ? 'Cancel Delete' : 'Delete Pages'}
-          </button>
-          
-          {isDeleteMode && selectedPages.length > 0 && (
-            <button
-              onClick={() => {
-                setPages(prev => prev.filter((_, i) => !selectedPages.includes(i)));
-                setSelectedPages([]);
-                setIsDeleteMode(false);
-              }}
-              className="px-6 py-2 rounded-full bg-red-500 text-white font-medium hover:bg-red-600 transition-all duration-300 flex items-center"
-              disabled={isLoading}
-            >
-              <Trash2 className="mr-2" size={20} />
-              Confirm Delete ({selectedPages.length})
-            </button>
-          )}
-          
-          {!isDeleteMode && pages.length > 0 && (
-            <button
-              onClick={createFinalPDF}
-              className="px-6 py-2 rounded-full bg-green-500 text-white font-medium hover:bg-green-600 transition-all duration-300 flex items-center"
-              disabled={isLoading}
-            >
-              <Download className="mr-2" size={20} />
-              Download Combined PDF
-            </button>
-          )}
+            {pages.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {pages.map((page, index) => (
+                  <div
+                    key={index}
+                    draggable={!isDeleteMode}
+                    onDragStart={(e) => onDragStart(e, index)}
+                    onDragOver={(e) => onDragOver(e, index)}
+                    onDragEnd={onDragEnd}
+                    className={`relative bg-white bg-opacity-20 rounded-lg overflow-hidden shadow-md aspect-[3/4] cursor-move transition-all duration-300 hover:shadow-lg ${
+                      draggedItem === index ? 'opacity-50' : ''
+                    }`}
+                  >
+                    <img
+                      src={page.preview}
+                      alt={`Page ${index + 1}`}
+                      className="w-full h-full object-contain"
+                    />
+                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                      {index + 1}/{pages.length}
+                    </div>
+                    {isDeleteMode && (
+                      <input
+                        type="checkbox"
+                        checked={selectedPages.includes(index)}
+                        onChange={() => setSelectedPages(prev => 
+                          prev.includes(index) 
+                            ? prev.filter(i => i !== index)
+                            : [...prev, index]
+                        )}
+                        className="absolute top-2 right-2 w-5 h-5"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer Section - Fixed */}
+          <div className="p-6 bg-white bg-opacity-5 backdrop-blur-sm border-t border-white border-opacity-20">
+            <div className="flex justify-center space-x-4">
+              {pages.length > 0 && (
+                <button
+                  onClick={() => {
+                    setIsDeleteMode(!isDeleteMode);
+                    setSelectedPages([]);
+                  }}
+                  className={`px-6 py-2 rounded-full text-white font-medium transition-all duration-300 ${
+                    isDeleteMode ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
+                  } flex items-center`}
+                  disabled={isLoading}
+                >
+                  <Trash2 className="mr-2" size={20} />
+                  {isDeleteMode ? 'Cancel Delete' : 'Delete Pages'}
+                </button>
+              )}
+              
+              {isDeleteMode && selectedPages.length > 0 && (
+                <button
+                  onClick={() => {
+                    setPages(prev => prev.filter((_, i) => !selectedPages.includes(i)));
+                    setSelectedPages([]);
+                    setIsDeleteMode(false);
+                  }}
+                  className="px-6 py-2 rounded-full bg-red-500 text-white font-medium hover:bg-red-600 transition-all duration-300 flex items-center"
+                  disabled={isLoading}
+                >
+                  <Trash2 className="mr-2" size={20} />
+                  Confirm Delete ({selectedPages.length})
+                </button>
+              )}
+              
+              {!isDeleteMode && pages.length > 0 && (
+                <button
+                  onClick={createFinalPDF}
+                  className="px-6 py-2 rounded-full bg-green-500 text-white font-medium hover:bg-green-600 transition-all duration-300 flex items-center"
+                  disabled={isLoading}
+                >
+                  <Download className="mr-2" size={20} />
+                  Download Combined PDF
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-      </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default App;
