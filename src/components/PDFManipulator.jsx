@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
+import { Link } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { PDFDocument } from 'pdf-lib';
-import { FileText, Trash2, Download } from 'lucide-react';
+import { FileText, Trash2, Download, ArrowLeft } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Configure PDF.js worker
@@ -274,16 +275,33 @@ const App = () => {
 
   return (
     <div className="fixed inset-4 bg-white bg-opacity-10 rounded-xl shadow-lg backdrop-filter backdrop-blur-lg flex flex-col overflow-hidden">
-      {/* Header Section */}
+      
+
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+          {/* Back Button */}
+          <Link 
+            to="/" 
+            className="inline-flex items-center px-6 py-2 mb-8 bg-white bg-opacity-10 text-white rounded-full hover:bg-opacity-20 transition-all duration-300 backdrop-blur-md border border-white border-opacity-20"
+          >
+            <ArrowLeft className="mr-2" size={20} />
+            Back to Home
+          </Link>
+
+
       <div className="p-8 pb-4">
-        <h2 className="text-3xl font-bold text-white mb-6">PDF ToolBox</h2>
-        
-        <div
-          {...getRootProps()}
-          className={`border-2 border-dashed border-white border-opacity-50 rounded-xl p-8 text-center cursor-pointer mb-4 transition-all duration-300 hover:border-opacity-100 ${
-            isDragActive ? 'border-blue-500' : ''
-          }`}
-        >
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <h2 className="text-3xl font-bold text-white">PDF ToolBox</h2>
+        </div>
+      </div>
+      <div
+        {...getRootProps()}
+        className={`border-2 border-dashed border-white border-opacity-50 rounded-xl p-8 text-center cursor-pointer mb-4 transition-all duration-300 hover:border-opacity-100 ${
+          isDragActive ? 'border-blue-500' : ''
+        }`}
+      >
           <input {...getInputProps()} />
           <FileText className="mx-auto mb-4 text-white" size={48} />
           <p className="text-white text-lg">
@@ -392,6 +410,7 @@ const App = () => {
             </button>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

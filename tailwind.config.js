@@ -5,33 +5,23 @@ module.exports = {
   theme: {
     extend: {
       animation: {
-        'gradient-x': 'gradient-x 5s ease infinite',
-        'snow-fall': 'snow-fall 15s linear infinite',
-        'spin-slow': 'spin 1s linear infinite',
-        'pulse-slow': 'pulse 1s ease-in-out infinite',
+        blob: "blob 7s infinite",
       },
       keyframes: {
-        'gradient-x': {
-          '0%, 100%': {
-            'background-size': '400% 400%',
-            'background-position': 'left center',
+        blob: {
+          "0%": {
+            transform: "translate(0px, 0px) scale(1)",
           },
-          '50%': {
-            'background-size': '400% 400%',
-            'background-position': 'right center',
+          "33%": {
+            transform: "translate(30px, -50px) scale(1.1)",
+          },
+          "66%": {
+            transform: "translate(-20px, 20px) scale(0.9)",
+          },
+          "100%": {
+            transform: "translate(0px, 0px) scale(1)",
           },
         },
-        'snow-fall': {
-          '0%': { transform: 'translateY(-10px)' },
-          '100%': { transform: 'translateY(100vh)' },
-        },
-      },
-      backgroundImage: {
-        'gradient-conic': 'conic-gradient(var(--tw-gradient-stops))',
-      },
-      boxShadow: {
-        'frost': '0 4px 6px -1px rgba(255, 255, 255, 0.1), 0 2px 4px -1px rgba(255, 255, 255, 0.06)',
-        'frost-hover': '0 10px 15px -3px rgba(255, 255, 255, 0.1), 0 4px 6px -2px rgba(255, 255, 255, 0.05)',
       },
     },
   },

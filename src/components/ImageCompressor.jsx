@@ -90,10 +90,14 @@ const ImageCompressor = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-400 to-purple-600 p-4">
-      <Link to="/image-tools" className="text-white mb-4 flex items-center">
-        <ArrowLeft className="mr-2" size={20} />
-        Back to Image Tools
-      </Link>
+     <div className="container mx-auto px-4 py-8">
+      <Link 
+            to="/image-tools" 
+            className="inline-flex items-center px-6 py-2 mb-8 bg-white bg-opacity-10 text-white rounded-full hover:bg-opacity-20 transition-all duration-300 backdrop-blur-md border border-white border-opacity-20"
+          >
+            <ArrowLeft className="mr-2" size={20} />
+            Back To Image Tool
+          </Link>
       <div className="bg-white bg-opacity-10 rounded-xl shadow-lg backdrop-filter backdrop-blur-lg p-6 flex-grow overflow-y-auto">
         <h1 className="text-3xl font-bold text-white mb-6">Image Compressor</h1>
         
@@ -188,6 +192,7 @@ const ImageCompressor = () => {
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   );
