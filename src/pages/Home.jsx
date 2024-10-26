@@ -42,7 +42,7 @@ const Home = () => {
         <main className="flex-grow container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-4xl font-bold text-center text-white mb-2">
-              Your Digital Toolkit
+              Your Digital ToolBox
             </h2>
             <p className="text-center text-white text-opacity-90 mb-12">
               Powerful tools to enhance your productivity
