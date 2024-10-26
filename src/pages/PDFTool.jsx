@@ -15,8 +15,11 @@ const PDFTool = () => {
           Back to Home
         </Link>
         <PDFManipulator />
+        
       </div>
     </div>
+
+    
   );
 };
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Image, QrCode, FileSymlink, Github, Sparkles } from 'lucide-react';
+import { FileText, Image, QrCode, FileSymlink, Github, Sparkles, Camera } from 'lucide-react';
 
 const Home = () => {
   return (
@@ -67,6 +67,7 @@ const Home = () => {
                 title="QR Code Generator"
                 description="Create custom QR codes instantly"
               />
+
               <ComingSoonCard />
             </div>
           </div>

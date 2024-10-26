@@ -6,7 +6,6 @@ import ImageTools from './pages/ImageTools';
 import ImageResize from './components/ImageResize';
 import ImageCompressor from './components/ImageCompressor';
 import QRCodeGeneratot from './components/QrCodeGenerator';
-import FormatConvertor from './components/FormatConvertor';
 
 import './index.css';
 
@@ -20,8 +19,6 @@ function App() {
         <Route path="/image-tools/resize" element={<ImageResize />} />
         <Route path="/image-tools/compress" element={<ImageCompressor />} />
         <Route path="/qr-tool" element={<QRCodeGeneratot />} />
-        <Route path="/convert-tool" element={<FormatConvertor />} />
-
       </Routes>
       
     </Router>

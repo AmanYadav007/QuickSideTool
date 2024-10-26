@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { PDFDocument } from 'pdf-lib';
-import { FileText, Trash2, Download, ArrowLeft } from 'lucide-react';
+import { FileText, Trash2, Download, ArrowLeft, CheckSquare } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Configure PDF.js worker
@@ -86,6 +86,17 @@ const App = () => {
   const onDragEnd = () => {
     setDraggedItem(null);
   };
+
+  const handleSelectAll = () => {
+    if (selectedPages.length === pages.length) {
+      // If all pages are selected, deselect all
+      setSelectedPages([]);
+    } else {
+      // Select all pages
+      setSelectedPages(pages.map((_, index) => index));
+    }
+  };
+
  // Optimized page deletion
  const handleDeletePages = useCallback(() => {
   setIsLoading(true);
@@ -360,9 +371,20 @@ return (
       {/* Content Container with Scroll */}
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className="bg-white bg-opacity-10 backdrop-blur-md m-4 rounded-xl shadow-lg flex flex-col h-full">
-          {/* Header Content - Fixed */}
           <div className="p-6 border-b border-white border-opacity-20">
-            <h2 className="text-3xl font-bold text-white mb-6">PDF ToolBox</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-3xl font-bold text-white">PDF ToolBox</h2>
+              {isDeleteMode && pages.length > 0 && (
+                <button
+                  onClick={handleSelectAll}
+                  className="px-4 py-2 rounded-full bg-blue-500 text-white font-medium hover:bg-blue-600 transition-all duration-300 flex items-center"
+                >
+                  <CheckSquare className="mr-2" size={20} />
+                  {selectedPages.length === pages.length ? 'Deselect All' : 'Select All'}
+                  <span className="ml-2">({selectedPages.length}/{pages.length})</span>
+                </button>
+              )}
+            </div>
             
             {/* Upload Area */}
             <div
@@ -436,8 +458,8 @@ return (
             )}
           </div>
 
-          {/* Footer Section - Fixed */}
-          <div className="p-6 bg-white bg-opacity-5 backdrop-blur-sm border-t border-white border-opacity-20">
+        {/* Update footer section */}
+        <div className="p-6 bg-white bg-opacity-5 backdrop-blur-sm border-t border-white border-opacity-20">
             <div className="flex justify-center space-x-4">
               {pages.length > 0 && (
                 <button
@@ -457,11 +479,7 @@ return (
               
               {isDeleteMode && selectedPages.length > 0 && (
                 <button
-                  onClick={() => {
-                    setPages(prev => prev.filter((_, i) => !selectedPages.includes(i)));
-                    setSelectedPages([]);
-                    setIsDeleteMode(false);
-                  }}
+                  onClick={handleDeletePages}
                   className="px-6 py-2 rounded-full bg-red-500 text-white font-medium hover:bg-red-600 transition-all duration-300 flex items-center"
                   disabled={isLoading}
                 >
@@ -485,8 +503,8 @@ return (
         </div>
       </div>
     </div>
-  </div>
-);
+    </div>
+  );
 };
 
 export default App;
