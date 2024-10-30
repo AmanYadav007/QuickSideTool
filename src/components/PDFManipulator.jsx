@@ -427,7 +427,7 @@ return (
                     onDragStart={(e) => onDragStart(e, index)}
                     onDragOver={(e) => onDragOver(e, index)}
                     onDragEnd={onDragEnd}
-                    className={`relative bg-white bg-opacity-20 rounded-lg overflow-hidden shadow-md aspect-[3/4] cursor-move transition-all duration-300 hover:shadow-lg ${
+                    className={`relative bg-white bg-opacity-20 rounded-lg overflow-hidden shadow-md aspect-[3/2] cursor-move transition-all duration-300 hover:shadow-lg ${
                       draggedItem === index ? 'opacity-50' : ''
                     }`}
                   >
