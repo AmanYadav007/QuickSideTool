@@ -372,7 +372,7 @@ return (
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className="bg-white bg-opacity-10 backdrop-blur-md m-4 rounded-xl shadow-lg flex flex-col h-full">
           <div className="p-6 border-b border-white border-opacity-20">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-3">
               <h2 className="text-3xl font-bold text-white">PDF ToolKit</h2>
               {isDeleteMode && pages.length > 0 && (
                 <button
