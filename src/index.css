@@ -104,3 +104,16 @@
 .p-8{
   padding: .5rem;
 }
+
+
+.p-6 {
+  padding: 1.4rem;
+}
+
+.p-4 {
+  padding: 1.1rem;
+}
+
+.m-4 {
+  margin: .5rem;
+}

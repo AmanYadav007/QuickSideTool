@@ -342,8 +342,7 @@ const App = () => {
     }
   };
 
-  // Update the delete button click handler in your JSX
-  // Replace the existing delete button onClick with this:
+
   <button
     onClick={handleDeletePages}
     className="px-6 py-2 rounded-full bg-red-500 text-white font-medium hover:bg-red-600 transition-all duration-300 flex items-center"
@@ -358,7 +357,7 @@ return (
     {/* Main wrapper with proper overflow handling */}
     <div className="flex flex-col h-full">
       {/* Header Section - Fixed */}
-      <div className="p-4">
+      <div className="p-3">
         <Link 
           to="/" 
           className="inline-flex items-center px-6 py-2 mb-4 bg-white bg-opacity-10 text-white rounded-full hover:bg-opacity-20 transition-all duration-300 backdrop-blur-md border border-white border-opacity-20"
@@ -394,7 +393,7 @@ return (
               }`}
             >
               <input {...getInputProps()} />
-              <FileText className="mx-auto mb-4 text-white" size={48} />
+              {/* <FileText className="mx-auto mb-3 text-white" size={35} /> */}
               <p className="text-white text-lg">
                 {isDragActive
                   ? "Drop the files here ..."
@@ -459,7 +458,7 @@ return (
           </div>
 
         {/* Update footer section */}
-        <div className="p-6 bg-white bg-opacity-5 backdrop-blur-sm border-t border-white border-opacity-20">
+        <div className="p-6 bg-white bg-opacity-5 backdrop-blur-sm border-white border-opacity-20">
             <div className="flex justify-center space-x-4">
               {pages.length > 0 && (
                 <button
