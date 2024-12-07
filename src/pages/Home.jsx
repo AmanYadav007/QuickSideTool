@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Image, QrCode, FileSymlink, Github, Sparkles, Camera } from 'lucide-react';
+import { FileText, Image, QrCode, FileSymlink, Github, Sparkles, Camera, Gamepad2} from 'lucide-react';
 
 const Home = () => {
   return (
@@ -68,7 +68,13 @@ const Home = () => {
                 description="Create custom QR codes instantly"
               />
 
-              <ComingSoonCard />
+              <ToolCard 
+                to="/game" 
+                icon={<Gamepad2 size={32} />} 
+                title="Have Fun"
+                description="Remove Your Stress"
+                className="button"
+              />
             </div>
           </div>
         </main>
@@ -84,7 +90,7 @@ const Home = () => {
                   rel="noopener noreferrer" 
                   className="text-blue-200 hover:text-blue-100 transition-colors"
                 >
-                  AGuider
+                  Aman Yadav
                 </a>
               </p>
             </div>
