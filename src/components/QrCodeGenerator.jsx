@@ -159,9 +159,9 @@ const QRCodeGenerator = () => {
                   onChange={(e) => setDownloadFormat(e.target.value)}
                   className="px-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl text-white focus:outline-none backdrop-blur-sm"
                 >
-                  <option value="png">PNG</option>
-                  <option value="jpg">JPG</option>
-                  <option value="svg">SVG</option>
+                  <option value="png" className='bg-black'>PNG</option>
+                  <option value="jpg" className='bg-black'>JPG</option>
+                  <option value="svg" className='bg-black'>SVG</option>
                 </select>
                 <button
                   onClick={downloadQRCode}

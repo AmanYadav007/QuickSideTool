@@ -7,8 +7,12 @@ const Card = ({ id, image, flipped, solved, onClick }) => {
       onClick={() => onClick(id)}
     >
       <div className="card-inner">
-        <div className="card-front">?</div>
-        <div className="card-back">{image}</div>
+        <div className="card-front">
+          <div className="card-content">?</div>
+        </div>
+        <div className="card-back">
+          <div className="card-content">{image}</div>
+        </div>
       </div>
     </div>
   );
