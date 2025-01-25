@@ -13,7 +13,6 @@ const PDFUnlocker = () => {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     setFile(selectedFile);
-
     // Generate a preview URL for the uploaded file
     if (selectedFile) {
       const fileUrl = URL.createObjectURL(selectedFile);
@@ -22,7 +21,6 @@ const PDFUnlocker = () => {
       setPreviewUrl(null);
     }
   };
-
   const handleUnlock = async () => {
     if (!file || !password) {
       setMessage('Please upload a PDF and enter a password.');
