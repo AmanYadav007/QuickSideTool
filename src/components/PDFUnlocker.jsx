@@ -61,7 +61,6 @@ const PDFUnlocker = () => {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600">
       {/* Animated background elements */}
@@ -82,7 +81,6 @@ const PDFUnlocker = () => {
             <ArrowLeft className="mr-2" size={20} />
             Back to Home
           </Link>
-
           {/* Main Content Container */}
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
