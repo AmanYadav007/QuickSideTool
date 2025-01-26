@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Lock, Unlock } from 'lucide-react';
+import { ArrowLeft, Lock, Unlock, Eye, EyeOff } from 'lucide-react';
 import Confetti from 'react-confetti';
 
 const PDFUnlocker = () => {
@@ -11,6 +11,7 @@ const PDFUnlocker = () => {
   const [action, setAction] = useState('unlock'); // 'unlock' or 'lock'
   const [showConfetti, setShowConfetti] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Toggle password visibility
 
   // Theme settings based on action
   const theme = {
@@ -230,13 +231,21 @@ const PDFUnlocker = () => {
             <div
               className={`mt-8 ${theme[action].bg} backdrop-blur-md rounded-2xl p-6 ${theme[action].border} hover:shadow-glow`}
             >
-              <input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`w-full mb-4 p-3 ${theme[action].bg} ${theme[action].text} rounded-lg ${theme[action].border} focus:outline-none focus:border-opacity-40 hover:shadow-glow`}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`w-full mb-4 p-3 ${theme[action].bg} ${theme[action].text} rounded-lg ${theme[action].border} focus:outline-none focus:border-opacity-40 hover:shadow-glow pr-12`}
+                />
+                <button
+                  onClick={() => setShowPassword(!showPassword)}
+                  className={`absolute right-3 top-3 p-2 ${theme[action].text} text-opacity-80 hover:text-opacity-100 transition-all duration-300`}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
               <button
                 onClick={handleAction}
                 disabled={isLoading}
