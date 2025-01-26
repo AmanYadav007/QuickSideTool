@@ -78,9 +78,11 @@ const PDFUnlocker = () => {
     formData.append('file', file);
     formData.append('password', password);
 
+    const backendUrl = 'https://quicksidetoolbackend.onrender.com';
+
     try {
       const endpoint = action === 'unlock' ? '/unlock-pdf' : '/lock-pdf';
-      const response = await fetch(`http://localhost:4000${endpoint}`, {
+      const response = await fetch(`${backendUrl}/${endpoint}`, {
         method: 'POST',
         body: formData,
       });
