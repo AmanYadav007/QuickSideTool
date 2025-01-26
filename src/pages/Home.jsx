@@ -60,8 +60,8 @@ const Home = () => {
              <ToolCard 
               to="/unlock-pdf" 
               icon={<Unlock size={32} />} 
-              title="Unlock PDF"
-              description="Remove password protection from PDFs"
+              title="Unlock & Lock PDF"
+              description="unlock and Lock password protection from PDFs"
             />
             <ToolCard 
               to="/image-tools" 

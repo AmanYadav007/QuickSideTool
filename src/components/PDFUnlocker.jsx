@@ -1,29 +1,72 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { ArrowLeft, Lock, Unlock } from 'lucide-react';
+import Confetti from 'react-confetti';
 
 const PDFUnlocker = () => {
   const [file, setFile] = useState(null);
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [action, setAction] = useState('unlock'); // 'unlock' or 'lock'
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Theme settings based on action
+  const theme = {
+    unlock: {
+      gradient: 'from-blue-200 via-green-200 to-teal-200',
+      bg: 'bg-white bg-opacity-20',
+      text: 'text-gray-800',
+      border: 'border-gray-300 border-opacity-20',
+      icon: <Unlock size={32} className="text-blue-500" />,
+    },
+    lock: {
+      gradient: 'from-gray-800 via-gray-900 to-black',
+      bg: 'bg-gray-800 bg-opacity-20',
+      text: 'text-gray-100',
+      border: 'border-gray-700 border-opacity-20',
+      icon: <Lock size={32} className="text-purple-400" />,
+    },
+  };
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    setFile(selectedFile);
-    // Generate a preview URL for the uploaded file
-    if (selectedFile) {
-      const fileUrl = URL.createObjectURL(selectedFile);
-      setPreviewUrl(fileUrl);
-    } else {
-      setPreviewUrl(null);
+    const file = e.target.files[0];
+    if (file) {
+      setFile(file);
+      setMessage('');
     }
   };
-  const handleUnlock = async () => {
-    if (!file || !password) {
-      setMessage('Please upload a PDF and enter a password.');
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') {
+      setFile(file);
+      setMessage('');
+    } else {
+      setMessage('Please upload a valid PDF file.');
+    }
+  };
+
+  const handleAction = async () => {
+    if (!file) {
+      setMessage('Please upload a PDF file.');
+      return;
+    }
+
+    if (!password) {
+      setMessage('Please enter a password.');
       return;
     }
 
@@ -35,134 +78,182 @@ const PDFUnlocker = () => {
     formData.append('password', password);
 
     try {
-      const response = await axios.post('https://quick-side-tool.vercel.app/unlock-pdf', formData, {
-        responseType: 'blob',
+      const endpoint = action === 'unlock' ? '/unlock-pdf' : '/lock-pdf';
+      const response = await fetch(`http://localhost:4000${endpoint}`, {
+        method: 'POST',
+        body: formData,
       });
 
-      // Create a download link for the unlocked PDF
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'unlocked.pdf');
-      document.body.appendChild(link);
-      link.click();
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute(
+          'download',
+          action === 'unlock' ? 'unlocked.pdf' : 'locked.pdf'
+        );
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
 
-      // Clean up
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      setMessage('PDF unlocked successfully!');
+        setMessage(`PDF ${action === 'unlock' ? 'unlocked' : 'locked'} successfully!`);
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000); // Hide confetti after 5 seconds
+      } else {
+        const error = await response.text();
+        setMessage(`Failed to ${action} PDF: ${error}`);
+      }
     } catch (error) {
-      console.error('Error unlocking PDF:', error);
-      setMessage('Failed to unlock PDF. Incorrect password or unsupported file.');
+      console.error(`Error ${action}ing PDF:`, error);
+      setMessage(`Failed to ${action} PDF. Please try again.`);
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 opacity-50">
-        <div className="absolute w-96 h-96 -top-48 -left-48 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-        <div className="absolute w-96 h-96 -top-48 -right-48 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-        <div className="absolute w-96 h-96 -bottom-48 -left-48 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+    <div
+      className={`min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br ${theme[action].gradient} animate-gradient`}
+    >
+      {/* Confetti Animation */}
+      {showConfetti && <Confetti />}
+
+      {/* Floating Particles */}
+      <div className="absolute inset-0 overflow-hidden">
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 bg-white rounded-full opacity-20 animate-float"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+            }}
+          />
+        ))}
       </div>
 
       {/* Main Content */}
       <div className="relative z-10 flex-1">
         <div className="container mx-auto px-4 py-8">
           {/* Back Button */}
-          <Link 
-            to="/" 
-            className="inline-flex items-center px-6 py-2 mb-8 bg-white bg-opacity-10 text-white rounded-full hover:bg-opacity-20 transition-all duration-300 backdrop-blur-md border border-white border-opacity-20"
+          <Link
+            to="/"
+            className={`inline-flex items-center px-6 py-2 mb-8 ${theme[action].bg} ${theme[action].text} rounded-full hover:bg-opacity-20 transition-all duration-300 backdrop-blur-md ${theme[action].border} hover:shadow-glow`}
           >
             <ArrowLeft className="mr-2" size={20} />
             Back to Home
           </Link>
+
           {/* Main Content Container */}
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-white mb-2">PDF Unlocker</h2>
-              <p className="text-white text-opacity-90">
-                Unlock password-protected PDFs with ease
+              <h2 className={`text-4xl font-bold ${theme[action].text} mb-2`}>
+                PDF Tools
+              </h2>
+              <p className={`${theme[action].text} text-opacity-90`}>
+                Secure and manage your PDF files with ease
               </p>
             </div>
 
-            {/* File Input */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-white mb-2">
-                Upload PDF File
-              </label>
-              <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center px-4 py-6 bg-white bg-opacity-10 backdrop-blur-md rounded-2xl border border-white border-opacity-20 cursor-pointer hover:bg-opacity-20 transition-all duration-300">
-                  <FileText className="text-white" size={32} />
-                  <span className="mt-2 text-sm text-white text-opacity-90">
-                    {file ? file.name : 'Choose a file'}
-                  </span>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
+            {/* Toggle Button for Lock/Unlock */}
+            <div className="flex justify-center mb-8">
+              <div
+                className={`relative w-64 h-12 ${theme[action].bg} backdrop-blur-md rounded-full ${theme[action].border} p-1`}
+              >
+                <div
+                  className={`absolute top-1 left-1 w-1/2 h-10 ${
+                    theme[action === 'unlock' ? 'lock' : 'unlock'].bg
+                  } rounded-full transition-all duration-300 ${
+                    action === 'unlock' ? 'translate-x-0' : 'translate-x-full'
+                  }`}
+                />
+                <div className="relative flex justify-between items-center h-full px-2">
+                  <button
+                    onClick={() => setAction('unlock')}
+                    className={`z-10 w-1/2 h-full flex items-center justify-center ${theme[action].text} text-opacity-80 transition-all duration-300 ${
+                      action === 'unlock' ? 'text-opacity-100 font-semibold' : ''
+                    }`}
+                  >
+                    Unlock
+                  </button>
+                  <button
+                    onClick={() => setAction('lock')}
+                    className={`z-10 w-1/2 h-full flex items-center justify-center ${theme[action].text} text-opacity-80 transition-all duration-300 ${
+                      action === 'lock' ? 'text-opacity-100 font-semibold' : ''
+                    }`}
+                  >
+                    Lock
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Password Input */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-white mb-2">
-                Enter PDF Password
+            {/* Drag-and-Drop File Upload */}
+            <div
+              className={`mt-8 ${theme[action].bg} backdrop-blur-md rounded-2xl p-6 border-2 border-dashed ${
+                isDragging ? `${theme[action].border} border-opacity-50` : `${theme[action].border} border-opacity-20`
+              } transition-all duration-300`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={handleFileChange}
+                className="hidden"
+                id="file-input"
+              />
+              <label
+                htmlFor="file-input"
+                className={`block text-center ${theme[action].text} text-opacity-80 cursor-pointer`}
+              >
+                {file ? (
+                  <div className="flex flex-col items-center">
+                    <span className={`${theme[action].text} text-opacity-90`}>
+                      {file.name}
+                    </span>
+                    <span className={`text-sm ${theme[action].text} text-opacity-70`}>
+                      {(file.size / 1024).toFixed(2)} KB
+                    </span>
+                  </div>
+                ) : (
+                  'Drag & drop or click to upload a PDF'
+                )}
               </label>
+            </div>
+
+            {/* Password Input and Action Button */}
+            <div
+              className={`mt-8 ${theme[action].bg} backdrop-blur-md rounded-2xl p-6 ${theme[action].border} hover:shadow-glow`}
+            >
               <input
                 type="password"
-                placeholder="Password"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-white bg-opacity-10 backdrop-blur-md rounded-2xl border border-white border-opacity-20 text-white placeholder-white placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent"
+                className={`w-full mb-4 p-3 ${theme[action].bg} ${theme[action].text} rounded-lg ${theme[action].border} focus:outline-none focus:border-opacity-40 hover:shadow-glow`}
               />
-            </div>
-
-            {/* Unlock Button */}
-            <button
-              onClick={handleUnlock}
-              disabled={isLoading}
-              className="w-full px-6 py-3 bg-white bg-opacity-10 backdrop-blur-md rounded-2xl border border-white border-opacity-20 text-white hover:bg-opacity-20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent"
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span className="ml-2">Unlocking...</span>
-                </div>
-              ) : (
-                'Unlock PDF'
-              )}
-            </button>
-
-            {/* Message */}
-            {message && (
-              <p
-                className={`mt-4 text-sm text-center ${
-                  message.includes('successfully') ? 'text-green-300' : 'text-red-300'
-                }`}
+              <button
+                onClick={handleAction}
+                disabled={isLoading}
+                className={`w-full py-3 ${theme[action].bg} ${theme[action].text} rounded-lg hover:bg-opacity-20 transition-all duration-300 backdrop-blur-md ${theme[action].border} hover:shadow-glow flex items-center justify-center`}
               >
-                {message}
-              </p>
-            )}
-
-            {/* PDF Preview */}
-            {previewUrl && (
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-white mb-2">
-                  PDF Preview
-                </label>
-                <iframe
-                  src={previewUrl}
-                  className="w-full h-64 bg-white bg-opacity-10 backdrop-blur-md rounded-2xl border border-white border-opacity-20"
-                  title="PDF Preview"
-                />
-              </div>
-            )}
+                {isLoading ? (
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
+                ) : (
+                  action === 'unlock' ? 'Unlock PDF' : 'Lock PDF'
+                )}
+              </button>
+              {message && (
+                <p className={`mt-4 text-sm ${theme[action].text} text-opacity-90`}>
+                  {message}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
