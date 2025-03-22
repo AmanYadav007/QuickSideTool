@@ -52,25 +52,41 @@ const ProgressModal = ({ progress, status, currentPage, totalPages, onCancel }) 
   </div>
 );
 
+const ContextMenu = ({ x, y, onClose, onReplace }) => {
+  return (
+    <div
+      className="fixed bg-white shadow-lg rounded-md py-2 z-50"
+      style={{ top: y, left: x }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center"
+        onClick={onReplace}
+      >
+        <FileText className="w-4 h-4 mr-2" />
+        Replace Page
+      </button>
+    </div>
+  );
+};
+
 const App = () => {
   const [pages, setPages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [draggedItem, setDraggedItem] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
   const cancelProcessingRef = useRef(false);
   const pdfCacheRef = useRef(new Map());
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const unusedPreviews = new Set();
     
-    // Collect all preview URLs that are no longer referenced
     pages.forEach(page => {
-      if (page.preview) {
-        unusedPreviews.add(page.preview);
-      }
+      if (page.preview) unusedPreviews.add(page.preview);
     });
 
-    // Revoke any unused preview URLs
     unusedPreviews.forEach(preview => {
       if (!pages.some(page => page.preview === preview)) {
         URL.revokeObjectURL(preview);
@@ -81,13 +97,11 @@ const App = () => {
   const handleDragStart = (e, index) => {
     setDraggedItem(index);
     e.dataTransfer.effectAllowed = 'move';
-    // Add a subtle transparency to the dragged element
     e.target.style.opacity = '0.5';
   };
 
   const handleDragEnd = (e) => {
     setDraggedItem(null);
-    // Restore the opacity
     e.target.style.opacity = '1';
   };
 
@@ -100,16 +114,13 @@ const App = () => {
     const newPages = [...pages];
     const draggedPage = { ...newPages[draggedItem] };
     
-    // Remove the dragged item
     newPages.splice(draggedItem, 1);
-    // Insert it at the new position
     newPages.splice(index, 0, draggedPage);
     
     setPages(newPages);
     setDraggedItem(index);
   };
 
-  // Handle page deletion with proper cleanup
   const handleRemovePage = useCallback((indexToRemove) => {
     setPages(prevPages => {
       const newPages = prevPages.filter((_, index) => index !== indexToRemove);
@@ -119,6 +130,107 @@ const App = () => {
       }
       return newPages;
     });
+  }, []);
+
+  const handleContextMenu = useCallback((e, page, index) => {
+    e.preventDefault();
+    if (page.type !== 'pdf') return;
+
+    setContextMenu({
+      x: e.pageX,
+      y: e.pageY,
+      pageIndex: index
+    });
+  }, []);
+
+  const handleReplacePage = useCallback(() => {
+    if (fileInputRef.current && contextMenu !== null) {
+      fileInputRef.current.dataset.pageIndex = contextMenu.pageIndex;
+      fileInputRef.current.click();
+    }
+  }, [contextMenu]);
+
+  const handleFileSelect = useCallback(async (event) => {
+    const file = event.target.files[0];
+    const pageIndex = parseInt(event.target.dataset.pageIndex);
+    
+    if (!file || isNaN(pageIndex)) return;
+
+    try {
+      if (!Object.values(FILE_TYPES).includes(file.type)) {
+        alert('Please select a valid PDF or image file');
+        return;
+      }
+
+      setIsLoading(true);
+      let newPage;
+
+      if (file.type === FILE_TYPES.PDF) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 0.5 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({
+          canvasContext: context,
+          viewport: viewport
+        }).promise;
+
+        const blob = await new Promise(resolve => 
+          canvas.toBlob(resolve, 'image/jpeg', 0.5)
+        );
+
+        newPage = {
+          file,
+          pageIndex: 0,
+          type: 'pdf',
+          preview: URL.createObjectURL(blob),
+          dimensions: { width: viewport.width, height: viewport.height }
+        };
+
+        canvas.width = 0;
+        canvas.height = 0;
+      } else {
+        newPage = {
+          file,
+          type: 'image',
+          preview: URL.createObjectURL(file),
+          pageIndex: 0
+        };
+      }
+
+      if (newPage) {
+        setPages(prevPages => {
+          const newPages = [...prevPages];
+          if (newPages[pageIndex]?.preview) {
+            URL.revokeObjectURL(newPages[pageIndex].preview);
+          }
+          newPages[pageIndex] = newPage;
+          return newPages;
+        });
+      }
+    } catch (error) {
+      console.error('Error replacing page:', error);
+      alert('Error replacing page: ' + error.message);
+    } finally {
+      setIsLoading(false);
+      setContextMenu(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+        delete fileInputRef.current.dataset.pageIndex;
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = () => setContextMenu(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const processFile = async (file) => {
@@ -159,7 +271,6 @@ const App = () => {
                 canvas.toBlob(resolve, 'image/jpeg', 0.5)
               );
 
-              // Cleanup canvas
               canvas.width = 0;
               canvas.height = 0;
 
@@ -437,16 +548,14 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-400 to-purple-600">
       <div className="container mx-auto p-4 space-y-6">
-        {/* Back button */}
-        {/* <button
-          className="text-white hover:bg-white/20 -ml-2 px-3 py-2 rounded-md flex items-center"
-          onClick={() => window.history.back()}
-        >
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </button> */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept="application/pdf,image/*"
+          onChange={handleFileSelect}
+        />
 
-        {/* Drop zone */}
         <div 
           {...getRootProps()} 
           className={`
@@ -468,13 +577,9 @@ const App = () => {
           </p>
         </div>
 
-        {/* Pages grid */}
         {pages.length > 0 && (
           <div className="p-6 space-y-6 bg-white/95 backdrop-blur-sm rounded-lg shadow-md">
             <div className="flex justify-between items-center">
-              {/* <h2 className="text-xl font-semibold">
-                Pages ({pages.length})
-              </h2> */}
               <button
                 onClick={createFinalPDF}
                 disabled={isLoading || pages.length === 0}
@@ -497,6 +602,7 @@ const App = () => {
                   onDragStart={(e) => handleDragStart(e, index)}
                   onDragEnd={handleDragEnd}
                   onDragOver={(e) => handleDragOver(e, index)}
+                  onContextMenu={(e) => handleContextMenu(e, page, index)}
                   className={`
                     relative group rounded-lg overflow-hidden bg-white
                     transition-all duration-200 ease-in-out
@@ -536,10 +642,18 @@ const App = () => {
             </div>
           </div>
         )}
+
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onClose={() => setContextMenu(null)}
+            onReplace={handleReplacePage}
+          />
+        )}
       </div>
     </div>
   );
 };
 
 export default App;
-
