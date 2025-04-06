@@ -52,6 +52,49 @@ const ProgressModal = ({ progress, status, currentPage, totalPages, onCancel }) 
   </div>
 );
 
+const ContextMenu = ({ x, y, onClose, onReplace }) => {
+  const menuStyle = {
+    top: Math.max(0, Math.min(y, window.innerHeight - 60)),
+    left: Math.max(0, Math.min(x, window.innerWidth - 150)),
+    backgroundColor: '#ffffff',
+    color: '#1f2937',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)',
+  };
+
+  return (
+    <div
+      className="fixed rounded-md py-2 z-50 border border-gray-200"
+      style={menuStyle}
+      onClick={(e) => e.stopPropagation()}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <button
+        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center"
+        onClick={(e) => {
+          onReplace();
+          onClose();
+        }}
+      >
+        <FileText className="w-4 h-4 mr-2 text-gray-700" />
+        <span className="text-gray-800 font-medium">Replace Page</span>
+      </button>
+    </div>
+  );
+};
+
+const LoadingOverlay = ({ isLoading }) => {
+  if (!isLoading) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-4 rounded-lg shadow-lg flex items-center space-x-2">
+        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+        <span className="text-gray-700">Replacing page...</span>
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   const [pages, setPages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,17 +108,11 @@ const App = () => {
 
   useEffect(() => {
     const unusedPreviews = new Set();
-    
-    // Collect all preview URLs that are no longer referenced
-    pages.forEach(page => {
-      if (page.preview) {
-        unusedPreviews.add(page.preview);
-      }
+    pages.forEach((page) => {
+      if (page.preview) unusedPreviews.add(page.preview);
     });
-
-    // Revoke any unused preview URLs
-    unusedPreviews.forEach(preview => {
-      if (!pages.some(page => page.preview === preview)) {
+    unusedPreviews.forEach((preview) => {
+      if (!pages.some((page) => page.preview === preview)) {
         URL.revokeObjectURL(preview);
       }
     });
@@ -117,6 +154,130 @@ const App = () => {
       }
       return newPages;
     });
+  }, []);
+
+  const handleContextMenu = useCallback((e, page, index) => {
+    e.preventDefault();
+    const pageElement = e.currentTarget;
+    const rect = pageElement.getBoundingClientRect();
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
+
+    // Calculate position relative to the top-left of the clicked element
+    const menuX = rect.left + scrollX + 10; // 10px offset from left
+    const menuY = rect.top + scrollY + 10; // 10px offset from top
+
+    // Adjust menuY to ensure it fits within the viewport
+    const menuHeight = 40; // Approximate height of the context menu
+    const adjustedY = Math.min(menuY, window.innerHeight + scrollY - menuHeight - 10);
+
+    // If the menu would appear below the viewport, try placing it above the element
+    const spaceBelow = window.innerHeight - (rect.bottom + scrollY);
+    const adjustedYAbove = rect.top + scrollY - menuHeight - 10;
+    const finalY = (spaceBelow < menuHeight && adjustedYAbove > 0) ? adjustedYAbove : adjustedY;
+
+    setContextMenu({
+      x: menuX,
+      y: finalY,
+      pageIndex: index,
+    });
+  }, []);
+
+  const handleReplacePage = useCallback(() => {
+    if (fileInputRef.current && contextMenu !== null) {
+      fileInputRef.current.dataset.pageIndex = contextMenu.pageIndex;
+      fileInputRef.current.click();
+    }
+  }, [contextMenu]);
+
+  const handleFileSelect = useCallback(async (event) => {
+    const file = event.target.files[0];
+    const pageIndex = parseInt(event.target.dataset.pageIndex);
+
+    if (!file || isNaN(pageIndex)) return;
+
+    try {
+      if (!Object.values(FILE_TYPES).includes(file.type)) {
+        alert('Please select a valid PDF or image file');
+        return;
+      }
+
+      setReplaceLoading(true);
+      setIsLoading(true);
+      let newPages = [];
+
+      if (file.type === FILE_TYPES.PDF) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const totalPages = pdf.numPages;
+
+        for (let i = 0; i < totalPages; i++) {
+          const page = await pdf.getPage(i + 1);
+          const viewport = page.getViewport({ scale: 0.5 });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          await page.render({
+            canvasContext: context,
+            viewport: viewport,
+          }).promise;
+
+          const blob = await new Promise((resolve) =>
+            canvas.toBlob(resolve, 'image/jpeg', 0.5)
+          );
+
+          newPages.push({
+            file,
+            pageIndex: i,
+            type: 'pdf',
+            preview: URL.createObjectURL(blob),
+            dimensions: { width: viewport.width, height: viewport.height },
+          });
+
+          canvas.width = 0;
+          canvas.height = 0;
+        }
+      } else {
+        newPages = [
+          {
+            file,
+            type: 'image',
+            preview: URL.createObjectURL(file),
+            pageIndex: 0,
+          },
+        ];
+      }
+
+      setPages((prevPages) => {
+        const newPagesArray = [...prevPages];
+        if (newPagesArray[pageIndex]?.preview) {
+          URL.revokeObjectURL(newPagesArray[pageIndex].preview);
+        }
+        newPagesArray.splice(pageIndex, 1, ...newPages);
+        return newPagesArray;
+      });
+
+    } catch (error) {
+      console.error('Error replacing page:', error);
+      alert('Error replacing page: ' + error.message);
+    } finally {
+      setReplaceLoading(false);
+      setIsLoading(false);
+      setContextMenu(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+        delete fileInputRef.current.dataset.pageIndex;
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = () => setContextMenu(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const processFile = async (file) => {
@@ -434,18 +595,16 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-400 to-purple-600">
       <div className="container mx-auto p-4 space-y-6">
-        {/* Back button */}
-        {/* <button
-          className="text-white hover:bg-white/20 -ml-2 px-3 py-2 rounded-md flex items-center"
-          onClick={() => window.history.back()}
-        >
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </button> */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept="application/pdf,image/*"
+          onChange={handleFileSelect}
+        />
 
-        {/* Drop zone */}
-        <div 
-          {...getRootProps()} 
+        <div
+          {...getRootProps()}
           className={`
             border-2 border-dashed rounded-xl p-12
             transition-all duration-200 ease-in-out
@@ -529,10 +688,19 @@ const App = () => {
             </div>
           </div>
         )}
+
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onClose={() => setContextMenu(null)}
+            onReplace={handleReplacePage}
+          />
+        )}
+        <LoadingOverlay isLoading={replaceLoading} />
       </div>
     </div>
   );
 };
 
 export default App;
-
