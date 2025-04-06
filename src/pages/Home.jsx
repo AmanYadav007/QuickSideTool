@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Image, QrCode, Github, Gamepad2, Unlock} from 'lucide-react';
+import { FileText, Image, QrCode, Github, Gamepad2, Unlock, Link as LinkIcon } from 'lucide-react';
 
 const Home = () => {
   return (
@@ -69,6 +69,12 @@ const Home = () => {
               title="Image Tools"
               description="Resize, compress, and convert images"
             />
+              <ToolCard 
+              to="/pdf-link-remove" 
+              icon={<LinkIcon size={32} />} 
+              title="PDF Link Remove"
+              description="Remove links from PDF documents"
+            />
             <ToolCard 
               to="/qr-tool" 
               icon={<QrCode size={32} />} 
@@ -82,7 +88,6 @@ const Home = () => {
               description="Remove Your Stress"
               className="button"
             />
-
           </div>
         </div>
       </main>
@@ -125,57 +130,4 @@ const ToolCard = ({ to, icon, title, description }) => (
     </div>
   </Link>
 );
-
-// const ComingSoonCard = () => (
-//   <div className="group relative bg-white bg-opacity-10 backdrop-blur-md rounded-2xl p-6 transition-all duration-300 border border-white border-opacity-20">
-//     <div className="flex items-start space-x-4">
-//       <div className="flex-shrink-0 w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center text-white transition-all duration-300">
-//         <Sparkles size={32} className="animate-pulse" />
-//       </div>
-//       <div className="flex-grow">
-//         <h3 className="text-lg font-semibold text-white mb-1">More Tools Coming Soon</h3>
-//         <p className="text-sm text-white text-opacity-80">We're working on exciting new tools for you</p>
-        
-//         {/* Animated dots */}
-//         <div className="flex space-x-1 mt-2">
-//           <div className="w-1.5 h-1.5 rounded-full bg-white/50 animate-bounce" style={{ animationDelay: '0ms' }} />
-//           <div className="w-1.5 h-1.5 rounded-full bg-white/50 animate-bounce" style={{ animationDelay: '200ms' }} />
-//           <div className="w-1.5 h-1.5 rounded-full bg-white/50 animate-bounce" style={{ animationDelay: '400ms' }} />
-//         </div>
-//       </div>
-//     </div>
-
-//     {/* Sparkle effects */}
-//     <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full animate-ping opacity-75"></div>
-//     <div className="absolute bottom-2 -left-1 w-2 h-2 bg-purple-400 rounded-full animate-ping opacity-75 animation-delay-2000"></div>
-//   </div>
-// );
-
-// Add these animations to your CSS/Tailwind config
-// const styles = {
-//   '.animate-blob': {
-//     animation: 'blob 7s infinite',
-//   },
-//   '.animation-delay-2000': {
-//     animationDelay: '2s',
-//   },
-//   '.animation-delay-4000': {
-//     animationDelay: '4s',
-//   },
-//   '@keyframes blob': {
-//     '0%': {
-//       transform: 'translate(0px, 0px) scale(1)',
-//     },
-//     '33%': {
-//       transform: 'translate(30px, -50px) scale(1.1)',
-//     },
-//     '66%': {
-//       transform: 'translate(-20px, 20px) scale(0.9)',
-//     },
-//     '100%': {
-//       transform: 'translate(0px, 0px) scale(1)',
-//     },
-//   },
-// };
-
 export default Home;
