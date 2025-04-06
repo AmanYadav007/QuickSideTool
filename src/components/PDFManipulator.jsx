@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useDropzone } from 'react-dropzone';
 import { PDFDocument } from 'pdf-lib';
-import { FileText, Download, Trash2, GripVertical, ChevronLeft } from 'lucide-react';
+import { FileText, Download, Trash2, GripVertical, Loader2 } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Configure PDF.js worker
@@ -12,7 +12,7 @@ const FILE_TYPES = {
   PDF: 'application/pdf',
   JPEG: 'image/jpeg',
   JPG: 'image/jpg',
-  PNG: 'image/png'
+  PNG: 'image/png',
 };
 
 const ProgressModal = ({ progress, status, currentPage, totalPages, onCancel }) => (
@@ -52,27 +52,10 @@ const ProgressModal = ({ progress, status, currentPage, totalPages, onCancel }) 
   </div>
 );
 
-const ContextMenu = ({ x, y, onClose, onReplace }) => {
-  return (
-    <div
-      className="fixed bg-white shadow-lg rounded-md py-2 z-50"
-      style={{ top: y, left: x }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <button
-        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center"
-        onClick={onReplace}
-      >
-        <FileText className="w-4 h-4 mr-2" />
-        Replace Page
-      </button>
-    </div>
-  );
-};
-
 const App = () => {
   const [pages, setPages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [replaceLoading, setReplaceLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [draggedItem, setDraggedItem] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
@@ -83,10 +66,14 @@ const App = () => {
   useEffect(() => {
     const unusedPreviews = new Set();
     
+    // Collect all preview URLs that are no longer referenced
     pages.forEach(page => {
-      if (page.preview) unusedPreviews.add(page.preview);
+      if (page.preview) {
+        unusedPreviews.add(page.preview);
+      }
     });
 
+    // Revoke any unused preview URLs
     unusedPreviews.forEach(preview => {
       if (!pages.some(page => page.preview === preview)) {
         URL.revokeObjectURL(preview);
@@ -122,7 +109,7 @@ const App = () => {
   };
 
   const handleRemovePage = useCallback((indexToRemove) => {
-    setPages(prevPages => {
+    setPages((prevPages) => {
       const newPages = prevPages.filter((_, index) => index !== indexToRemove);
       const removedPage = prevPages[indexToRemove];
       if (removedPage && removedPage.preview) {
@@ -130,107 +117,6 @@ const App = () => {
       }
       return newPages;
     });
-  }, []);
-
-  const handleContextMenu = useCallback((e, page, index) => {
-    e.preventDefault();
-    if (page.type !== 'pdf') return;
-
-    setContextMenu({
-      x: e.pageX,
-      y: e.pageY,
-      pageIndex: index
-    });
-  }, []);
-
-  const handleReplacePage = useCallback(() => {
-    if (fileInputRef.current && contextMenu !== null) {
-      fileInputRef.current.dataset.pageIndex = contextMenu.pageIndex;
-      fileInputRef.current.click();
-    }
-  }, [contextMenu]);
-
-  const handleFileSelect = useCallback(async (event) => {
-    const file = event.target.files[0];
-    const pageIndex = parseInt(event.target.dataset.pageIndex);
-    
-    if (!file || isNaN(pageIndex)) return;
-
-    try {
-      if (!Object.values(FILE_TYPES).includes(file.type)) {
-        alert('Please select a valid PDF or image file');
-        return;
-      }
-
-      setIsLoading(true);
-      let newPage;
-
-      if (file.type === FILE_TYPES.PDF) {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 0.5 });
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        await page.render({
-          canvasContext: context,
-          viewport: viewport
-        }).promise;
-
-        const blob = await new Promise(resolve => 
-          canvas.toBlob(resolve, 'image/jpeg', 0.5)
-        );
-
-        newPage = {
-          file,
-          pageIndex: 0,
-          type: 'pdf',
-          preview: URL.createObjectURL(blob),
-          dimensions: { width: viewport.width, height: viewport.height }
-        };
-
-        canvas.width = 0;
-        canvas.height = 0;
-      } else {
-        newPage = {
-          file,
-          type: 'image',
-          preview: URL.createObjectURL(file),
-          pageIndex: 0
-        };
-      }
-
-      if (newPage) {
-        setPages(prevPages => {
-          const newPages = [...prevPages];
-          if (newPages[pageIndex]?.preview) {
-            URL.revokeObjectURL(newPages[pageIndex].preview);
-          }
-          newPages[pageIndex] = newPage;
-          return newPages;
-        });
-      }
-    } catch (error) {
-      console.error('Error replacing page:', error);
-      alert('Error replacing page: ' + error.message);
-    } finally {
-      setIsLoading(false);
-      setContextMenu(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-        delete fileInputRef.current.dataset.pageIndex;
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = () => setContextMenu(null);
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const processFile = async (file) => {
@@ -264,10 +150,10 @@ const App = () => {
 
               await page.render({
                 canvasContext: context,
-                viewport: viewport
+                viewport: viewport,
               }).promise;
 
-              const blob = await new Promise(resolve => 
+              const blob = await new Promise((resolve) =>
                 canvas.toBlob(resolve, 'image/jpeg', 0.5)
               );
 
@@ -279,7 +165,7 @@ const App = () => {
                 pageIndex: i,
                 type: 'pdf',
                 preview: URL.createObjectURL(blob),
-                dimensions: { width: viewport.width, height: viewport.height }
+                dimensions: { width: viewport.width, height: viewport.height },
               };
             })
           );
@@ -289,7 +175,7 @@ const App = () => {
         newPages.push(...chunkResults);
         
         setLoadingProgress((chunk + 1) / chunks * 100);
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
       return newPages;
@@ -318,7 +204,7 @@ const App = () => {
         if (progressRoot && document.body.contains(progressRoot)) {
           document.body.removeChild(progressRoot);
         }
-      }
+      },
     };
   };
 
@@ -330,7 +216,7 @@ const App = () => {
       setLoadingProgress(0);
       cancelProcessingRef.current = false;
 
-      const invalidFiles = acceptedFiles.filter(file => 
+      const invalidFiles = acceptedFiles.filter((file) =>
         !Object.values(FILE_TYPES).includes(file.type)
       );
       
@@ -350,7 +236,7 @@ const App = () => {
 
         if (root) {
           root.render(
-            <ProgressModal 
+            <ProgressModal
               progress={fileProgress}
               status={`Processing file ${fileIndex + 1} of ${totalFiles}`}
               currentPage={totalProcessedPages}
@@ -380,13 +266,13 @@ const App = () => {
             file,
             type: 'image',
             preview,
-            pageIndex: newPages.length
+            pageIndex: newPages.length,
           });
           totalProcessedPages += 1;
         }
       }
 
-      setPages(prevPages => [...prevPages, ...newPages]);
+      setPages((prevPages) => [...prevPages, ...newPages]);
 
     } catch (error) {
       console.error('Error processing files:', error);
@@ -421,7 +307,7 @@ const App = () => {
       const updateProgress = (progress, status, current) => {
         if (root) {
           root.render(
-            <ProgressModal 
+            <ProgressModal
               progress={progress}
               status={status}
               currentPage={current}
@@ -489,7 +375,7 @@ const App = () => {
           }
         }
 
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
 
       if (cancelProcessingRef.current) {
@@ -541,28 +427,30 @@ const App = () => {
     onDrop,
     accept: {
       'application/pdf': ['.pdf'],
-      'image/*': ['.png', '.jpg', '.jpeg']
-    }
+      'image/*': ['.png', '.jpg', '.jpeg'],
+    },
   });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-400 to-purple-600">
       <div className="container mx-auto p-4 space-y-6">
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept="application/pdf,image/*"
-          onChange={handleFileSelect}
-        />
+        {/* Back button */}
+        {/* <button
+          className="text-white hover:bg-white/20 -ml-2 px-3 py-2 rounded-md flex items-center"
+          onClick={() => window.history.back()}
+        >
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Back to Home
+        </button> */}
 
+        {/* Drop zone */}
         <div 
           {...getRootProps()} 
           className={`
             border-2 border-dashed rounded-xl p-12
             transition-all duration-200 ease-in-out
-            ${isDragActive 
-              ? 'border-white bg-white/20' 
+            ${isDragActive
+              ? 'border-white bg-white/20'
               : 'border-white/50 hover:border-white hover:bg-white/10'
             }
             ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
@@ -570,10 +458,9 @@ const App = () => {
         >
           <input {...getInputProps()} disabled={isLoading} />
           <p className="text-white/90 text-center text-lg">
-            {isDragActive 
-              ? "Drop the files here..." 
-              : "Drag & drop PDF files or images here, or click to select files"
-            }
+            {isDragActive
+              ? 'Drop the files here...'
+              : 'Drag & drop PDF files or images here, or click to select files'}
           </p>
         </div>
 
@@ -606,16 +493,16 @@ const App = () => {
                   className={`
                     relative group rounded-lg overflow-hidden bg-white
                     transition-all duration-200 ease-in-out
-                    ${draggedItem === index 
-                      ? 'opacity-50 scale-95' 
+                    ${draggedItem === index
+                      ? 'opacity-50 scale-95'
                       : 'hover:shadow-lg hover:scale-[1.02]'
                     }
                   `}
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/50 pointer-events-none" />
                   
-                  <div className="absolute top-2 left-2 p-1.5 bg-black/50 
-                    rounded-full opacity-0 group-hover:opacity-100 
+                  <div className="absolute top-2 left-2 p-1.5 bg-black/50
+                    rounded-full opacity-0 group-hover:opacity-100
                     transition-opacity cursor-move z-10"
                   >
                     <GripVertical className="w-4 h-4 text-white" />
@@ -642,18 +529,10 @@ const App = () => {
             </div>
           </div>
         )}
-
-        {contextMenu && (
-          <ContextMenu
-            x={contextMenu.x}
-            y={contextMenu.y}
-            onClose={() => setContextMenu(null)}
-            onReplace={handleReplacePage}
-          />
-        )}
       </div>
     </div>
   );
 };
 
 export default App;
+
