@@ -15,6 +15,8 @@ module.exports = {
         'scale-in-fast': 'scale-in-fast 0.2s ease-out forwards',
         'blob-fade': 'blob-fade 10s infinite alternate ease-in-out',
         'pulse-slow': 'pulse-slow 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'gradient-shift': 'gradient-shift 1.5s ease-in-out forwards',
+        'whac': 'whac 0.15s ease-out', // NEW: Whac animation
       },
       keyframes: {
         'fade-in': {
@@ -51,7 +53,19 @@ module.exports = {
         'pulse-slow': {
           '0%, 100%': { transform: 'scale(1)', opacity: '0.2' },
           '50%': { transform: 'scale(1.2)', opacity: '0.35' },
+        },
+        'gradient-shift': {
+          '0%': { 'background-position': '0% 50%' },
+          '100%': { 'background-position': '100% 50%' },
+        },
+        'whac': { // NEW: Whac animation
+          '0%': { transform: 'translateY(0) scale(1)' },
+          '50%': { transform: 'translateY(-10px) scale(0.9)' }, // Mole slightly dips
+          '100%': { transform: 'translateY(0) scale(1)' },
         }
+      },
+      backgroundSize: {
+        '200%': '200% 200%',
       },
       boxShadow: {
         'xl-active': '0 15px 30px -5px rgba(0, 0, 0, 0.4), inset 0 0 0 2px rgba(255, 255, 255, 0.2)',

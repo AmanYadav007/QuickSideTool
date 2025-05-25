@@ -1,6 +1,14 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { FileText, Image, QrCode, Github, Gamepad2, Unlock, Link as LinkIcon } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  FileText,
+  Image,
+  QrCode,
+  Github,
+  Gamepad2,
+  Unlock,
+  Link as LinkIcon,
+} from "lucide-react";
 
 const Home = () => {
   return (
@@ -47,7 +55,8 @@ const Home = () => {
               Your Essential Digital Toolkit
             </h2>
             <p className="text-xl text-gray-300 mb-16 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-500">
-              Discover a suite of powerful, easy-to-use tools designed to boost your productivity and simplify daily tasks.
+              Discover a suite of powerful, easy-to-use tools designed to boost
+              your productivity and simplify daily tasks.
             </p>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -87,24 +96,28 @@ const Home = () => {
               {/* Greyed Out Coming Soon Card - Updated Style */}
               <div className="relative group rounded-2xl p-7 border border-white border-opacity-20 bg-white bg-opacity-5 backdrop-filter backdrop-blur-md cursor-not-allowed transition-all duration-300 shadow-xl overflow-hidden animate-fade-in-up animation-delay-1500">
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-800 opacity-90 rounded-2xl flex items-center justify-center">
-                  <span className="text-gray-400 text-2xl font-bold rotate-6 transform -translate-y-4">Coming Soon!</span>
+                  <span className="text-gray-400 text-2xl font-bold rotate-6 transform -translate-y-4">
+                    Coming Soon!
+                  </span>
                 </div>
                 <div className="flex flex-col items-center justify-center h-full relative z-10 text-opacity-50">
                   <div className="w-16 h-16 mb-4 rounded-full flex items-center justify-center bg-gray-600 text-gray-400 shadow-md">
                     <LinkIcon size={40} />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-400 mb-1">PDF Link Remove</h3>
-                  <p className="text-sm text-gray-500 text-center">Efficiently remove hyperlinks from PDF documents.</p>
+                  <h3 className="text-xl font-bold text-gray-400 mb-1">
+                    PDF Link Remove
+                  </h3>
+                  <p className="text-sm text-gray-500 text-center">
+                    Efficiently remove hyperlinks from PDF documents.
+                  </p>
                 </div>
               </div>
 
               <ToolCard
-                to="/game"
-                icon={<Gamepad2 size={36} />}
+                to="/WhacAMoleGame" // Make sure this matches your route
+                icon={<Gamepad2 size={32} />}
                 title="Have Fun"
-                description="Take a break and relax with a quick game."
-                gradientFrom="from-red-500"
-                gradientTo="to-pink-500"
+                description="Remove your stress"
               />
             </div>
           </div>
@@ -113,10 +126,11 @@ const Home = () => {
         {/* Footer */}
         <footer className="py-5 px-4 md:px-8 border-t border-white border-opacity-10 backdrop-blur-lg mt-12">
           <div className="container mx-auto text-center text-gray-400 text-sm">
-            <p>&copy; {new Date().getFullYear()} All rights reserved&nbsp;
+            <p>
+              &copy; {new Date().getFullYear()} All rights reserved&nbsp;
               <a
-                href='https://aguider.in/'
-                target='_blank'
+                href="https://aguider.in/"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-fuchsia-400 hover:text-fuchsia-300 transition-colors font-semibold"
               >
@@ -130,7 +144,14 @@ const Home = () => {
   );
 };
 
-const ToolCard = ({ to, icon, title, description, gradientFrom, gradientTo }) => (
+const ToolCard = ({
+  to,
+  icon,
+  title,
+  description,
+  gradientFrom,
+  gradientTo,
+}) => (
   <Link
     to={to}
     className="group relative rounded-2xl p-7 flex flex-col items-center text-center
@@ -139,12 +160,16 @@ const ToolCard = ({ to, icon, title, description, gradientFrom, gradientTo }) =>
                hover:bg-opacity-10 overflow-hidden animate-fade-in-up"
   >
     {/* Animated Gradient Border on Hover */}
-    <div className={`absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-500 ease-out group-hover:border-opacity-100 group-hover:border-gradient group-hover:${gradientFrom} group-hover:${gradientTo} pointer-events-none`}></div>
+    <div
+      className={`absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-500 ease-out group-hover:border-opacity-100 group-hover:border-gradient group-hover:${gradientFrom} group-hover:${gradientTo} pointer-events-none`}
+    ></div>
 
     <div className="relative z-10 flex flex-col items-center">
-      <div className={`w-16 h-16 mb-4 rounded-full flex items-center justify-center text-white shadow-xl
+      <div
+        className={`w-16 h-16 mb-4 rounded-full flex items-center justify-center text-white shadow-xl
                       bg-gradient-to-br ${gradientFrom} ${gradientTo}
-                      transform transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-2xl-active`}>
+                      transform transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-2xl-active`}
+      >
         {icon}
       </div>
       <h3 className="text-xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-fuchsia-300 transition-colors duration-300">
