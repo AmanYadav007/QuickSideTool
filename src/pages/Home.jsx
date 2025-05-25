@@ -4,119 +4,125 @@ import { FileText, Image, QrCode, Github, Gamepad2, Unlock, Link as LinkIcon } f
 
 const Home = () => {
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 opacity-50">
-        <div className="absolute w-96 h-96 -top-48 -left-48 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-        <div className="absolute w-96 h-96 -top-48 -right-48 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-        <div className="absolute w-96 h-96 -bottom-48 -left-48 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white font-sans antialiased">
+      {/* Dynamic Background Elements */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <div className="absolute w-80 h-80 rounded-full bg-fuchsia-500 blur-3xl opacity-30 animate-float-slow top-1/4 left-1/4 transform -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute w-96 h-96 rounded-full bg-sky-500 blur-3xl opacity-30 animate-float-slow animation-delay-2000 bottom-1/4 right-1/4 transform translate-x-1/2 translate-y-1/2"></div>
+        <div className="absolute w-72 h-72 rounded-full bg-teal-500 blur-3xl opacity-30 animate-float-slow animation-delay-4000 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute w-60 h-60 rounded-full bg-indigo-500 blur-3xl opacity-30 animate-float-slow animation-delay-6000 top-1/3 right-1/3 transform translate-x-1/2 -translate-y-1/2"></div>
       </div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
-        <header className="bg-white bg-opacity-10 backdrop-blur-md border-b border-white border-opacity-20">
-          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-white">QUICK SIDE TOOL</h1>
+        <header className="py-5 px-4 md:px-8 border-b border-white border-opacity-10 backdrop-blur-lg shadow-lg">
+          <div className="container mx-auto flex justify-between items-center">
+            <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-400">
+              QUICK SIDE TOOL
+            </h1>
             <div className="relative group">
               <a
                 href="https://github.com/AmanYadav007/QuickSideTool"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-blue-200 transition-colors"
+                className="text-white hover:text-cyan-300 transition-colors duration-300 transform hover:scale-110"
               >
-                <Github size={24} />
+                <Github size={28} />
               </a>
               {/* Tooltip */}
-              <div className="absolute right-0 -bottom-12 w-36 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:-translate-y-1">
-                <div className="bg-white bg-opacity-90 text-gray-800 text-sm py-1 px-2 rounded shadow-lg backdrop-blur-sm">
-                  Contribute to Future
+              <div className="absolute right-0 top-full mt-3 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:-translate-y-1">
+                <div className="bg-gray-800 text-white text-sm py-2 px-3 rounded-lg shadow-xl text-center border border-gray-700">
+                  Contribute to Future Projects
                 </div>
-                {/* Arrow */}
-                <div className="absolute -top-1 right-3 w-2 h-2 bg-white bg-opacity-90 transform rotate-45"></div>
+                <div className="absolute -top-1 right-5 w-3 h-3 bg-gray-800 transform rotate-45 border-t border-r border-gray-700"></div>
               </div>
             </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-grow container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-4xl font-bold text-center text-white mb-2">
-              Your Digital ToolBox
+        <main className="flex-grow container mx-auto px-4 md:px-8 py-16 flex flex-col items-center justify-center text-center">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-6xl font-extrabold text-white mb-6 leading-tight drop-shadow-lg animate-fade-in-up">
+              Your Essential Digital Toolkit
             </h2>
-            <p className="text-center text-white text-opacity-90 mb-12">
-              Powerful tools to enhance your productivity
+            <p className="text-xl text-gray-300 mb-16 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-500">
+              Discover a suite of powerful, easy-to-use tools designed to boost your productivity and simplify daily tasks.
             </p>
 
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               <ToolCard
                 to="/pdf-tool"
-                icon={<FileText size={32} />}
+                icon={<FileText size={36} />}
                 title="PDF Tools"
-                description="Merge, split, and organize your PDF files"
+                description="Merge, split, and organize your PDF files with ease."
+                gradientFrom="from-pink-500"
+                gradientTo="to-purple-500"
               />
               <ToolCard
                 to="/unlock-pdf"
-                icon={<Unlock size={32} />}
+                icon={<Unlock size={36} />}
                 title="Unlock & Lock PDF"
-                description="Unlock and lock password protection from PDFs"
+                description="Secure or remove password protection from your PDFs."
+                gradientFrom="from-blue-500"
+                gradientTo="to-cyan-500"
               />
               <ToolCard
                 to="/image-tools"
-                icon={<Image size={32} />}
+                icon={<Image size={36} />}
                 title="Image Tools"
-                description="Resize, compress, and convert images"
+                description="Resize, compress, and convert images for any purpose."
+                gradientFrom="from-green-500"
+                gradientTo="to-teal-500"
+              />
+              <ToolCard
+                to="/qr-tool"
+                icon={<QrCode size={36} />}
+                title="QR Code Generator"
+                description="Generate custom QR codes for links, text, and more."
+                gradientFrom="from-yellow-500"
+                gradientTo="to-orange-500"
               />
 
-              {/* Greyed Out Coming Soon Card */}
-              <div className="relative group bg-white bg-opacity-5 backdrop-blur-md rounded-2xl p-6 border border-white border-opacity-10 cursor-not-allowed hover:bg-opacity-10 transition-all duration-300">
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-white bg-opacity-10 rounded-xl flex items-center justify-center text-white text-opacity-40">
-                    <LinkIcon size={32} />
-                  </div>
-                  <div className="flex-grow">
-                    <h3 className="text-lg font-semibold text-white text-opacity-60 mb-1">PDF Link Remove</h3>
-                    <p className="text-sm text-white text-opacity-40">Remove links from PDF documents</p>
-                  </div>
+              {/* Greyed Out Coming Soon Card - Updated Style */}
+              <div className="relative group rounded-2xl p-7 border border-white border-opacity-20 bg-white bg-opacity-5 backdrop-filter backdrop-blur-md cursor-not-allowed transition-all duration-300 shadow-xl overflow-hidden animate-fade-in-up animation-delay-1500">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-800 opacity-90 rounded-2xl flex items-center justify-center">
+                  <span className="text-gray-400 text-2xl font-bold rotate-6 transform -translate-y-4">Coming Soon!</span>
                 </div>
-                <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-300 to-indigo-400 text-xs font-semibold text-white px-2 py-1 rounded-full shadow-md">
-                  Coming Soon
+                <div className="flex flex-col items-center justify-center h-full relative z-10 text-opacity-50">
+                  <div className="w-16 h-16 mb-4 rounded-full flex items-center justify-center bg-gray-600 text-gray-400 shadow-md">
+                    <LinkIcon size={40} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-400 mb-1">PDF Link Remove</h3>
+                  <p className="text-sm text-gray-500 text-center">Efficiently remove hyperlinks from PDF documents.</p>
                 </div>
               </div>
 
-
-
-              <ToolCard
-                to="/qr-tool"
-                icon={<QrCode size={32} />}
-                title="QR Code Generator"
-                description="Create custom QR codes instantly"
-              />
               <ToolCard
                 to="/game"
-                icon={<Gamepad2 size={32} />}
+                icon={<Gamepad2 size={36} />}
                 title="Have Fun"
-                description="Remove your stress"
+                description="Take a break and relax with a quick game."
+                gradientFrom="from-red-500"
+                gradientTo="to-pink-500"
               />
             </div>
           </div>
         </main>
 
         {/* Footer */}
-        <footer className="bg-white bg-opacity-10 backdrop-blur-md border-t border-white border-opacity-20">
-          <div className="container mx-auto px-4 py-4">
-            <div className="text-center text-white text-sm">
-              <p>&copy; 2025 All rights reserved&nbsp;
-                <a
-                  href='https://aguider.in/'
-                  target='_blank'
-                  rel="noopener noreferrer"
-                  className="text-blue-200 hover:text-blue-100 transition-colors"
-                >
-                  Aman Yadav
-                </a>
-              </p>
-            </div>
+        <footer className="py-5 px-4 md:px-8 border-t border-white border-opacity-10 backdrop-blur-lg mt-12">
+          <div className="container mx-auto text-center text-gray-400 text-sm">
+            <p>&copy; {new Date().getFullYear()} All rights reserved&nbsp;
+              <a
+                href='https://aguider.in/'
+                target='_blank'
+                rel="noopener noreferrer"
+                className="text-fuchsia-400 hover:text-fuchsia-300 transition-colors font-semibold"
+              >
+                Aman Yadav
+              </a>
+            </p>
           </div>
         </footer>
       </div>
@@ -124,19 +130,29 @@ const Home = () => {
   );
 };
 
-const ToolCard = ({ to, icon, title, description }) => (
+const ToolCard = ({ to, icon, title, description, gradientFrom, gradientTo }) => (
   <Link
     to={to}
-    className="group relative bg-white bg-opacity-10 backdrop-blur-md rounded-2xl p-6 transition-all duration-300 hover:bg-opacity-20 hover:transform hover:-translate-y-1 hover:shadow-2xl border border-white border-opacity-20"
+    className="group relative rounded-2xl p-7 flex flex-col items-center text-center
+               bg-white bg-opacity-5 backdrop-filter backdrop-blur-md border border-white border-opacity-20
+               transform transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl-custom
+               hover:bg-opacity-10 overflow-hidden animate-fade-in-up"
   >
-    <div className="flex items-start space-x-4">
-      <div className="flex-shrink-0 w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center text-white group-hover:bg-opacity-30 transition-all duration-300">
+    {/* Animated Gradient Border on Hover */}
+    <div className={`absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-500 ease-out group-hover:border-opacity-100 group-hover:border-gradient group-hover:${gradientFrom} group-hover:${gradientTo} pointer-events-none`}></div>
+
+    <div className="relative z-10 flex flex-col items-center">
+      <div className={`w-16 h-16 mb-4 rounded-full flex items-center justify-center text-white shadow-xl
+                      bg-gradient-to-br ${gradientFrom} ${gradientTo}
+                      transform transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-2xl-active`}>
         {icon}
       </div>
-      <div className="flex-grow">
-        <h3 className="text-lg font-semibold text-white mb-1">{title}</h3>
-        <p className="text-sm text-white text-opacity-80">{description}</p>
-      </div>
+      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-fuchsia-300 transition-colors duration-300">
+        {title}
+      </h3>
+      <p className="text-sm text-gray-300 leading-relaxed opacity-90">
+        {description}
+      </p>
     </div>
   </Link>
 );
