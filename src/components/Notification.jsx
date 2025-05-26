@@ -1,60 +1,55 @@
-import React, { useEffect, useState } from 'react';
-import { CheckCircle, XCircle, Info, X } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
 
-const Notification = ({ message, type, duration = 4000, onClose }) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  // Determine styling based on type
-  let bgColor = 'bg-gray-800';
-  let textColor = 'text-white';
-  let icon = <Info className="w-5 h-5" />;
-
-  switch (type) {
-    case 'success':
-      bgColor = 'bg-green-600';
-      icon = <CheckCircle className="w-5 h-5" />;
-      break;
-    case 'error':
-      bgColor = 'bg-red-600';
-      icon = <XCircle className="w-5 h-5" />;
-      break;
-    case 'info':
-      bgColor = 'bg-blue-600';
-      icon = <Info className="w-5 h-5" />;
-      break;
-    default:
-      // Default to info or a neutral style
-      break;
-  }
+const Notification = ({ message, type, onClose }) => {
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     if (message) {
-      setIsVisible(true);
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        onClose(); // Call onClose to clear message from parent state
-      }, duration);
-      return () => clearTimeout(timer);
-    } else {
-      setIsVisible(false);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        onClose();
+      }, 5000); // Notification disappears after 5 seconds
     }
-  }, [message, duration, onClose]);
 
-  if (!isVisible || !message) return null;
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [message, onClose]);
+
+  if (!message) return null;
+
+  let bgColor = 'bg-blue-500';
+  let icon = 'ℹ️'; // Info icon
+
+  switch (type) {
+    case 'success':
+      bgColor = 'bg-green-500';
+      icon = '✅';
+      break;
+    case 'error':
+      bgColor = 'bg-red-600';
+      icon = '❌';
+      break;
+    case 'info':
+    default:
+      bgColor = 'bg-blue-500';
+      icon = 'ℹ️';
+      break;
+  }
 
   return (
     <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl text-sm font-semibold flex items-center space-x-3 z-[60]
-                  transition-all duration-300 ease-out transform
-                  ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}
-                  ${bgColor} ${textColor}
-                  `}
+      className={`fixed bottom-4 left-1/2 -translate-x-1/2 p-4 rounded-lg shadow-lg text-white text-center flex items-center space-x-3 z-50 transition-all duration-300 transform ${bgColor} animate-fade-in-up`}
       role="alert"
     >
-      {icon}
-      <span>{message}</span>
-      <button onClick={() => { setIsVisible(false); onClose(); }} className="ml-3 p-1 rounded-full hover:bg-white/20 transition-colors">
-        <X className="w-4 h-4" />
+      <span className="text-xl">{icon}</span>
+      <span className="font-semibold">{message}</span>
+      <button onClick={onClose} className="ml-2 text-white/80 hover:text-white transition-colors">
+        &times;
       </button>
     </div>
   );
