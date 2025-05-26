@@ -54,16 +54,16 @@ const ProgressModal = ({ progress, status, currentPage, totalPages, onCancel }) 
 
 const ContextMenu = ({ x, y, onClose, onReplace }) => {
   const menuStyle = {
-    top: Math.max(0, Math.min(y, window.innerHeight - 60)),
-    left: Math.max(0, Math.min(x, window.innerWidth - 150)),
+    top: Math.max(0, Math.min(y, window.innerHeight - 60)), // Ensure menu stays within viewport
+    left: Math.max(0, Math.min(x, window.innerWidth - 150)), // Ensure menu stays within viewport
   };
 
   return (
     <div
       className="context-menu fixed rounded-md py-1.5 z-50 border border-gray-300 bg-white shadow-xl animate-scale-in-fast"
       style={menuStyle}
-      onClick={(e) => e.stopPropagation()}
-      onContextMenu={(e) => e.preventDefault()}
+      onClick={(e) => e.stopPropagation()} // Prevent closing on click inside menu
+      onContextMenu={(e) => e.preventDefault()} // Prevent browser default context menu
     >
       <button
         className="w-full px-3 py-1.5 text-left text-gray-800 text-sm font-medium hover:bg-blue-100 flex items-center transition-colors duration-200"
@@ -94,16 +94,16 @@ const LoadingOverlay = ({ isLoading }) => {
 
 const App = () => {
   const [pages, setPages] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [replaceLoading, setReplaceLoading] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [loadingStatus, setLoadingStatus] = useState('');
-  const [currentPageModal, setCurrentPageModal] = useState(0);
-  const [totalPagesModal, setTotalPagesModal] = useState(0);
+  const [isLoading, setIsLoading] = useState(false); // For initial file processing and final PDF creation
+  const [replaceLoading, setReplaceLoading] = useState(false); // For single page replacement
+  const [loadingProgress, setLoadingProgress] = useState(0); // Not used in current ProgressModal render props
+  const [loadingStatus, setLoadingStatus] = useState(''); // Not used in current ProgressModal render props
+  const [currentPageModal, setCurrentPageModal] = useState(0); // Not used in current ProgressModal render props
+  const [totalPagesModal, setTotalPagesModal] = useState(0); // Not used in current ProgressModal render props
   const [draggedItem, setDraggedItem] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const cancelProcessingRef = useRef(false);
-  const pdfCacheRef = useRef(new Map());
+  const pdfCacheRef = useRef(new Map()); // Cache PDFDocument instances
   const fileInputRef = useRef(null);
 
   // Clean up object URLs when component unmounts
@@ -117,7 +117,7 @@ const App = () => {
     };
   }, []); 
 
-  // Clean up object URLs for pages that are removed or replaced
+  // Clean up object URLs for pages that are removed or replaced dynamically
   const activePreviewUrls = useRef(new Set());
   useEffect(() => {
     const currentPreviews = new Set(pages.map(p => p.preview));
@@ -161,7 +161,7 @@ const App = () => {
         newPages.splice(index, 0, draggedPage);
         return newPages;
       });
-      setDraggedItem(index);
+      setDraggedItem(index); // Update dragged item index to follow its new position
     }
   };
 
@@ -175,8 +175,8 @@ const App = () => {
   const handleContextMenu = useCallback((e, page, index) => {
     e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
-    const menuX = rect.left + window.scrollX + 10;
-    const menuY = rect.top + window.scrollY + 10;
+    const menuX = e.clientX; // Use clientX/Y for mouse position directly
+    const menuY = e.clientY;
 
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
@@ -186,9 +186,11 @@ const App = () => {
     let finalX = menuX;
     let finalY = menuY;
 
+    // Adjust if menu goes off screen to the right
     if (menuX + menuWidth > viewportWidth) {
       finalX = viewportWidth - menuWidth - 10;
     }
+    // Adjust if menu goes off screen to the bottom
     if (menuY + menuHeight > viewportHeight) {
       finalY = viewportHeight - menuHeight - 10;
     }
@@ -202,16 +204,67 @@ const App = () => {
 
   const handleReplacePage = useCallback(() => {
     if (fileInputRef.current && contextMenu !== null) {
+      // Create a dummy input for triggering replacement, or clear current one
+      // to ensure `onChange` fires even if same file is selected
+      fileInputRef.current.value = ''; 
       fileInputRef.current.dataset.pageIndex = contextMenu.pageIndex;
       fileInputRef.current.click();
     }
   }, [contextMenu]);
 
+  // Helper function to process a single file (PDF or Image) into page data
+  const processFileIntoPageData = async (file) => {
+    let newPagesData = [];
+    if (file.type === FILE_TYPES.PDF) {
+      const pdfDocument = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+      const totalFilePages = pdfDocument.numPages;
+
+      for (let i = 0; i < totalFilePages; i++) {
+        const page = await pdfDocument.getPage(i + 1);
+        const viewport = page.getViewport({ scale: 0.5 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({
+          canvasContext: context,
+          viewport: viewport,
+        }).promise;
+
+        const blob = await new Promise((resolve) =>
+          canvas.toBlob(resolve, 'image/jpeg', 0.8)
+        );
+        newPagesData.push({
+          file,
+          pageIndex: i, // Index within the original PDF file
+          type: 'pdf',
+          preview: URL.createObjectURL(blob),
+          dimensions: { width: viewport.width, height: viewport.height },
+        });
+        // Clear canvas dimensions to free memory
+        canvas.width = 0;
+        canvas.height = 0;
+      }
+    } else { // Image file
+      newPagesData.push({
+        file,
+        pageIndex: 0, // Image files always have 1 'page' at index 0
+        type: 'image',
+        preview: URL.createObjectURL(file),
+        dimensions: { width: 0, height: 0 }, // Dimensions set during PDF creation, not here
+      });
+    }
+    return newPagesData;
+  };
+
+
   const handleFileSelect = useCallback(async (event) => {
     const file = event.target.files[0];
-    const pageIndex = parseInt(event.target.dataset.pageIndex);
+    const pageIndexToReplace = parseInt(event.target.dataset.pageIndex); // This is the index in the `pages` array
 
-    if (!file || isNaN(pageIndex)) {
+    if (!file || isNaN(pageIndexToReplace)) {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
         delete fileInputRef.current.dataset.pageIndex;
@@ -225,54 +278,15 @@ const App = () => {
         return;
       }
 
-      setReplaceLoading(true);
-      
-      let newPagesData = [];
-      let pdfDocument = null;
+      setReplaceLoading(true); // Start loading overlay for replacement
 
-      if (file.type === FILE_TYPES.PDF) {
-        pdfDocument = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
-        const totalFilePages = pdfDocument.numPages;
-
-        for (let i = 0; i < totalFilePages; i++) {
-          const page = await pdfDocument.getPage(i + 1);
-          const viewport = page.getViewport({ scale: 0.5 });
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-
-          await page.render({
-            canvasContext: context,
-            viewport: viewport,
-          }).promise;
-
-          const blob = await new Promise((resolve) =>
-            canvas.toBlob(resolve, 'image/jpeg', 0.8)
-          );
-          newPagesData.push({
-            file,
-            pageIndex: i,
-            type: 'pdf',
-            preview: URL.createObjectURL(blob),
-            dimensions: { width: viewport.width, height: viewport.height },
-          });
-          canvas.width = 0;
-          canvas.height = 0;
-        }
-      } else {
-        newPagesData.push({
-          file,
-          type: 'image',
-          preview: URL.createObjectURL(file),
-          pageIndex: 0,
-        });
-      }
+      // Process the selected file (can be multi-page PDF or single image)
+      const replacementPages = await processFileIntoPageData(file);
 
       setPages((prevPages) => {
         const updatedPages = [...prevPages];
-        updatedPages.splice(pageIndex, 1, ...newPagesData);
+        // Remove 1 page at pageIndexToReplace and insert all replacementPages
+        updatedPages.splice(pageIndexToReplace, 1, ...replacementPages);
         return updatedPages;
       });
 
@@ -280,14 +294,16 @@ const App = () => {
       console.error('Error replacing page:', error);
       alert('Error replacing page: ' + error.message);
     } finally {
-      setReplaceLoading(false);
-      setContextMenu(null);
+      setReplaceLoading(false); // Hide loading overlay
+      setContextMenu(null); // Close context menu
+      // Always clear the file input value and dataset after processing
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
         delete fileInputRef.current.dataset.pageIndex;
       }
     }
-  }, []);
+  }, []); // Dependencies: none, as it uses `fileInputRef.current` and `pages` via `setPages`
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -299,18 +315,19 @@ const App = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [contextMenu]);
 
+  // Unified function to process files for preview (used by onDrop)
   const processFileForPreview = async (file, totalFiles, fileIndex, updateProgress) => {
     if (cancelProcessingRef.current) {
       throw new Error('Processing cancelled by user');
     }
 
     try {
+      let filePages = [];
       if (file.type === FILE_TYPES.PDF) {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         const numPages = pdf.numPages;
-        const filePages = [];
-
+        
         for (let i = 0; i < numPages; i++) {
           if (cancelProcessingRef.current) {
             throw new Error('Processing cancelled by user');
@@ -331,41 +348,47 @@ const App = () => {
 
           filePages.push({
             file,
-            pageIndex: i,
+            pageIndex: i, // Index within the original PDF file
             type: 'pdf',
             preview: URL.createObjectURL(blob),
             dimensions: { width: viewport.width, height: viewport.height },
           });
 
+          // Update progress for modal
           updateProgress(
             `Rendering page ${i + 1} of ${numPages} for file ${fileIndex + 1}`,
-            (i + 1),
-            numPages
+            (i + 1), // Current page being processed in this file
+            numPages // Total pages in this specific file
           );
-          await new Promise((resolve) => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10)); // Small delay for UI update
         }
-        return filePages;
-      } else if (Object.values(FILE_TYPES).includes(file.type)) {
-        const preview = URL.createObjectURL(file);
-        return [{
+      } else if (Object.values(FILE_TYPES).includes(file.type)) { // Image file
+        filePages.push({
           file,
           type: 'image',
-          preview,
+          preview: URL.createObjectURL(file),
           pageIndex: 0,
-          dimensions: { width: 0, height: 0 },
-        }];
+          dimensions: { width: 0, height: 0 }, // Dimensions will be derived when embedding
+        });
+        // Update progress for modal
+        updateProgress(
+          `Processing image file ${fileIndex + 1}`,
+          1, // Always 1 page for an image file
+          1 // Total pages is 1 for an image file
+        );
       }
+      return filePages;
     } catch (error) {
       if (error.message === 'Processing cancelled by user') {
         console.log('File preview generation cancelled.');
       } else {
         console.error(`Error processing file ${file.name} for preview:`, error);
       }
-      throw error;
+      throw error; // Re-throw to be caught by onDrop's outer try-catch
     }
-    return [];
   };
 
+  // Dynamically create and clean up modal root for progress display
   const createRootForModal = () => {
     const progressDiv = document.createElement('div');
     document.body.appendChild(progressDiv);
@@ -388,57 +411,64 @@ const App = () => {
 
     cancelProcessingRef.current = false;
     let modalCleanup = () => {};
-    let newOverallPages = [];
+    let newOverallPages = []; // Accumulate pages from all dropped files
 
     try {
       const { root: modalRoot, cleanup } = createRootForModal();
       modalCleanup = cleanup;
       
       setIsLoading(true);
-      setLoadingProgress(0);
+      setLoadingProgress(0); // Reset progress on new drop
       setLoadingStatus('Preparing to process files...');
       setCurrentPageModal(0);
       setTotalPagesModal(0);
 
+      // Validate file types first
       const invalidFiles = acceptedFiles.filter(file => !Object.values(FILE_TYPES).includes(file.type));
       if (invalidFiles.length > 0) {
         throw new Error(`Unsupported files: ${invalidFiles.map(f => f.name).join(', ')}. Please use PDF, JPG, JPEG, or PNG.`);
       }
 
       let cumulativePagesProcessed = 0;
-      let totalExpectedPages = 0;
+      let totalExpectedPages = 0; // Total pages across ALL accepted files
 
+      // Calculate total expected pages for overall progress
       for(const file of acceptedFiles) {
         if (file.type === FILE_TYPES.PDF) {
           const pdfData = await file.arrayBuffer();
           const tempPdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
           totalExpectedPages += tempPdf.numPages;
         } else {
-          totalExpectedPages += 1;
+          totalExpectedPages += 1; // Images are 1 page each
         }
       }
-      setTotalPagesModal(totalExpectedPages);
+      setTotalPagesModal(totalExpectedPages); // Set for modal display
 
+      // Process each accepted file
       for (let fileIndex = 0; fileIndex < acceptedFiles.length; fileIndex++) {
-        if (cancelProcessingRef.current) break;
+        if (cancelProcessingRef.current) break; // Check for cancellation
 
         const file = acceptedFiles[fileIndex];
         
-        const updateCurrentFileProgress = (statusText, currentPageNum, totalPagesInFile) => {
+        // Callback to update progress within the modal for the current file being processed
+        const updateCurrentFileProgress = (statusText, currentPageNumInFile, totalPagesInFile) => {
           setLoadingStatus(`${statusText} (File ${fileIndex + 1}/${acceptedFiles.length})`);
-          setCurrentPageModal(cumulativePagesProcessed + currentPageNum);
-          setLoadingProgress(((cumulativePagesProcessed + currentPageNum) / totalExpectedPages) * 100);
+          setCurrentPageModal(cumulativePagesProcessed + currentPageNumInFile);
+          // Calculate overall progress percentage
+          const overallProgress = ((cumulativePagesProcessed + currentPageNumInFile) / totalExpectedPages) * 100;
+          setLoadingProgress(overallProgress); 
           
+          // Render progress modal
           if (modalRoot) {
             modalRoot.render(
               <ProgressModal
-                progress={((cumulativePagesProcessed + currentPageNum) / totalExpectedPages) * 100}
+                progress={overallProgress}
                 status={`${statusText} (File ${fileIndex + 1}/${acceptedFiles.length})`}
-                currentPage={cumulativePagesProcessed + currentPageNum}
+                currentPage={cumulativePagesProcessed + currentPageNumInFile}
                 totalPages={totalExpectedPages}
                 onCancel={() => {
                   cancelProcessingRef.current = true;
-                  modalCleanup();
+                  modalCleanup(); // Immediately unmount modal on cancel
                 }}
               />
             );
@@ -446,29 +476,31 @@ const App = () => {
         };
 
         const pagesFromFile = await processFileForPreview(file, acceptedFiles.length, fileIndex, updateCurrentFileProgress);
-        newOverallPages = [...newOverallPages, ...pagesFromFile];
-        cumulativePagesProcessed += pagesFromFile.length;
+        newOverallPages = [...newOverallPages, ...pagesFromFile]; // Add pages from current file
+        cumulativePagesProcessed += pagesFromFile.length; // Update cumulative count
       }
 
+      // If processing was cancelled
       if (cancelProcessingRef.current) {
         alert('File processing was cancelled.');
-        newOverallPages.forEach(page => URL.revokeObjectURL(page.preview));
+        newOverallPages.forEach(page => URL.revokeObjectURL(page.preview)); // Revoke URLs for unsaved previews
         return;
       }
 
+      // Add all newly processed pages to the main state
       setPages((prevPages) => [...prevPages, ...newOverallPages]);
 
     } catch (error) {
       console.error('Error in onDrop:', error);
       alert(error.message || 'An error occurred while processing files.');
-      newOverallPages.forEach(page => URL.revokeObjectURL(page.preview));
+      newOverallPages.forEach(page => URL.revokeObjectURL(page.preview)); // Revoke URLs on error
     } finally {
-      setIsLoading(false);
-      setLoadingProgress(0);
+      setIsLoading(false); // Hide main loading state
+      setLoadingProgress(0); // Reset progress values
       setLoadingStatus('');
       setCurrentPageModal(0);
       setTotalPagesModal(0);
-      modalCleanup();
+      modalCleanup(); // Always ensure modal is cleaned up
     }
   }, []);
 
@@ -487,7 +519,7 @@ const App = () => {
       setIsLoading(true);
       cancelProcessingRef.current = false;
       const pdfDoc = await PDFDocument.create();
-      const pdfCache = new Map();
+      const pdfCache = new Map(); // Cache loaded PDFDocuments to avoid re-loading same PDF files
 
       const totalItemsToProcess = pages.length;
 
@@ -524,7 +556,8 @@ const App = () => {
             pdfDoc.addPage(copiedPage);
           } catch (error) {
             console.error(`Error embedding PDF page ${i + 1} from file ${page.file.name}:`, error);
-            continue; 
+            // Decide how to handle errors: skip page or throw error to stop process
+            continue; // Skip this problematic page and continue
           }
         } else if (page.type === 'image') {
           try {
@@ -540,16 +573,16 @@ const App = () => {
             }
             
             if (image) {
-              const { width, height } = image.scale(1);
-              const newPage = pdfDoc.addPage([width, height]);
-              newPage.drawImage(image, { x: 0, y: 0, width, height });
+              const { width, height } = image.scale(1); // Get original dimensions
+              const newPage = pdfDoc.addPage([width, height]); // Add page with image dimensions
+              newPage.drawImage(image, { x: 0, y: 0, width, height }); // Draw image full size
             }
           } catch (error) {
             console.error(`Error embedding image page ${i + 1} from file ${page.file.name}:`, error);
             continue;
           }
         }
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10)); // Small delay for UI update
       }
 
       if (cancelProcessingRef.current) {
@@ -577,20 +610,23 @@ const App = () => {
       link.href = url;
       link.download = 'merged_and_ordered_document.pdf';
       document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      link.click(); // Trigger download
+      document.body.removeChild(link); // Clean up link element
       
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url); // Clean up object URL
       
-      setTimeout(modalCleanup, 1500);
+      setTimeout(modalCleanup, 1500); // Give user time to see 100% and download
+      alert('PDF created and downloaded successfully!'); // Success message
 
     } catch (error) {
       console.error('Error during PDF creation:', error);
       alert(error.message || 'Failed to create PDF. Please ensure all files are valid and try again.');
-      pages.forEach(page => URL.revokeObjectURL(page.preview));
+      // Clean up previews if they were created before cancellation/error
+      pages.forEach(page => URL.revokeObjectURL(page.preview)); 
       modalCleanup();
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Hide main loading state
+      // Ensure modal is cleaned up even if there's an unexpected error
       if (modalCleanup) modalCleanup(); 
     }
   };
@@ -602,7 +638,7 @@ const App = () => {
       'application/pdf': ['.pdf'],
       'image/*': ['.png', '.jpg', '.jpeg'],
     },
-    disabled: isLoading || replaceLoading
+    disabled: isLoading || replaceLoading // Disable dropzone during any loading
   });
 
   return (
@@ -620,13 +656,14 @@ const App = () => {
           PDF & Image Combiner
         </h1>
 
+        {/* Hidden file input for replacement functionality */}
         <input
           type="file"
           ref={fileInputRef}
           className="hidden"
           accept="application/pdf,image/png,image/jpeg,image/jpg"
           onChange={handleFileSelect}
-          disabled={replaceLoading}
+          disabled={replaceLoading} // Disable file input during replacement
         />
 
         <div
@@ -685,7 +722,7 @@ const App = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
               {pages.map((page, index) => (
                 <div
-                  key={`${page.preview}-${index}`}
+                  key={`${page.preview}-${index}`} // Use a more robust key to handle replacements
                   draggable
                   onDragStart={(e) => handleDragStart(e, index)}
                   onDragEnd={handleDragEnd}
