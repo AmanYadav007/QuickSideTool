@@ -104,3 +104,34 @@
 .animate-pulse {
   animation: pulse 2s ease-in-out infinite;
 }
+
+
+
+@keyframes blobFade {
+  0% {
+    transform: scale(0.8) translate(0, 0);
+    opacity: 0.3;
+  }
+  33% {
+    transform: scale(1.1) translate(20px, -20px);
+    opacity: 0.4;
+  }
+  66% {
+    transform: scale(0.9) translate(-10px, 10px);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(0.8) translate(0, 0);
+    opacity: 0.3;
+  }
+}
+
+.animate-blob-fade {
+  animation: blobFade 10s infinite alternate; /* 10s duration, loops infinitely, alternates direction */
+}
+
+/* Helper classes to stagger the animation start times */
+.animation-delay-0 { animation-delay: 0s; }
+.animation-delay-2000 { animation-delay: 2s; }
+.animation-delay-4000 { animation-delay: 4s; }
+.animation-delay-6000 { animation-delay: 6s; }

@@ -1,23 +1,26 @@
-// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}", // Adjust path based on your project structure
   ],
   theme: {
     extend: {
+      // ✅ Custom Animations
       animation: {
         'fade-in': 'fade-in 0.5s ease-out forwards',
         'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
         'fade-in-down': 'fade-in-down 0.6s ease-out forwards',
-        'fade-in-left': 'fade-in-left 0.6s ease-out forwards', 
+        'fade-in-left': 'fade-in-left 0.6s ease-out forwards',
         'scale-in': 'scale-in 0.4s ease-out forwards',
         'scale-in-fast': 'scale-in-fast 0.2s ease-out forwards',
         'blob-fade': 'blob-fade 10s infinite alternate ease-in-out',
         'pulse-slow': 'pulse-slow 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'gradient-shift': 'gradient-shift 1.5s ease-in-out forwards',
-        'whac': 'whac 0.15s ease-out', // NEW: Whac animation
+        'whac': 'whac 0.15s ease-out', // Whac-A-Mole hit animation
+        'pop-up': 'pop-up 0.2s ease-out forwards', // Whac-A-Mole appear animation
       },
+
+      // ✅ Custom Keyframes
       keyframes: {
         'fade-in': {
           '0%': { opacity: '0' },
@@ -55,18 +58,23 @@ module.exports = {
           '50%': { transform: 'scale(1.2)', opacity: '0.35' },
         },
         'gradient-shift': {
-          '0%': { 'background-position': '0% 50%' },
-          '100%': { 'background-position': '100% 50%' },
+          '0%': { backgroundPosition: '0% 50%' },
+          '100%': { backgroundPosition: '100% 50%' },
         },
-        'whac': { // NEW: Whac animation
+        // Whac-A-Mole specific keyframes
+        'whac': {
           '0%': { transform: 'translateY(0) scale(1)' },
-          '50%': { transform: 'translateY(-10px) scale(0.9)' }, // Mole slightly dips
+          '50%': { transform: 'translateY(10px) scale(0.9)' }, // Briefly push down/shrink
           '100%': { transform: 'translateY(0) scale(1)' },
-        }
+        },
+        'pop-up': {
+          '0%': { transform: 'translateY(100%) scale(0.8)', opacity: '0' },
+          '80%': { transform: 'translateY(-10%) scale(1.05)', opacity: '1' },
+          '100%': { transform: 'translateY(0%) scale(1)', opacity: '1' },
+        },
       },
-      backgroundSize: {
-        '200%': '200% 200%',
-      },
+
+      // ✅ Additional Utilities (Box Shadows)
       boxShadow: {
         'xl-active': '0 15px 30px -5px rgba(0, 0, 0, 0.4), inset 0 0 0 2px rgba(255, 255, 255, 0.2)',
         'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
@@ -76,11 +84,18 @@ module.exports = {
         '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         '3xl': '0 35px 60px -15px rgba(0, 0, 0, 0.3)',
         'inner': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
+        // Custom inner shadows for mole holes
+        'inner-xl': 'inset 0 5px 15px rgba(0, 0, 0, 0.7)',
+        'inner-2xl': 'inset 0 8px 20px rgba(0, 0, 0, 0.9)',
         'none': 'none',
+      },
+      // Other extend properties
+      backgroundSize: {
+        '200%': '200% 200%',
       },
       borderWidth: {
         '3': '3px',
-      }
+      },
     },
   },
   plugins: [],
