@@ -8,6 +8,7 @@ import ImageCompressor from "./components/ImageCompressor";
 import QRCodeGeneratot from "./components/QrCodeGenerator";
 import PDFLinkRemover from "./components/PDFLinkRemover";
 import WhacAMoleGame from "./components/WhacAMoleGame";
+import PDFUnlocker from "./components/PDFUnlocker";
 
 import "./index.css";
 
@@ -21,6 +22,7 @@ function App() {
         <Route path="/image-tools/resize" element={<ImageResize />} />
         <Route path="/image-tools/compress" element={<ImageCompressor />} />
         <Route path="/qr-tool" element={<QRCodeGeneratot />} />
+        <Route path="/unlock-pdf" element={<PDFUnlocker />} />
         <Route path="/pdf-link-remove" element={<PDFLinkRemover />} />
         <Route path="/WhacAMoleGame" element={<WhacAMoleGame />} />
 
