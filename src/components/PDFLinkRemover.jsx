@@ -1,12 +1,118 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Link as LinkIcon, Upload, Download, FileText, Loader2 } from 'lucide-react';
+import { ArrowLeft, Link as LinkIcon, Upload, Download, FileText, Loader2, X, CheckCircle } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
+import { createRoot } from 'react-dom/client';
 
+// --- NEW: OrbitalFlowProcessingOverlay Component ---
+const OrbitalFlowProcessingOverlay = ({ status, onCancel, currentStep, totalSteps }) => (
+  <div className="fixed inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-50 animate-fade-in overflow-hidden">
+    
+    {/* Background Orbital/Particle Animation */}
+    <div className="absolute inset-0 flex items-center justify-center">
+      {/* Central Glowing Orb */}
+      <div className="relative w-40 h-40 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 animate-pulse-orb flex items-center justify-center shadow-lg transform scale-95">
+        <Loader2 className="animate-spin-slow w-24 h-24 text-white opacity-80" /> {/* Larger, slower spinner */}
+        {/* Inner glow */}
+        <div className="absolute inset-0 rounded-full ring-4 ring-blue-400/50 animate-ping-once"></div>
+        <div className="absolute inset-0 rounded-full ring-2 ring-teal-400/50 animate-ping-once animation-delay-500"></div>
+      </div>
+
+      {/* Orbiting Particles */}
+      {Array.from({ length: 50 }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-2 h-2 rounded-full bg-white opacity-60 animate-orbit"
+          style={{
+            animationDelay: `${i * 0.1}s`, // Staggered delays
+            transformOrigin: '50% 50%',
+            top: '50%',
+            left: '50%',
+            transform: `translate(-50%, -50%) rotate(${Math.random() * 360}deg) translateY(${60 + Math.random() * 80}px)`, // Random initial position/orbit radius
+          }}
+        ></div>
+      ))}
+    </div>
+
+    {/* Content Overlay */}
+    <div className="relative z-10 bg-gray-900/80 rounded-3xl p-8 w-full max-w-lg mx-4 shadow-3xl border border-gray-700 overflow-hidden text-center animate-scale-in">
+      <h3 className="text-3xl font-extrabold text-white mb-6 animate-fade-in-down">
+        Working Our Magic...
+      </h3>
+      
+      {/* Dynamic Status Message */}
+      <div className="text-xl font-semibold text-gray-200 mb-8 h-8 animate-fade-in-up">
+        {status}
+      </div>
+
+      {/* Step Indicators (Simplified Visual) */}
+      <div className="flex justify-center space-x-3 mb-8">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
+                            ${currentStep >= 1 ? 'border-blue-400 bg-blue-500 text-white shadow-lg animate-bounce-step' : 'border-gray-600 text-gray-400 bg-gray-700'}`}>
+                {currentStep > 1 ? <CheckCircle size={20} /> : <span className="font-bold">1</span>}
+            </div>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
+                            ${currentStep >= 2 ? 'border-teal-400 bg-teal-500 text-white shadow-lg animate-bounce-step animation-delay-100' : 'border-gray-600 text-gray-400 bg-gray-700'}`}>
+                {currentStep > 2 ? <CheckCircle size={20} /> : <span className="font-bold">2</span>}
+            </div>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
+                            ${currentStep >= 3 ? 'border-green-400 bg-green-500 text-white shadow-lg animate-bounce-step animation-delay-200' : 'border-gray-600 text-gray-400 bg-gray-700'}`}>
+                {currentStep > 3 ? <CheckCircle size={20} /> : <span className="font-bold">3</span>}
+            </div>
+        </div>
+
+      <button 
+        className="w-full px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors duration-300 transform hover:scale-105 shadow-lg"
+        onClick={onCancel}
+      >
+        Cancel Process
+      </button>
+    </div>
+  </div>
+);
+
+// --- Main PDFLinkRemover Component ---
 const PDFLinkRemover = () => {
   const [file, setFile] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState('');
-  const [downloadBlob, setDownloadBlob] = useState(null); // State to store the Blob for download
+  const [downloadBlob, setDownloadBlob] = useState(null);
+
+  const processingOverlayRootRef = useRef(null);
+  const processingOverlayCleanupRef = useRef(() => {});
+
+  const createAndShowProcessingOverlay = useCallback(() => {
+    const overlayDiv = document.createElement('div');
+    document.body.appendChild(overlayDiv);
+    processingOverlayRootRef.current = createRoot(overlayDiv);
+    processingOverlayCleanupRef.current = () => {
+      if (processingOverlayRootRef.current) {
+        processingOverlayRootRef.current.unmount();
+      }
+      if (overlayDiv && document.body.contains(overlayDiv)) {
+        document.body.removeChild(overlayDiv);
+      }
+    };
+    return processingOverlayRootRef.current;
+  }, []);
+
+  const updateProcessingOverlay = useCallback((status, currentStep, totalSteps) => {
+    if (processingOverlayRootRef.current) {
+      processingOverlayRootRef.current.render(
+        <OrbitalFlowProcessingOverlay // Use the new component name
+          status={status}
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          onCancel={() => {
+            setMessage('Process cancelled.');
+            setProcessing(false);
+            processingOverlayCleanupRef.current();
+          }}
+        />
+      );
+    }
+  }, []);
+
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -14,7 +120,7 @@ const PDFLinkRemover = () => {
       if (selectedFile.type === 'application/pdf') {
         setFile(selectedFile);
         setMessage('');
-        setDownloadBlob(null); // Clear any previous download
+        setDownloadBlob(null);
       } else {
         setFile(null);
         setMessage('Error: Please select a valid PDF file.');
@@ -27,7 +133,32 @@ const PDFLinkRemover = () => {
     }
   };
 
-  // Function to trigger download from a blob
+  const onDrop = useCallback((acceptedFiles) => {
+    setMessage('');
+    setDownloadBlob(null);
+
+    if (acceptedFiles.length === 0) {
+      setMessage('Error: No file dropped or invalid file type.');
+      setFile(null);
+      return;
+    }
+
+    const droppedFile = acceptedFiles[0];
+    if (droppedFile.type === 'application/pdf') {
+      setFile(droppedFile);
+    } else {
+      setMessage('Error: Only PDF files are accepted. Please drag and drop a .pdf file.');
+      setFile(null);
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'application/pdf': ['.pdf'] },
+    multiple: false,
+    disabled: processing
+  });
+
   const triggerDownload = (blob, filename) => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -44,24 +175,31 @@ const PDFLinkRemover = () => {
       setMessage('Error: Please upload a PDF file first.');
       return;
     }
-    setMessage('Processing PDF... This may take a moment.');
+    
     setProcessing(true);
+    setMessage('');
     setDownloadBlob(null); 
+
+    // Use the new overlay component
+    const modalRoot = createAndShowProcessingOverlay();
+    updateProcessingOverlay('Establishing secure connection...', 1, 3); // Initial message
+
     const formData = new FormData();
     formData.append('file', file);
 
-    // Ensure this URL matches your backend's Flask app address and port
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://quicksidetoolbackend.onrender.com';
 
     try {
+      updateProcessingOverlay('Removing your link...', 1, 3);
       const response = await fetch(`${backendUrl}/remove-pdf-links`, {
         method: 'POST',
         body: formData,
       });
 
       if (response.ok) {
+        updateProcessingOverlay('Analyzing PDF structure & locating links...', 2, 3); // Step 2
         const blob = await response.blob();
-        // Extract filename from response headers if available, otherwise use a default
+        
         const contentDisposition = response.headers.get('Content-Disposition');
         let filename = `links_removed_${file.name.replace(/\.pdf$/, '')}.pdf`;
         if (contentDisposition) {
@@ -71,21 +209,24 @@ const PDFLinkRemover = () => {
             }
         }
         
-        // Store the blob and filename in state for the download button
         setDownloadBlob({ blob, filename });
+        updateProcessingOverlay('Rebuilding PDF without links... Almost there!', 3, 3); // Step 3
         setMessage('Success: Links processed! Click "Download" to save your PDF.');
 
       } else {
         const errorText = await response.text();
         setMessage(`Error: Failed to remove links. Server response: ${errorText || 'Unknown error'}`);
-        setDownloadBlob(null); // Clear blob on error
+        setDownloadBlob(null);
       }
     } catch (error) {
       console.error('Network or processing error:', error);
       setMessage('Error: Failed to remove links. Check your connection or try again.');
       setDownloadBlob(null);
     } finally {
-      setProcessing(false);
+      setTimeout(() => {
+        processingOverlayCleanupRef.current();
+        setProcessing(false);
+      }, 2000); // Keep modal visible for 2 seconds after final update
     }
   };
 
@@ -126,20 +267,14 @@ const PDFLinkRemover = () => {
               <h2 className="text-2xl md:text-3xl font-bold text-white">Remove Links from PDF</h2>
             </div>
 
-            {/* File Upload Section */}
+            {/* File Upload Section - Now using useDropzone props */}
             <div
-              className={`mt-6 bg-white/10 backdrop-blur-md rounded-2xl p-8 border-2 border-dashed border-white/30
+              {...getRootProps()}
+              className={`mt-6 bg-white/10 backdrop-blur-md rounded-2xl p-8 border-2 border-dashed
+                         ${isDragActive ? 'border-teal-400 bg-teal-400/10' : 'border-white/30'}
                          transition-all duration-300 cursor-pointer hover:border-blue-400 hover:bg-blue-400/10`}
-              onClick={() => document.getElementById('pdf-file-input').click()}
             >
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={handleFileChange}
-                className="hidden"
-                id="pdf-file-input"
-                disabled={processing}
-              />
+              <input {...getInputProps()} />
               <div className="flex flex-col items-center justify-center py-4">
                 {file ? (
                   <div className="text-center">
@@ -147,13 +282,13 @@ const PDFLinkRemover = () => {
                     <p className="text-sm text-white text-opacity-70 mt-1">
                       {(file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
-                    <p className="text-sm text-white/60 mt-2">Click to change file</p>
+                    <p className="text-sm text-white/60 mt-2">Click or drag new PDF to change file</p>
                   </div>
                 ) : (
                   <>
                     <Upload size={48} className="text-white/70 mb-4" />
                     <p className="text-white text-opacity-90 text-lg font-semibold">
-                      Drag & drop your PDF here, or click to upload
+                      {isDragActive ? 'Drop your PDF here!' : 'Drag & drop your PDF here, or click to upload'}
                     </p>
                     <p className="text-white text-opacity-70 text-sm mt-1">
                       (Only PDF files are supported)
