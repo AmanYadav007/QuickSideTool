@@ -93,25 +93,12 @@ const Home = () => {
                 gradientTo="to-orange-500"
               />
 
-              {/* Greyed Out Coming Soon Card - Updated Style */}
-              <div className="relative group rounded-2xl p-7 border border-white border-opacity-20 bg-white bg-opacity-5 backdrop-filter backdrop-blur-md cursor-not-allowed transition-all duration-300 shadow-xl overflow-hidden animate-fade-in-up animation-delay-1500">
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-800 opacity-90 rounded-2xl flex items-center justify-center">
-                  <span className="text-gray-400 text-2xl font-bold rotate-6 transform -translate-y-4">
-                    Coming Soon!
-                  </span>
-                </div>
-                <div className="flex flex-col items-center justify-center h-full relative z-10 text-opacity-50">
-                  <div className="w-16 h-16 mb-4 rounded-full flex items-center justify-center bg-gray-600 text-gray-400 shadow-md">
-                    <LinkIcon size={40} />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-400 mb-1">
-                    PDF Link Remove
-                  </h3>
-                  <p className="text-sm text-gray-500 text-center">
-                    Efficiently remove hyperlinks from PDF documents.
-                  </p>
-                </div>
-              </div>
+            <ToolCard
+                to="/pdf-link-remove"
+                icon={<LinkIcon size={36} />}
+                title="PDF Link Remove"
+                description="Efficiently remove hyperlinks from PDF documents."
+              />
 
               <ToolCard
                 to="/WhacAMoleGame" // Make sure this matches your route
