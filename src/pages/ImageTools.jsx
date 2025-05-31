@@ -64,15 +64,15 @@ const ImageTools = () => {
                 <ul className="space-y-2 text-white text-opacity-80 text-sm">
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 mt-2 flex-shrink-0"></div>
-                    <span>**Batch Processing:** Work on multiple images simultaneously, saving you time and effort.</span>
+                    <span>Batch Processing: Work on multiple images simultaneously, saving you time and effort.</span>
                   </li>
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 mt-2 flex-shrink-0"></div>
-                    <span>**Quality Preservation:** Advanced algorithms ensure minimal quality loss during optimization.</span>
+                    <span>Quality Preservation: Advanced algorithms ensure minimal quality loss during optimization.</span>
                   </li>
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 mt-2 flex-shrink-0"></div>
-                    <span>**Broad Compatibility:** Supports a wide array of popular image formats for flexible usage.</span>
+                    <span>Broad Compatibility: Supports a wide array of popular image formats for flexible usage.</span>
                   </li>
                 </ul>
               </div>
@@ -82,15 +82,15 @@ const ImageTools = () => {
                 <ul className="space-y-2 text-white text-opacity-80 text-sm">
                   <li className="flex items-center">
                     <div className="w-2 h-2 bg-teal-400 rounded-full mr-2"></div>
-                    **Raster Images:** JPG, JPEG, PNG, BMP, GIF
+                    Raster Images: JPG, JPEG, PNG, BMP, GIF
                   </li>
                   <li className="flex items-center">
                     <div className="w-2 h-2 bg-teal-400 rounded-full mr-2"></div>
-                    **Modern Formats:** WebP
+                    Modern Formats: WebP
                   </li>
                   <li className="flex items-center">
                     <div className="w-2 h-2 bg-teal-400 rounded-full mr-2"></div>
-                    **Vector Graphics:** SVG
+                    Vector Graphics: SVG
                   </li>
                 </ul>
               </div>
