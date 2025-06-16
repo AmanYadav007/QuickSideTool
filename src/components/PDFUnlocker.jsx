@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Added useEffect
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Lock, Unlock, Eye, EyeOff, Loader2, Upload, X } from 'lucide-react';
 import Confetti from 'react-confetti';
@@ -36,6 +36,11 @@ const PDFUnlocker = () => {
 
   const currentTheme = theme;
 
+  // Clear message when action changes
+  useEffect(() => {
+    setMessage('');
+  }, [action]);
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -47,8 +52,8 @@ const PDFUnlocker = () => {
         setMessage('');
       }
     } else {
-        setFile(null);
-        setMessage('');
+      setFile(null);
+      setMessage('');
     }
   };
 
@@ -57,9 +62,9 @@ const PDFUnlocker = () => {
     setIsDragging(true);
     const items = e.dataTransfer.items;
     if (items && items.length > 0 && items[0].type === 'application/pdf') {
-        setIsInvalidDrag(false);
+      setIsInvalidDrag(false);
     } else {
-        setIsInvalidDrag(true);
+      setIsInvalidDrag(true);
     }
   };
 
@@ -95,17 +100,18 @@ const PDFUnlocker = () => {
     }
 
     setIsLoading(true);
-    setMessage('');
+    setMessage(''); // Clear previous messages
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('password', password);
 
+    // Using environment variable for backend URL
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://quicksidetoolbackend.onrender.com';
 
     try {
       const endpoint = action === 'unlock' ? '/unlock-pdf' : '/lock-pdf';
-      const response = await fetch(`${backendUrl}/${endpoint}`, {
+      const response = await fetch(`${backendUrl}${endpoint}`, { // Corrected concatenation
         method: 'POST',
         body: formData,
       });
@@ -128,16 +134,21 @@ const PDFUnlocker = () => {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 5000);
       } else {
-        const errorText = await response.text();
+        const errorData = await response.json(); // Expecting JSON response for errors
         let specificMessage = `Failed to ${action} PDF.`;
-        if (errorText.includes('Incorrect password') && action === 'unlock') {
+
+        if (errorData && errorData.error) { // Check if error key exists in JSON
+          if (errorData.error.includes('Incorrect password') && action === 'unlock') {
             specificMessage = 'Error: Incorrect password for this PDF.';
-        } else if (errorText.includes('already encrypted') && action === 'lock') {
+          } else if (errorData.error.includes('already encrypted') && action === 'lock') {
             specificMessage = 'Error: PDF is already locked with this password.';
-        } else if (errorText.includes('not encrypted') && action === 'unlock') {
+          } else if (errorData.error.includes('not encrypted') && action === 'unlock') {
             specificMessage = 'Error: This PDF is not encrypted.';
+          } else {
+            specificMessage = `Error: ${errorData.error}`; // Display generic error from backend
+          }
         } else {
-            specificMessage += ` Server response: ${errorText}`;
+          specificMessage += ` Status: ${response.status}`; // Fallback if no specific error message from backend
         }
         setMessage(specificMessage);
       }
@@ -177,8 +188,8 @@ const PDFUnlocker = () => {
             <Link
               to="/"
               className="inline-flex items-center px-4 py-1.5 bg-white/10 text-white rounded-full
-                         hover:bg-white/20 transition-all duration-300 backdrop-blur-md border border-white/20
-                         hover:border-blue-400 transform hover:scale-105 shadow-md animate-fade-in-left text-sm"
+                          hover:bg-white/20 transition-all duration-300 backdrop-blur-md border border-white/20
+                          hover:border-blue-400 transform hover:scale-105 shadow-md animate-fade-in-left text-sm"
             >
               <ArrowLeft className="mr-2 w-4 h-4" />
               Back to Home
@@ -275,9 +286,9 @@ const PDFUnlocker = () => {
                   </>
                 )}
                 {isDragging && isInvalidDrag && (
-                    <p className="text-red-400 text-sm mt-2 font-semibold animate-pulse">
-                        🚫 Only PDF files are allowed!
-                    </p>
+                  <p className="text-red-400 text-sm mt-2 font-semibold animate-pulse">
+                    🚫 Only PDF files are allowed!
+                  </p>
                 )}
               </div>
             </div>
@@ -322,14 +333,14 @@ const PDFUnlocker = () => {
                   {message}
                 </p>
               )}
-               {(message.includes('Success') || message.includes('Error')) && (
-                  <button
-                    onClick={handleClearForm}
-                    className="mt-6 w-full py-2 bg-gray-700/80 text-white rounded-lg hover:bg-gray-800/80 transition-colors flex items-center justify-center text-sm shadow-md"
-                  >
-                    <X className="mr-2 w-4 h-4" /> Clear Form / Do Another
-                  </button>
-                )}
+              {(message.includes('Success') || message.includes('Error')) && (
+                <button
+                  onClick={handleClearForm}
+                  className="mt-6 w-full py-2 bg-gray-700/80 text-white rounded-lg hover:bg-gray-800/80 transition-colors flex items-center justify-center text-sm shadow-md"
+                >
+                  <X className="mr-2 w-4 h-4" /> Clear Form / Do Another
+                </button>
+              )}
             </div>
           </div>
         </main>

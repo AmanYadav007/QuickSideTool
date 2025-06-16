@@ -9,6 +9,7 @@ import {
   Trash2,
   GripVertical,
   Loader2,
+  // RotateCw, // Removed RotateCw import as it was commented out anyway and not used for compression
 } from "lucide-react";
 // import { Link } from "react-router-dom";
 import Notification from "./Notification";
@@ -94,26 +95,8 @@ const ContextMenu = ({ x, y, onClose, onReplace, onRotate, onClearAll }) => {
         <FileText className="w-4 h-4 mr-2 text-blue-600" />
         <span className="text-gray-800">Replace Page</span>
       </button>
-      {/* <button
-        className="w-full px-3 py-1.5 text-left text-gray-800 text-sm font-medium hover:bg-blue-100 flex items-center transition-colors duration-200"
-        onClick={(e) => {
-          onClearAll();
-          onClose();
-        }}
-      >
-        <Trash2 className="w-4 h-4 mr-2 text-red-600" />
-        <span className="text-gray-800">Clear All Pages</span>
-      </button> */}
-      {/* <button
-        className="w-full px-3 py-1.5 text-left text-gray-800 text-sm font-medium hover:bg-blue-100 flex items-center transition-colors duration-200"
-        onClick={(e) => {
-          onRotate(90); // Rotate by 90 degrees clockwise
-          onClose();
-        }}
-      >
-        <RotateCw className="w-4 h-4 mr-2 text-purple-600" />
-        <span className="text-gray-800">Rotate 90° Clockwise</span>
-      </button> */}
+      {/* Removed "Clear All Pages" button from ContextMenu as it was commented out */}
+      {/* Removed "Rotate 90° Clockwise" button from ContextMenu as it was commented out */}
     </div>
   );
 };
@@ -136,16 +119,16 @@ const LoadingOverlay = ({ isLoading }) => {
 // --- Main App Component ---
 
 const App = () => {
-  const [pages, setPages] = useState([]); // Added 'rotation: 0' to page object structure
+  const [pages, setPages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [replaceLoading, setReplaceLoading] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
-  const [dragOverIndex, setDragOverIndex] = useState(null); // New state for visual drag-over feedback
+  const [dragOverIndex, setDragOverIndex] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const cancelProcessingRef = useRef(false);
-  const pdfCacheRef = useRef(new Map()); // Cache for parsed PDF.js documents
+  const pdfCacheRef = useRef(new Map());
   const fileInputRef = useRef(null);
-  const dragOverTimeoutRef = useRef(null); // Ref for debouncing drag over
+  const dragOverTimeoutRef = useRef(null);
 
   const [notification, setNotification] = useState({ message: "", type: "" });
 
@@ -502,7 +485,7 @@ const App = () => {
           const file = acceptedFiles[fileIndex];
 
           const updateCurrentFileProgress = (
-            statusText = "Processing files", // Default status text
+            statusText = "Processing files",
             currentPageNum,
             totalPagesInFile
           ) => {
@@ -529,8 +512,8 @@ const App = () => {
           const pagesFromFile = await processFileIntoPageData(
             file,
             updateCurrentFileProgress
-          ); // Pass the progress callback
-          newOverallPages.push(...pagesFromFile); // Use push for efficiency
+          );
+          newOverallPages.push(...pagesFromFile);
           cumulativePagesProcessed += pagesFromFile.length;
         }
 
@@ -763,11 +746,12 @@ const App = () => {
     "Reorder pages with simple drag & drop.",
     "Replace individual pages within your document.",
     "Download your combined document as a new PDF.",
+    // Removed "Compress PDF files for smaller file sizes."
   ];
 
   return (
     <div className="text-white font-sans antialiased relative">
-    <div className={`container mx-auto pt-16 pb-8 md:pt-24 md:pb-12 space-y-8 relative z-10 ${pages.length === 0 ? 'flex flex-col items-center' : ''}`}>
+      <div className={`container mx-auto pt-16 pb-8 md:pt-24 md:pb-12 space-y-8 relative z-10 ${pages.length === 0 ? 'flex flex-col items-center' : ''}`}>
         <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 drop-shadow-md animate-fade-in-down">
           PDF & Image Combiner
         </h1>
@@ -890,7 +874,7 @@ const App = () => {
                   handleDragStart={handleDragStart}
                   handleDragEnd={handleDragEnd}
                   handleDragOver={handleDragOver}
-                  handleDragLeave={handleDragLeave} // Pass the new handler
+                  handleDragLeave={handleDragLeave}
                   handleContextMenu={handleContextMenu}
                   handleRemovePage={handleRemovePage}
                 />
@@ -905,8 +889,8 @@ const App = () => {
             y={contextMenu.y}
             onClose={() => setContextMenu(null)}
             onReplace={handleReplacePage}
-            onClearAll={handleClearAll}
-            onRotate={handleRotatePage}
+            onClearAll={handleClearAll} // Kept this as it was in the original context menu props
+            onRotate={handleRotatePage} // Kept this as it was in the original context menu props
           />
         )}
         <LoadingOverlay isLoading={replaceLoading} />
