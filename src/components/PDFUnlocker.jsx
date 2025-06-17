@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Added useEffect
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Lock, Unlock, Eye, EyeOff, Loader2, Upload, X } from 'lucide-react';
 import Confetti from 'react-confetti';
@@ -111,7 +111,7 @@ const PDFUnlocker = () => {
 
     try {
       const endpoint = action === 'unlock' ? '/unlock-pdf' : '/lock-pdf';
-      const response = await fetch(`${backendUrl}${endpoint}`, { // Corrected concatenation
+      const response = await fetch(`${backendUrl}${endpoint}`, {
         method: 'POST',
         body: formData,
       });
@@ -188,8 +188,8 @@ const PDFUnlocker = () => {
             <Link
               to="/"
               className="inline-flex items-center px-4 py-1.5 bg-white/10 text-white rounded-full
-                          hover:bg-white/20 transition-all duration-300 backdrop-blur-md border border-white/20
-                          hover:border-blue-400 transform hover:scale-105 shadow-md animate-fade-in-left text-sm"
+                         hover:bg-white/20 transition-all duration-300 backdrop-blur-md border border-white/20
+                         hover:border-blue-400 transform hover:scale-105 shadow-md animate-fade-in-left text-sm"
             >
               <ArrowLeft className="mr-2 w-4 h-4" />
               Back to Home
@@ -302,12 +302,13 @@ const PDFUnlocker = () => {
                   placeholder={action === 'unlock' ? "Enter password to unlock" : "Enter new password to lock"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full p-3 ${currentTheme.bgClass.replace('/10', '/20')} ${currentTheme.textClass} rounded-lg border ${currentTheme.borderColor} focus:outline-none focus:ring-2 focus:ring-blue-400 pr-12 placeholder-gray-300/80 transition-all duration-200`}
+                  // MODIFIED CLASSNAMES FOR VISIBILITY
+                  className={`w-full p-3 bg-white/10 text-white rounded-lg border ${currentTheme.borderColor} focus:outline-none focus:ring-2 focus:ring-blue-400 pr-12 placeholder-white/50 transition-all duration-200`}
                   disabled={isLoading}
                 />
                 <button
                   onClick={() => setShowPassword(!showPassword)}
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 ${currentTheme.textClass} text-opacity-80 hover:text-opacity-100 transition-all duration-300`}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 text-white text-opacity-80 hover:text-opacity-100 transition-all duration-300`}
                   title={showPassword ? "Hide password" : "Show password"}
                   disabled={isLoading}
                 >
