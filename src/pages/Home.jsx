@@ -9,6 +9,7 @@ import {
   Unlock,
   Link as LinkIcon,
 } from "lucide-react";
+import { SpeedInsights } from "@vercel/speed-insights/react"
 
 const Home = () => {
   return (
@@ -108,6 +109,7 @@ const Home = () => {
               />
             </div>
           </div>
+           <SpeedInsights />
         </main>
 
         {/* Footer */}
