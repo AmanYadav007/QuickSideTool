@@ -1,73 +1,217 @@
-# Getting Started with Create React App
+# QuickSideTool 🛠️
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive Chrome extension and web application that provides essential document and image manipulation tools directly in your browser. Transform your productivity with our suite of powerful, easy-to-use tools.
 
-## Available Scripts
+![QuickSideTool](https://img.shields.io/badge/QuickSideTool-v3.0-blue?style=for-the-badge&logo=chrome)
+![React](https://img.shields.io/badge/React-18.3.1-61DAFB?style=for-the-badge&logo=react)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.14-38B2AC?style=for-the-badge&logo=tailwind-css)
 
-In the project directory, you can run:
+## ✨ Features
 
-### `npm start`
+### 📄 PDF Tools
+- **PDF & Image Combiner**: Merge multiple PDFs and images into a single document
+- **Drag & Drop Interface**: Intuitive file management with visual previews
+- **Page Reordering**: Rearrange pages with simple drag-and-drop
+- **Page Replacement**: Replace individual pages with context menu
+- **Real-time Progress**: Track processing with beautiful progress indicators
+- **Batch Processing**: Handle multiple files simultaneously
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 🔐 PDF Security
+- **PDF Unlocker**: Remove password protection from encrypted PDFs
+- **PDF Locker**: Add password protection with AES-256 encryption
+- **Smart Error Handling**: Clear feedback for various scenarios
+- **Secure Processing**: Server-side encryption/decryption
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 🔗 PDF Link Removal
+- **Hyperlink Stripper**: Remove all clickable links from PDF documents
+- **Annotation Preservation**: Keep non-link annotations intact
+- **Encrypted PDF Support**: Handle protected documents appropriately
+- **Visual Processing**: Beautiful orbital animation during processing
 
-### `npm test`
+### 🖼️ Image Tools
+- **Image Resizer**: Batch resize images with custom dimensions
+  - Aspect ratio locking
+  - Multiple output formats (JPEG, PNG, WebP)
+  - Individual and global size controls
+- **Image Compressor**: Reduce file sizes without quality loss
+  - Quality-based compression
+  - Format conversion
+  - Batch processing with ZIP downloads
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 📱 QR Code Generator
+- **Custom QR Codes**: Generate QR codes for URLs, text, or data
+- **Customization Options**: Size, colors, format selection
+- **Multiple Export Formats**: PNG, JPG, SVG
+- **Real-time Preview**: Live QR code generation
 
-### `npm run build`
+### 🎮 Whac-A-Mole Game
+- **Stress Relief**: Fun mini-game for breaks
+- **Difficulty Levels**: Easy, Medium, Hard modes
+- **Sound Effects**: Audio feedback for interactions
+- **Score Tracking**: Performance measurement
+- **Celebration Effects**: Confetti animations
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 🚀 Getting Started
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
+- Chrome browser (for extension)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Installation
 
-### `npm run eject`
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/AmanYadav007/QuickSideTool.git
+   cd QuickSideTool
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+3. **Start the development server**
+   ```bash
+   npm start
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+4. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Backend Setup (Optional)
 
-## Learn More
+For PDF operations, you can run the backend locally:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. **Navigate to backend directory**
+   ```bash
+   cd backend
+   ```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+2. **Install Python dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### Code Splitting
+3. **Start the Flask server**
+   ```bash
+   python app.py
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+The backend will run on `http://localhost:4000`
 
-### Analyzing the Bundle Size
+## 🏗️ Technology Stack
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Frontend
+- **React 18** - Modern React with hooks
+- **React Router** - Client-side routing
+- **Tailwind CSS** - Utility-first CSS framework
+- **Framer Motion** - Animation library
+- **Lucide React** - Beautiful icons
 
-### Making a Progressive Web App
+### Backend
+- **Flask** - Python web framework
+- **pikepdf** - PDF manipulation library
+- **CORS** - Cross-origin resource sharing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Key Libraries
+- `pdf-lib` - Client-side PDF manipulation
+- `pdfjs-dist` - PDF rendering and preview
+- `react-dropzone` - File upload handling
+- `jszip` - Batch file downloads
+- `qrcode.react` - QR code generation
+- `browser-image-compression` - Image processing
 
-### Advanced Configuration
+## 🎨 Design Features
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- **Dark Theme**: Consistent dark gradient backgrounds
+- **Glassmorphism**: Backdrop blur effects and translucent elements
+- **Animated Backgrounds**: Floating blob animations
+- **Responsive Design**: Mobile-first approach
+- **Smooth Transitions**: CSS animations and micro-interactions
+- **Loading States**: Custom progress overlays
+- **Toast Notifications**: User feedback system
 
-### Deployment
+## 📱 Chrome Extension
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+QuickSideTool can be installed as a Chrome extension:
 
-### `npm run build` fails to minify
+1. **Build the project**
+   ```bash
+   npm run build
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+2. **Load extension in Chrome**
+   - Open Chrome and go to `chrome://extensions/`
+   - Enable "Developer mode"
+   - Click "Load unpacked"
+   - Select the `build` folder
+
+3. **Access the extension**
+   - Click the extension icon in your toolbar
+   - Or use the side panel (if supported)
+
+## 🔧 Available Scripts
+
+- `npm start` - Runs the app in development mode
+- `npm run build` - Builds the app for production
+- `npm test` - Launches the test runner
+- `npm run eject` - Ejects from Create React App
+
+## 🌐 Deployment
+
+### Frontend
+The app is configured for deployment on various platforms:
+- Vercel
+- Netlify
+- GitHub Pages
+- Chrome Web Store
+
+### Backend
+The Flask backend is deployed on Render.com and can be deployed to:
+- Heroku
+- DigitalOcean
+- AWS
+- Google Cloud Platform
+
+## 🤝 Contributing
+
+We welcome contributions! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👨‍💻 Author
+
+**Aman Yadav**
+- Website: [aguider.in](https://aguider.in/)
+- GitHub: [@AmanYadav007](https://github.com/AmanYadav007)
+
+## 🙏 Acknowledgments
+
+- [Create React App](https://create-react-app.dev/) for the initial setup
+- [Tailwind CSS](https://tailwindcss.com/) for the styling framework
+- [Lucide](https://lucide.dev/) for the beautiful icons
+- [pikepdf](https://pikepdf.readthedocs.io/) for PDF manipulation
+- All contributors and users of QuickSideTool
+
+## 📞 Support
+
+If you have any questions or need help, please:
+- Open an issue on GitHub
+- Check the documentation
+- Contact the maintainer
+
+---
+
+⭐ **Star this repository if you find it helpful!**
 
 
 
