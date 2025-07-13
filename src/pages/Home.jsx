@@ -102,7 +102,7 @@ const Home = () => {
               />
 
               <ToolCard
-                to="/WhacAMoleGame" // Make sure this matches your route
+                to="/diamond-mines" // Make sure this matches your route
                 icon={<Gamepad2 size={32} />}
                 title="Have Fun"
                 description="Remove your stress"

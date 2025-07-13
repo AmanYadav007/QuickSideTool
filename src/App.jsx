@@ -7,8 +7,8 @@ import ImageResize from "./components/ImageResize";
 import ImageCompressor from "./components/ImageCompressor";
 import QRCodeGeneratot from "./components/QrCodeGenerator";
 import PDFLinkRemover from "./components/PDFLinkRemover";
-import WhacAMoleGame from "./components/WhacAMoleGame";
 import PDFUnlocker from "./components/PDFUnlocker";
+import DiamondQuestGame from "./components/DiamondQuestGame";
 
 import "./index.css";
 
@@ -24,8 +24,7 @@ function App() {
         <Route path="/qr-tool" element={<QRCodeGeneratot />} />
         <Route path="/unlock-pdf" element={<PDFUnlocker />} />
         <Route path="/pdf-link-remove" element={<PDFLinkRemover />} />
-        <Route path="/WhacAMoleGame" element={<WhacAMoleGame />} />
-
+        <Route path="/diamond-mines" element={<DiamondQuestGame />} />
       </Routes>
     </Router>
   );
