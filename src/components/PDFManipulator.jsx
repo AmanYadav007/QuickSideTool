@@ -6,8 +6,6 @@ import * as pdfjsLib from "pdfjs-dist";
 import {
   FileText,
   Download,
-  Trash2,
-  GripVertical,
   Loader2,
   // RotateCw, // Removed RotateCw import as it was commented out anyway and not used for compression
 } from "lucide-react";
@@ -162,7 +160,8 @@ const App = () => {
   // Cleanup for component unmount
   useEffect(() => {
     return () => {
-      pages.forEach((page) => {
+      const currentPages = pages;
+      currentPages.forEach((page) => {
         if (page.preview) {
           URL.revokeObjectURL(page.preview);
         }
@@ -217,7 +216,7 @@ const App = () => {
         setDraggedItem(index); // Update dragged item index to follow its new position
       }, 100); // Adjust debounce time as needed
     },
-    [draggedItem, pages]
+    [draggedItem]
   );
 
   const handleDragLeave = useCallback(() => {
@@ -489,17 +488,18 @@ const App = () => {
             currentPageNum,
             totalPagesInFile
           ) => {
+            const currentCumulativePages = cumulativePagesProcessed;
             modalRoot.render(
               <ProgressModal
                 progress={
-                  ((cumulativePagesProcessed + currentPageNum) /
+                  ((currentCumulativePages + currentPageNum) /
                     totalExpectedPages) *
                   100
                 }
                 status={`${statusText} (File ${fileIndex + 1}/${
                   acceptedFiles.length
                 })`}
-                currentPage={cumulativePagesProcessed + currentPageNum}
+                currentPage={currentCumulativePages + currentPageNum}
                 totalPages={totalExpectedPages}
                 onCancel={() => {
                   cancelProcessingRef.current = true;
