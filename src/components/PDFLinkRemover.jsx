@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Link as LinkIcon, Upload, Download, FileText, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Link as LinkIcon, Upload, Download, FileText, Loader2, X, CheckCircle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { createRoot } from 'react-dom/client';
 
@@ -113,6 +113,26 @@ const PDFLinkRemover = () => {
     }
   }, []);
 
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      if (selectedFile.type === 'application/pdf') {
+        setFile(selectedFile);
+        setMessage('');
+        setDownloadBlob(null);
+      } else {
+        setFile(null);
+        setMessage('Error: Please select a valid PDF file.');
+        setDownloadBlob(null);
+      }
+    } else {
+      setFile(null);
+      setMessage('');
+      setDownloadBlob(null);
+    }
+  };
+
   const onDrop = useCallback((acceptedFiles) => {
     setMessage('');
     setDownloadBlob(null);
@@ -161,7 +181,7 @@ const PDFLinkRemover = () => {
     setDownloadBlob(null); 
 
     // Use the new overlay component
-    createAndShowProcessingOverlay();
+    const modalRoot = createAndShowProcessingOverlay();
     updateProcessingOverlay('Establishing secure connection...', 1, 3); // Initial message
 
     const formData = new FormData();

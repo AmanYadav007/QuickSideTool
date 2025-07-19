@@ -7,6 +7,7 @@ const BOMB = "bomb";
 const DIAMOND_EMOJI = "💎";
 const CELEBRATE_EMOJIS = ["💎", "🎉", "✨", "💎", "🎉", "✨"];
 const BOMB_EMOJI = "💣";
+const TILE_COLOR = "#1e293b";
 const DIAMOND_COLOR = "#22c55e";
 const BOMB_COLOR = "#ef4444";
 const BG_COLOR = "#0f172a";
@@ -42,6 +43,7 @@ const DiamondQuestGame = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScoreState] = useState(getHighScore());
   const [diamondsFound, setDiamondsFound] = useState(0);
+  const [message, setMessage] = useState("Find the diamonds, avoid the bombs!");
   const [showCelebrate, setShowCelebrate] = useState(false);
   const [newHighScore, setNewHighScore] = useState(false);
   const celebrateTimeout = useRef(null);
@@ -51,6 +53,7 @@ const DiamondQuestGame = () => {
     setGameOver(false);
     setScore(0);
     setDiamondsFound(0);
+    setMessage("Find the diamonds, avoid the bombs!");
     setShowCelebrate(false);
     setNewHighScore(false);
     if (celebrateTimeout.current) clearTimeout(celebrateTimeout.current);
@@ -69,6 +72,7 @@ const DiamondQuestGame = () => {
     }, 400);
     if (newGrid[idx].type === BOMB) {
       setGameOver(true);
+      setMessage("💥 Game Over! You hit a bomb.");
       if (score > highScore) {
         setHighScore(score);
         setHighScoreState(score);
@@ -79,6 +83,7 @@ const DiamondQuestGame = () => {
     } else {
       setDiamondsFound(diamondsFound + 1);
       setScore(score + 10);
+      setMessage("+10 Stardust!");
       if (score + 10 > highScore) {
         setHighScore(score + 10);
         setHighScoreState(score + 10);
@@ -94,6 +99,7 @@ const DiamondQuestGame = () => {
     setGameOver(false);
     setScore(0);
     setDiamondsFound(0);
+    setMessage("Find the diamonds, avoid the bombs!");
     setShowCelebrate(false);
     setNewHighScore(false);
     if (celebrateTimeout.current) clearTimeout(celebrateTimeout.current);

@@ -6,6 +6,8 @@ import * as pdfjsLib from "pdfjs-dist";
 import {
   FileText,
   Download,
+  Trash2,
+  GripVertical,
   Loader2,
   // RotateCw, // Removed RotateCw import as it was commented out anyway and not used for compression
 } from "lucide-react";
@@ -160,20 +162,17 @@ const App = () => {
   // Cleanup for component unmount
   useEffect(() => {
     return () => {
-      const currentPages = pages;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      const currentPdfCache = pdfCacheRef.current;
-      currentPages.forEach((page) => {
+      pages.forEach((page) => {
         if (page.preview) {
           URL.revokeObjectURL(page.preview);
         }
       });
-      currentPdfCache.clear(); // Clear PDF document cache
+      pdfCacheRef.current.clear(); // Clear PDF document cache
       if (dragOverTimeoutRef.current) {
         clearTimeout(dragOverTimeoutRef.current);
       }
     };
-  }, [pages]);
+  }, []);
 
   const handleDragStart = useCallback((e, index) => {
     setDraggedItem(index);
@@ -218,7 +217,7 @@ const App = () => {
         setDraggedItem(index); // Update dragged item index to follow its new position
       }, 100); // Adjust debounce time as needed
     },
-    [draggedItem]
+    [draggedItem, pages]
   );
 
   const handleDragLeave = useCallback(() => {
@@ -484,27 +483,23 @@ const App = () => {
           if (cancelProcessingRef.current) break;
 
           const file = acceptedFiles[fileIndex];
-          const currentFileIndex = fileIndex;
-          const currentAcceptedFilesLength = acceptedFiles.length;
 
-          // eslint-disable-next-line no-loop-func
           const updateCurrentFileProgress = (
             statusText = "Processing files",
             currentPageNum,
             totalPagesInFile
           ) => {
-            const currentCumulativePages = cumulativePagesProcessed;
             modalRoot.render(
               <ProgressModal
                 progress={
-                  ((currentCumulativePages + currentPageNum) /
+                  ((cumulativePagesProcessed + currentPageNum) /
                     totalExpectedPages) *
                   100
                 }
-                status={`${statusText} (File ${currentFileIndex + 1}/${
-                  currentAcceptedFilesLength
+                status={`${statusText} (File ${fileIndex + 1}/${
+                  acceptedFiles.length
                 })`}
-                currentPage={currentCumulativePages + currentPageNum}
+                currentPage={cumulativePagesProcessed + currentPageNum}
                 totalPages={totalExpectedPages}
                 onCancel={() => {
                   cancelProcessingRef.current = true;

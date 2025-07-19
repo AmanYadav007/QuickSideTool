@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FileText, 
@@ -12,11 +12,13 @@ import {
   Users, 
   Star, 
   ArrowRight, 
-  Mail
+  Mail, 
+  CheckCircle
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import AnimatedBackground from '../components/AnimatedBackground';
+import CountdownTimer from '../components/CountdownTimer';
 import BuyMeACoffee from '../components/BuyMeACoffee';
 import SEO from '../components/SEO';
 import AdSense from '../components/AdSense';
