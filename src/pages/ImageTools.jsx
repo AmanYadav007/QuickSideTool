@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Image, Minimize2, ArrowLeft, FileText } from 'lucide-react';
+import { Image, Minimize2, ArrowLeft } from 'lucide-react';
 
 const ImageTools = () => {
   return (
