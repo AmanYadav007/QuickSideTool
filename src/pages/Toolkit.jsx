@@ -10,8 +10,9 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { SpeedInsights } from "@vercel/speed-insights/react"
+import AdSense from '../components/AdSense';
 
-const Home = () => {
+const Toolkit = () => {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white font-sans antialiased">
       {/* Dynamic Background Elements */}
@@ -55,10 +56,19 @@ const Home = () => {
             <h2 className="text-6xl font-extrabold text-white mb-6 leading-tight drop-shadow-lg animate-fade-in-up">
               Your Essential Digital Toolkit
             </h2>
-            <p className="text-xl text-gray-300 mb-16 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-500">
+            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-500">
               Discover a suite of powerful, easy-to-use tools designed to boost
               your productivity and simplify daily tasks.
             </p>
+
+            {/* Ad Section - Top of Tools */}
+            <div className="mb-12 bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-md">
+              <AdSense 
+                adSlot="3179433696" 
+                className="text-center"
+                style={{ minHeight: '90px' }}
+              />
+            </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               <ToolCard
@@ -72,7 +82,7 @@ const Home = () => {
               <ToolCard
                 to="/unlock-pdf"
                 icon={<Unlock size={36} />}
-                title="Unlock & Lock PDF"
+                title="PDF Unlocker"
                 description="Secure or remove password protection from your PDFs."
                 gradientFrom="from-blue-500"
                 gradientTo="to-cyan-500"
@@ -93,22 +103,33 @@ const Home = () => {
                 gradientFrom="from-yellow-500"
                 gradientTo="to-orange-500"
               />
-
-            <ToolCard
+              <ToolCard
                 to="/pdf-link-remove"
                 icon={<LinkIcon size={36} />}
-                title="PDF Link Remove"
+                title="PDF Link Remover"
                 description="Efficiently remove hyperlinks from PDF documents."
+                gradientFrom="from-purple-500"
+                gradientTo="to-pink-500"
               />
-
               <ToolCard
-                to="/diamond-mines" // Make sure this matches your route
+                to="/diamond-mines"
                 icon={<Gamepad2 size={32} />}
-                title="Have Fun"
-                description="Remove your stress"
+                title="Diamond Quest"
+                description="Fun mini-game for stress relief"
+                gradientFrom="from-indigo-500"
+                gradientTo="to-purple-500"
               />
             </div>
-          </div>
+                      </div>
+
+            {/* Ad Section - Bottom of Tools */}
+            <div className="mt-12 bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-md">
+              <AdSense 
+                adSlot="1427545936" 
+                className="text-center"
+                style={{ minHeight: '90px' }}
+              />
+            </div>
            <SpeedInsights />
         </main>
 
@@ -141,26 +162,26 @@ const ToolCard = ({
   gradientFrom,
   gradientTo,
 }) => (
-  <Link
-    to={to}
-    className="group relative rounded-2xl p-7 flex flex-col items-center text-center
-               bg-white bg-opacity-5 backdrop-filter backdrop-blur-md border border-white border-opacity-20
-               transform transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl-custom
-               hover:bg-opacity-10 overflow-hidden animate-fade-in-up"
-  >
+      <Link
+      to={to}
+      className="group relative rounded-2xl p-7 flex flex-col items-center text-center
+                 bg-white bg-opacity-5 backdrop-filter backdrop-blur-md border border-white border-opacity-20
+                 transform transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl-custom
+                 hover:bg-opacity-10 overflow-hidden animate-fade-in-up"
+    >
     {/* Animated Gradient Border on Hover */}
     <div
       className={`absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-500 ease-out group-hover:border-opacity-100 group-hover:border-gradient group-hover:${gradientFrom} group-hover:${gradientTo} pointer-events-none`}
     ></div>
 
-    <div className="relative z-10 flex flex-col items-center">
-      <div
-        className={`w-16 h-16 mb-4 rounded-full flex items-center justify-center text-white shadow-xl
-                      bg-gradient-to-br ${gradientFrom} ${gradientTo}
-                      transform transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-2xl-active`}
-      >
-        {icon}
-      </div>
+          <div className="relative z-10 flex flex-col items-center">
+        <div
+          className={`w-16 h-16 mb-4 rounded-full flex items-center justify-center text-white shadow-xl
+                        bg-gradient-to-br ${gradientFrom} ${gradientTo}
+                        transform transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-2xl-active`}
+        >
+          {icon}
+        </div>
       <h3 className="text-xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-fuchsia-300 transition-colors duration-300">
         {title}
       </h3>
@@ -171,4 +192,4 @@ const ToolCard = ({
   </Link>
 );
 
-export default Home;
+export default Toolkit;
