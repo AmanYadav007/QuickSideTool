@@ -161,17 +161,19 @@ const App = () => {
   useEffect(() => {
     return () => {
       const currentPages = pages;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const currentPdfCache = pdfCacheRef.current;
       currentPages.forEach((page) => {
         if (page.preview) {
           URL.revokeObjectURL(page.preview);
         }
       });
-      pdfCacheRef.current.clear(); // Clear PDF document cache
+      currentPdfCache.clear(); // Clear PDF document cache
       if (dragOverTimeoutRef.current) {
         clearTimeout(dragOverTimeoutRef.current);
       }
     };
-  }, []);
+  }, [pages]);
 
   const handleDragStart = useCallback((e, index) => {
     setDraggedItem(index);
@@ -482,7 +484,10 @@ const App = () => {
           if (cancelProcessingRef.current) break;
 
           const file = acceptedFiles[fileIndex];
+          const currentFileIndex = fileIndex;
+          const currentAcceptedFilesLength = acceptedFiles.length;
 
+          // eslint-disable-next-line no-loop-func
           const updateCurrentFileProgress = (
             statusText = "Processing files",
             currentPageNum,
@@ -496,8 +501,8 @@ const App = () => {
                     totalExpectedPages) *
                   100
                 }
-                status={`${statusText} (File ${fileIndex + 1}/${
-                  acceptedFiles.length
+                status={`${statusText} (File ${currentFileIndex + 1}/${
+                  currentAcceptedFilesLength
                 })`}
                 currentPage={currentCumulativePages + currentPageNum}
                 totalPages={totalExpectedPages}
