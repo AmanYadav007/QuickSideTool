@@ -193,11 +193,12 @@ const LandingPage = () => {
         className="relative z-10 py-8 px-4 max-w-4xl mx-auto"
       >
         <div className="bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-md">
-                      <AdSense 
-              adSlot="4643686467" 
-              className="text-center"
-              style={{ minHeight: '90px' }}
-            />
+          <AdSense 
+            adSlot="4643686467" 
+            position="horizontal"
+            className="text-center"
+            style={{ minHeight: '90px' }}
+          />
         </div>
       </motion.section>
 
@@ -287,11 +288,12 @@ const LandingPage = () => {
         className="relative z-10 py-8 px-4 max-w-4xl mx-auto"
       >
         <div className="bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-md">
-                      <AdSense 
-              adSlot="2025261981" 
-              className="text-center"
-              style={{ minHeight: '90px' }}
-            />
+          <AdSense 
+            adSlot="2025261981" 
+            position="horizontal"
+            className="text-center"
+            style={{ minHeight: '90px' }}
+          />
         </div>
       </motion.section>
 

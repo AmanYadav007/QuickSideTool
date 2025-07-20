@@ -19,7 +19,7 @@ const Navbar = () => {
           <a href="#testimonials" className="text-white/90 hover:text-purple-300 font-medium transition">Reviews</a>
           <a href="#contact" className="text-white/90 hover:text-purple-300 font-medium transition">Contact</a>
           <button
-            onClick={() => navigate('/home')}
+            onClick={() => navigate('/toolkit')}
             className="ml-4 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
           >
             Enter Dashboard
@@ -40,7 +40,7 @@ const Navbar = () => {
             <a href="#testimonials" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>Reviews</a>
             <a href="#contact" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>Contact</a>
             <button
-              onClick={() => { setMenuOpen(false); navigate('/home'); }}
+              onClick={() => { setMenuOpen(false); navigate('/toolkit'); }}
               className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
             >
               Enter Dashboard

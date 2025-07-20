@@ -27,9 +27,9 @@ const Toolkit = () => {
         {/* Header */}
         <header className="py-5 px-4 md:px-8 border-b border-white border-opacity-10 backdrop-blur-lg shadow-lg">
           <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-400">
+            <Link to="/" className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-400 hover:from-cyan-300 hover:to-fuchsia-300 transition-all duration-300 cursor-pointer">
               QUICK SIDE TOOL
-            </h1>
+            </Link>
             <div className="relative group">
               <a
                 href="https://github.com/AmanYadav007/QuickSideTool"
@@ -65,6 +65,7 @@ const Toolkit = () => {
             <div className="mb-12 bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-md">
               <AdSense 
                 adSlot="3179433696" 
+                position="horizontal"
                 className="text-center"
                 style={{ minHeight: '90px' }}
               />
@@ -126,6 +127,7 @@ const Toolkit = () => {
             <div className="mt-12 bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-md">
               <AdSense 
                 adSlot="1427545936" 
+                position="horizontal"
                 className="text-center"
                 style={{ minHeight: '90px' }}
               />

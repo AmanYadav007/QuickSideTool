@@ -5,6 +5,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GoogleAds from "./components/GoogleAds";
 import GTMBody from "./components/GTMBody";
+import ConsentManager from "./components/ConsentManager";
 import LandingPage from "./pages/LandingPage";
 import Toolkit from "./pages/Toolkit";
 import PDFTool from "./pages/PDFTool";
@@ -15,6 +16,8 @@ import QRCodeGeneratot from "./components/QrCodeGenerator";
 import PDFLinkRemover from "./components/PDFLinkRemover";
 import PDFUnlocker from "./components/PDFUnlocker";
 import DiamondQuestGame from "./components/DiamondQuestGame";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 import "./index.css";
 
@@ -23,6 +26,7 @@ function App() {
     <HelmetProvider>
       <GoogleAds />
       <GTMBody />
+      <ConsentManager />
       <ErrorBoundary>
         <AuthProvider>
           <Router>
@@ -37,6 +41,8 @@ function App() {
               <Route path="/unlock-pdf" element={<PDFUnlocker />} />
               <Route path="/pdf-link-remove" element={<PDFLinkRemover />} />
               <Route path="/diamond-mines" element={<DiamondQuestGame />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
             </Routes>
           </Router>
         </AuthProvider>

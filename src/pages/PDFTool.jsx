@@ -14,11 +14,11 @@ const PDFTool = () => {
       </div>
       <div className="container mx-auto px-4 py-8">
         <Link 
-          to="/" 
+          to="/toolkit" 
           className="inline-flex items-center mb-6 px-4 py-2 bg-white bg-opacity-20 text-white rounded-full hover:bg-opacity-30 transition-all duration-300 backdrop-filter backdrop-blur-sm"
         >
           <ArrowLeft className="mr-2" size={20} />
-          Back to Home
+          Back to Dashboard
         </Link>
         <PDFManipulator />
          
