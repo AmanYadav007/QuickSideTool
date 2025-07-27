@@ -13,6 +13,7 @@ const Navbar = () => {
           Quick Side Tool
         </Link>
         {/* Desktop Nav */}
+<<<<<<< HEAD
         <div className="hidden md:flex items-center space-x-8">
           <Link to="/" className="text-gray-300 hover:text-white transition-colors">Home</Link>
           <Link to="/about" className="text-gray-300 hover:text-white transition-colors">About</Link>
@@ -26,6 +27,19 @@ const Navbar = () => {
           >
             Get Started
           </Link>
+=======
+        <div className="hidden md:flex items-center gap-8">
+          <a href="#features" className="text-white/90 hover:text-purple-300 font-medium transition">Features</a>
+          <a href="#pricing" className="text-white/90 hover:text-purple-300 font-medium transition">Pricing</a>
+          <a href="#testimonials" className="text-white/90 hover:text-purple-300 font-medium transition">Reviews</a>
+          <a href="#contact" className="text-white/90 hover:text-purple-300 font-medium transition">Contact</a>
+          <button
+            onClick={() => navigate('/toolkit')}
+            className="ml-4 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
+          >
+            Enter Dashboard
+          </button>
+>>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
         </div>
         {/* Mobile Hamburger */}
         <button className="md:hidden flex flex-col gap-1.5" onClick={() => setMenuOpen(!menuOpen)} aria-label="Open menu">
@@ -37,6 +51,7 @@ const Navbar = () => {
               {/* Mobile Menu */}
         {menuOpen && (
           <div className="md:hidden bg-[#1a1440]/95 px-6 pb-4 pt-2 flex flex-col gap-4 text-lg">
+<<<<<<< HEAD
             <Link to="/" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>Home</Link>
             <Link to="/about" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>About</Link>
             <Link to="/blog" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>Blog</Link>
@@ -49,6 +64,18 @@ const Navbar = () => {
             >
               Get Started
             </Link>
+=======
+            <a href="#features" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>Features</a>
+            <a href="#pricing" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>Pricing</a>
+            <a href="#testimonials" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>Reviews</a>
+            <a href="#contact" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>Contact</a>
+            <button
+              onClick={() => { setMenuOpen(false); navigate('/toolkit'); }}
+              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
+            >
+              Enter Dashboard
+            </button>
+>>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
           </div>
         )}
     </nav>

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { getPublisherId } from '../config/adsense';
 import AdPlaceholder from './AdPlaceholder';
+<<<<<<< HEAD
 import logger from '../utils/logger';
+=======
+>>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
 
 const AdSense = ({ 
   adSlot, 
@@ -31,7 +34,11 @@ const AdSense = ({
           // If no error, ads might be ready
           setShowPlaceholder(false);
         } catch (error) {
+<<<<<<< HEAD
           logger.debug('AdSense not ready yet', error);
+=======
+          console.log('AdSense not ready:', error);
+>>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
           setShowPlaceholder(true);
         }
       } else {
