@@ -1,9 +1,6 @@
 import React from 'react';
-<<<<<<< HEAD
 import logger from '../utils/logger';
-=======
 import { AlertTriangle, RefreshCw } from 'lucide-react';
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -12,20 +9,12 @@ class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
-<<<<<<< HEAD
-=======
     // Update state so the next render will show the fallback UI
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
     return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
-<<<<<<< HEAD
     logger.error('Error caught by boundary', error, 'ErrorBoundary');
-=======
-    // Log the error to console (in production, you'd send this to a logging service)
-    console.error('Error caught by boundary:', error, errorInfo);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
     
     this.setState({
       error: error,
@@ -33,24 +22,6 @@ class ErrorBoundary extends React.Component {
     });
   }
 
-<<<<<<< HEAD
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-900 text-white flex items-center justify-center p-4">
-          <div className="max-w-md mx-auto text-center">
-            <div className="text-6xl mb-4">⚠️</div>
-            <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
-            <p className="text-gray-300 mb-6">
-              We're sorry, but something unexpected happened. Please try refreshing the page or contact support if the problem persists.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Refresh Page
-            </button>
-=======
   handleRetry = () => {
     this.setState({ hasError: false, error: null, errorInfo: null });
   };
@@ -100,7 +71,6 @@ class ErrorBoundary extends React.Component {
                 </div>
               </details>
             )}
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
           </div>
         </div>
       );

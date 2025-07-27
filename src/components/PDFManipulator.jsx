@@ -21,10 +21,7 @@ import Notification from "./Notification";
 import PageCard from "./PageCard";
 // Add import for the worker
 // (Assume create-react-app or similar setup with worker-loader)
-<<<<<<< HEAD
 import logger from '../utils/logger';
-=======
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
 
 
 const FILE_TYPES = {
@@ -471,29 +468,17 @@ const App = () => {
 
   // Enhanced page operations with animations
   const removePageWithAnimation = useCallback((indexToRemove) => {
-<<<<<<< HEAD
     logger.debug(`Attempting to remove page at index: ${indexToRemove}`);
-=======
-    console.log(`Attempting to remove page at index: ${indexToRemove}`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
     
     setPages(prevPages => {
       // Validate index
       if (indexToRemove < 0 || indexToRemove >= prevPages.length) {
-<<<<<<< HEAD
         logger.error(`Invalid index to remove: ${indexToRemove}, total pages: ${prevPages.length}`, null, 'PDFManipulator');
-=======
-        console.error(`Invalid index to remove: ${indexToRemove}, total pages: ${prevPages.length}`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
         return prevPages;
       }
       
       const pageToRemove = prevPages[indexToRemove];
-<<<<<<< HEAD
       logger.debug(`Page to remove`, { index: indexToRemove, file: pageToRemove.file?.name, preview: pageToRemove.preview?.substring(0, 30) });
-=======
-      console.log(`Page to remove:`, { index: indexToRemove, file: pageToRemove.file?.name, preview: pageToRemove.preview?.substring(0, 30) });
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
       
       // Mark the specific page for animation
       const newPages = prevPages.map((page, index) => 
@@ -506,20 +491,12 @@ const App = () => {
           // Find the page with the stored removeIndex
           const pageIndex = currentPages.findIndex(page => page.removeIndex === indexToRemove);
           if (pageIndex !== -1) {
-<<<<<<< HEAD
             logger.success(`Successfully removing page at index ${pageIndex}`);
-=======
-            console.log(`Successfully removing page at index ${pageIndex}`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
             const filteredPages = currentPages.filter((_, index) => index !== pageIndex);
             showNotification("Page removed successfully!", "success");
             return filteredPages;
           }
-<<<<<<< HEAD
           logger.warn(`Page with removeIndex ${indexToRemove} not found`);
-=======
-          console.warn(`Page with removeIndex ${indexToRemove} not found`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
           return currentPages;
         });
       }, 200);
@@ -1273,22 +1250,12 @@ const App = () => {
         }
 
         let cumulativePagesProcessed = 0;
-
-<<<<<<< HEAD
-        logger.info(`Starting to process ${acceptedFiles.length} files, expecting ${totalExpectedPages} total pages`);
-=======
-        console.log(`Starting to process ${acceptedFiles.length} files, expecting ${totalExpectedPages} total pages`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
         
         for (let fileIndex = 0; fileIndex < acceptedFiles.length; fileIndex++) {
           if (cancelProcessingRef.current) break;
 
           const file = acceptedFiles[fileIndex];
-<<<<<<< HEAD
           logger.info(`Processing file ${fileIndex + 1}/${acceptedFiles.length}: ${file.name} (${file.type})`);
-=======
-          console.log(`Processing file ${fileIndex + 1}/${acceptedFiles.length}: ${file.name} (${file.type})`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
 
           const updateCurrentFileProgress = (
             statusText = "Processing files",
@@ -1344,11 +1311,7 @@ const App = () => {
                 };
                 newOverallPages.push(pageObj);
                 addPageWithAnimation(pageObj); // Use animated add
-<<<<<<< HEAD
                 logger.success(`Successfully processed PDF page ${i + 1}/${totalFilePages} from ${file.name}`);
-=======
-                console.log(`Successfully processed PDF page ${i + 1}/${totalFilePages} from ${file.name}`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
                 canvas.width = 0;
                 canvas.height = 0;
               } catch (error) {
@@ -1395,11 +1358,7 @@ const App = () => {
               };
               newOverallPages.push(pageObj);
               addPageWithAnimation(pageObj); // Use animated add
-<<<<<<< HEAD
               logger.success(`Successfully processed image file: ${file.name}`);
-=======
-              console.log(`Successfully processed image file: ${file.name}`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
               
               URL.revokeObjectURL(img.src);
               canvas.width = 0;
@@ -1418,11 +1377,7 @@ const App = () => {
           return;
         }
 
-<<<<<<< HEAD
         logger.info(`File processing complete. Processed ${newOverallPages.length} pages out of ${totalExpectedPages} expected pages`);
-=======
-        console.log(`File processing complete. Processed ${newOverallPages.length} pages out of ${totalExpectedPages} expected pages`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
         showNotification("Files added and processed successfully!", "success");
       } catch (error) {
         handleError(error, "processing files");
@@ -1456,20 +1411,12 @@ const App = () => {
       const pdfLibCache = new Map(); // Cache for PDFDocument.load instances
 
       const totalItemsToProcess = pages.length;
-<<<<<<< HEAD
       logger.info(`Starting PDF creation with ${totalItemsToProcess} pages:`, pages.map(p => ({ type: p.type, file: p.file?.name, pageIndex: p.pageIndex })));
-=======
-      console.log(`Starting PDF creation with ${totalItemsToProcess} pages:`, pages.map(p => ({ type: p.type, file: p.file?.name, pageIndex: p.pageIndex })));
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
       
       // Validate page structure
       const invalidPages = pages.filter(p => !p.type || (p.type === 'pdf' && typeof p.pageIndex !== 'number'));
       if (invalidPages.length > 0) {
-<<<<<<< HEAD
         logger.warn('Invalid pages found:', invalidPages);
-=======
-        console.error('Invalid pages found:', invalidPages);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
         showNotification(`Found ${invalidPages.length} pages with invalid structure. PDF creation may fail.`, "error");
       }
 
@@ -1479,11 +1426,7 @@ const App = () => {
         }
 
         const page = pages[i];
-<<<<<<< HEAD
         logger.info(`Processing page ${i + 1}/${totalItemsToProcess}:`, { type: page.type, file: page.file?.name, pageIndex: page.pageIndex });
-=======
-        console.log(`Processing page ${i + 1}/${totalItemsToProcess}:`, { type: page.type, file: page.file?.name, pageIndex: page.pageIndex });
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
         const currentProgress = ((i + 1) / totalItemsToProcess) * 100;
 
         modalRoot.render(
@@ -1512,11 +1455,7 @@ const App = () => {
             ]);
             copiedPage.setRotation(degrees(page.rotation || 0)); // Apply rotation
             pdfDoc.addPage(copiedPage);
-<<<<<<< HEAD
             logger.success(`Successfully added PDF page ${i + 1} (pageIndex: ${page.pageIndex}) from file: ${page.file.name}`);
-=======
-            console.log(`Successfully added PDF page ${i + 1} (pageIndex: ${page.pageIndex}) from file: ${page.file.name}`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
           } catch (error) {
             logger.error(
               `Error embedding PDF page ${i + 1} from file ${page.file.name}:`,
@@ -1561,11 +1500,7 @@ const App = () => {
                 height,
                 rotate: degrees(page.rotation || 0), // Apply rotation
               });
-<<<<<<< HEAD
               logger.success(`Successfully added image page ${i + 1} from file: ${page.file.name}`);
-=======
-              console.log(`Successfully added image page ${i + 1} from file: ${page.file.name}`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
             }
           } catch (error) {
             logger.error(
@@ -1605,11 +1540,7 @@ const App = () => {
       );
 
       const pdfBytes = await pdfDoc.save();
-<<<<<<< HEAD
       logger.success(`Final PDF created with ${pdfDoc.getPageCount()} pages out of ${totalItemsToProcess} requested pages`);
-=======
-      console.log(`Final PDF created with ${pdfDoc.getPageCount()} pages out of ${totalItemsToProcess} requested pages`);
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
 

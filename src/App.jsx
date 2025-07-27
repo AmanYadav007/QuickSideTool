@@ -5,15 +5,9 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GoogleAds from "./components/GoogleAds";
 import GTMBody from "./components/GTMBody";
-<<<<<<< HEAD
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/Home";
-
 import Signup from "./pages/Signup";
-=======
-import ConsentManager from "./components/ConsentManager";
-import LandingPage from "./pages/LandingPage";
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
 import Toolkit from "./pages/Toolkit";
 import PDFTool from "./pages/PDFTool";
 import ImageTools from "./pages/ImageTools";
@@ -25,13 +19,10 @@ import PDFUnlocker from "./components/PDFUnlocker";
 import DiamondQuestGame from "./components/DiamondQuestGame";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
-<<<<<<< HEAD
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Help from './pages/Help';
 import Blog from './pages/Blog';
-=======
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
 
 import "./index.css";
 
@@ -40,7 +31,6 @@ function App() {
     <HelmetProvider>
       <GoogleAds />
       <GTMBody />
-<<<<<<< HEAD
       <ErrorBoundary>
         <AuthProvider>
           <Router>
@@ -51,11 +41,12 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/help" element={<Help />} />
               <Route path="/blog" element={<Blog />} />
-
               <Route path="/signup" element={<Signup />} />
               <Route path="/toolkit" element={<Toolkit />} />
               <Route path="/pdf-tool" element={<PDFTool />} />
               <Route path="/image-tools" element={<ImageTools />} />
+              <Route path="/image-tools/resize" element={<ImageResize />} />
+              <Route path="/image-tools/compress" element={<ImageCompressor />} />
               <Route path="/qr-tool" element={<QrCodeGenerator />} />
               <Route path="/unlock-pdf" element={<PDFUnlocker />} />
               <Route path="/pdf-link-remove" element={<PDFLinkRemover />} />
@@ -64,27 +55,6 @@ function App() {
               <Route path="/terms-of-service" element={<TermsOfService />} />
             </Routes>
           </Router>
-=======
-      <ConsentManager />
-      <ErrorBoundary>
-        <AuthProvider>
-    <Router>
-      <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/toolkit" element={<Toolkit />} />
-        <Route path="/pdf-tool" element={<PDFTool />} />
-        <Route path="/image-tools" element={<ImageTools />} />
-        <Route path="/image-tools/resize" element={<ImageResize />} />
-        <Route path="/image-tools/compress" element={<ImageCompressor />} />
-        <Route path="/qr-tool" element={<QRCodeGeneratot />} />
-        <Route path="/unlock-pdf" element={<PDFUnlocker />} />
-        <Route path="/pdf-link-remove" element={<PDFLinkRemover />} />
-        <Route path="/diamond-mines" element={<DiamondQuestGame />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<TermsOfService />} />
-      </Routes>
-    </Router>
->>>>>>> e47c9c944d14aec022f207328df9a602db8a38f1
         </AuthProvider>
       </ErrorBoundary>
     </HelmetProvider>
