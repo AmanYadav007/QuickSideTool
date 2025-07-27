@@ -3,6 +3,7 @@ import pikepdf # Use pikepdf for PDF operations
 from flask_cors import CORS
 import io
 import logging
+import os
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -10,6 +11,8 @@ CORS(app)  # Enable CORS for cross-origin requests
 
 # Configure logging
 logging.basicConfig(level=logging.INFO) # Set to INFO for production, DEBUG for development
+
+
 
 # Root route for health check or info
 @app.route('/')
@@ -197,6 +200,9 @@ def remove_pdf_links():
     except Exception as e:
         logging.error(f"Error processing PDF for link removal '{file.filename}': {e}", exc_info=True)
         return jsonify({"error": f"Failed to remove links from PDF: An unexpected server error occurred: {str(e)}. It might be corrupted or complex."}), 500
+
+
+
 
 
 # Main entry point

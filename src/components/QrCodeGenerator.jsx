@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Download, Settings, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import logger from '../utils/logger';
 
 const QRCodeGenerator = () => {
   const [qrValue, setQrValue] = useState('');
@@ -79,7 +80,7 @@ const QRCodeGenerator = () => {
         URL.revokeObjectURL(url); // Clean up the blob URL
     };
     img.onerror = () => {
-        console.error("Failed to load SVG for canvas conversion.");
+        logger.error("Failed to load SVG for canvas conversion.", null, 'QRCodeGenerator');
         alert("Could not convert QR code to selected format. Please try PNG or SVG directly.");
         URL.revokeObjectURL(url); // Clean up on error too
     };
@@ -101,19 +102,19 @@ const QRCodeGenerator = () => {
         <header className="py-4 px-4 md:px-8 border-b border-white border-opacity-10 backdrop-blur-lg shadow-lg">
           <div className="container mx-auto flex justify-between items-center">
             <Link 
-              to="/" 
+              to="/toolkit"
               className="inline-flex items-center px-4 py-1.5 bg-white/10 text-white rounded-full 
                          hover:bg-white/20 transition-all duration-300 backdrop-blur-md border border-white/20 
                          hover:border-blue-400 transform hover:scale-105 shadow-md animate-fade-in-left text-sm"
             >
               <ArrowLeft className="mr-2 w-4 h-4" />
-              Back to Home
+              Back to Dashboard
             </Link>
             <h1 className="text-2xl md:text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 drop-shadow-md animate-fade-in-down flex-grow px-4">
               QR Code Generator
             </h1>
             {/* Placeholder for potential other header elements */}
-            <div className="w-[110px] md:w-[130px] flex-shrink-0"></div> {/* To balance the Back to Home button */}
+            <div className="w-[110px] md:w-[130px] flex-shrink-0"></div> {/* To balance the Back to Dashboard button */}
           </div>
         </header>
 

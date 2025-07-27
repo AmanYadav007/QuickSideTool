@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Link as LinkIcon, Upload, Download, FileText, Loader2, X, CheckCircle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { createRoot } from 'react-dom/client';
+import logger from '../utils/logger';
 
 // --- NEW: OrbitalFlowProcessingOverlay Component ---
 const OrbitalFlowProcessingOverlay = ({ status, onCancel, currentStep, totalSteps }) => (
@@ -219,7 +220,7 @@ const PDFLinkRemover = () => {
         setDownloadBlob(null);
       }
     } catch (error) {
-      console.error('Network or processing error:', error);
+      logger.error('Network or processing error', error, 'PDFLinkRemover');
       setMessage('Error: Failed to remove links. Check your connection or try again.');
       setDownloadBlob(null);
     } finally {
@@ -245,13 +246,13 @@ const PDFLinkRemover = () => {
         <header className="py-4 px-4 md:px-8 border-b border-white border-opacity-10 backdrop-blur-lg shadow-lg">
           <div className="container mx-auto flex justify-between items-center">
             <Link
-              to="/"
+              to="/toolkit"
               className="inline-flex items-center px-4 py-1.5 bg-white/10 text-white rounded-full
                          hover:bg-white/20 transition-all duration-300 backdrop-blur-md border border-white/20
                          hover:border-blue-400 transform hover:scale-105 shadow-md animate-fade-in-left text-sm"
             >
               <ArrowLeft className="mr-2 w-4 h-4" />
-              Back to Home
+              Back to Dashboard
             </Link>
             <h1 className="text-2xl md:text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 drop-shadow-md animate-fade-in-down flex-grow px-4">
               PDF Link Remover

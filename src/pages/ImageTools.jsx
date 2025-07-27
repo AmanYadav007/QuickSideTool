@@ -18,13 +18,13 @@ const ImageTools = () => {
         <div className="container mx-auto px-4 md:px-8 w-full max-w-6xl">
           {/* Back Button */}
           <Link 
-            to="/" 
+            to="/toolkit" 
             className="inline-flex items-center px-5 py-2 mb-8 bg-white/10 text-white rounded-full 
                        hover:bg-white/20 transition-all duration-300 backdrop-blur-md border border-white/20 
                        hover:border-blue-400 transform hover:scale-105 shadow-md animate-fade-in-left"
           >
             <ArrowLeft className="mr-2 w-5 h-5" />
-            Back to Home
+            Back to Dashboard
           </Link>
           
           {/* Main Content Container */}

@@ -213,6 +213,156 @@ If you have any questions or need help, please:
 
 ⭐ **Star this repository if you find it helpful!**
 
+## Development
+
+### Logging System
+
+QuickSideTool uses a professional logging system with environment awareness:
+
+#### Logger Utility (`src/utils/logger.js`)
+
+```javascript
+import logger from '../utils/logger';
+
+// Different log levels
+logger.info('Information message');           // Development only
+logger.success('Success message');            // Development only  
+logger.warn('Warning message');               // Always logged
+logger.error('Error message', error, 'Context'); // Always logged
+logger.debug('Debug message');                // Development only
+logger.performance('Operation', duration);    // Performance metrics
+```
+
+#### Features:
+- **Environment Awareness**: Different behavior in development vs production
+- **Structured Logging**: Consistent format with emojis and context
+- **Error Tracking**: Ready for integration with services like Sentry
+- **Performance Monitoring**: Built-in performance measurement
+- **Statistics**: Track error and warning counts
+
+#### Development Tools (`src/utils/devTools.js`)
+
+```javascript
+import { devLog, measurePerformance, logStateChange } from '../utils/devTools';
+
+// Component debugging
+devLog('ComponentName', 'methodName', data);
+
+// Performance measurement
+const result = await measurePerformance('Operation', async () => {
+  // Your async operation
+});
+
+// State change tracking
+logStateChange('Component', 'stateName', oldValue, newValue);
+```
+
+### Code Quality Improvements
+
+#### Console Log Cleanup
+- ✅ Replaced all `console.log` with structured logging
+- ✅ Replaced `console.error` with error tracking
+- ✅ Replaced `console.warn` with warning tracking
+- ✅ Added context and component information to all logs
+- ✅ Environment-specific logging (dev vs production)
+
+#### Professional Touches
+- **Error Boundaries**: Comprehensive error handling with user-friendly messages
+- **Performance Monitoring**: Built-in performance measurement utilities
+- **Memory Tracking**: Development-only memory usage monitoring
+- **Network Logging**: Request/response tracking for debugging
+- **File Processing Logs**: Detailed file operation tracking
+- **Development Environment Info**: Automatic environment detection and logging
+
+#### Service Worker Improvements
+- Professional error handling in service worker
+- Development-only logging for cache operations
+- Graceful fallback handling
+
+#### Background Script Enhancements
+- Proper extension lifecycle management
+- Error handling for unhandled promise rejections
+- Installation and update tracking
+
+### Usage Examples
+
+#### Basic Logging
+```javascript
+// Before
+console.log('Processing file:', fileName);
+console.error('Error processing file:', error);
+
+// After
+logger.info('Processing file', { fileName });
+logger.error('Error processing file', error, 'FileProcessor');
+```
+
+#### Performance Measurement
+```javascript
+// Before
+const start = Date.now();
+await processFile();
+console.log(`Took ${Date.now() - start}ms`);
+
+// After
+await measurePerformance('File Processing', async () => {
+  await processFile();
+});
+```
+
+#### Component Debugging
+```javascript
+// Before
+console.log('Component rendered');
+
+// After
+const logRender = createRenderCounter('MyComponent');
+logRender(); // Call in useEffect or render
+```
+
+### Environment Variables
+
+The logging system respects these environment variables:
+- `NODE_ENV`: Controls logging behavior (development/production)
+- `REACT_APP_VERSION`: Application version for logging
+- `REACT_APP_BUILD_TIME`: Build timestamp for debugging
+
+### Production Considerations
+
+In production:
+- Info and debug logs are automatically disabled
+- Errors and warnings are still logged
+- Error tracking is prepared for external services
+- Performance impact is minimized
+- Memory usage monitoring is disabled
+
+### Integration Ready
+
+The logging system is designed for easy integration with:
+- **Sentry**: Error tracking and monitoring
+- **LogRocket**: Session replay and debugging
+- **Google Analytics**: Custom event tracking
+- **Custom Analytics**: Structured data ready for analysis
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start development server: `npm start`
+4. Build for production: `npm run build`
+
+## Contributing
+
+When adding new features or fixing bugs:
+1. Use the logger utility instead of console methods
+2. Add appropriate error handling with context
+3. Use performance measurement for expensive operations
+4. Follow the established logging patterns
+
+## License
+
+MIT License - see LICENSE file for details.
+
 
 
 

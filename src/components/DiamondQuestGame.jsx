@@ -156,7 +156,7 @@ const DiamondQuestGame = () => {
       {showCelebrate && <EmojiBurst />}
       <div className="max-w-md w-full bg-[#162032]/80 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-[#26324a] shadow-2xl flex flex-col items-center relative" style={{ boxShadow: '0 8px 32px 0 rgba(34,197,94,0.15)' }}>
         <div className="w-full flex justify-between items-center mb-3">
-          <Link to="/" className="px-3 py-1.5 rounded-lg font-bold text-base bg-[#0f172a] text-emerald-300 border border-emerald-400 shadow hover:bg-emerald-700/20 hover:text-emerald-200 transition-all duration-200" style={{ textShadow: '0 0 6px #22c55e' }}>← Home</Link>
+          <Link to="/toolkit" className="px-3 py-1.5 rounded-lg font-bold text-base bg-[#0f172a] text-emerald-300 border border-emerald-400 shadow hover:bg-emerald-700/20 hover:text-emerald-200 transition-all duration-200" style={{ textShadow: '0 0 6px #22c55e' }}>← Dashboard</Link>
           <span></span>
         </div>
         <h1 className="text-3xl font-extrabold text-center mb-2" style={{ color: DIAMOND_COLOR, fontFamily: FONT_FAMILY, letterSpacing: 1, textShadow: '0 0 8px #22c55e' }}>Diamond Quest</h1>
