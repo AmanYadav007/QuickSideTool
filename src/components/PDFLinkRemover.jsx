@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Link as LinkIcon, Upload, Download, FileText, Loader2, X, CheckCircle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { createRoot } from 'react-dom/client';
-import logger from '../utils/logger';
 
 // --- NEW: OrbitalFlowProcessingOverlay Component ---
 const OrbitalFlowProcessingOverlay = ({ status, onCancel, currentStep, totalSteps }) => (
@@ -220,7 +219,7 @@ const PDFLinkRemover = () => {
         setDownloadBlob(null);
       }
     } catch (error) {
-      logger.error('Network or processing error', error, 'PDFLinkRemover');
+      console.error('Network or processing error:', error);
       setMessage('Error: Failed to remove links. Check your connection or try again.');
       setDownloadBlob(null);
     } finally {

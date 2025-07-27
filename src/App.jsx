@@ -7,7 +7,6 @@ import GoogleAds from "./components/GoogleAds";
 import GTMBody from "./components/GTMBody";
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/Home";
-import Signup from "./pages/Signup";
 import Toolkit from "./pages/Toolkit";
 import PDFTool from "./pages/PDFTool";
 import ImageTools from "./pages/ImageTools";
@@ -41,7 +40,6 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/help" element={<Help />} />
               <Route path="/blog" element={<Blog />} />
-              <Route path="/signup" element={<Signup />} />
               <Route path="/toolkit" element={<Toolkit />} />
               <Route path="/pdf-tool" element={<PDFTool />} />
               <Route path="/image-tools" element={<ImageTools />} />

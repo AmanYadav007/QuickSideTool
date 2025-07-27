@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Lock, Unlock, Eye, EyeOff, Loader2, Upload, X } from 'lucide-react';
 import Confetti from 'react-confetti';
-import logger from '../utils/logger';
 
 const PDFUnlocker = () => {
   const [file, setFile] = useState(null);
@@ -154,7 +153,7 @@ const PDFUnlocker = () => {
         setMessage(specificMessage);
       }
     } catch (error) {
-      logger.error(`Error ${action}ing PDF`, error, 'PDFUnlocker');
+      console.error(`Error ${action}ing PDF:`, error);
       setMessage(`Error: Failed to ${action} PDF. Please check your internet connection or try again later.`);
     } finally {
       setIsLoading(false);

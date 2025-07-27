@@ -3,7 +3,6 @@ import { useDropzone } from 'react-dropzone';
 import { ArrowLeft, Upload, Download, Image as ImageIcon, Lock, Unlock, Trash2, Copy, X, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import JSZip from 'jszip';
-import logger from '../utils/logger';
 
 const ImageResize = () => {
     const [images, setImages] = useState([]);
@@ -72,7 +71,7 @@ const ImageResize = () => {
                 };
                 img.onerror = () => {
                     URL.revokeObjectURL(objectUrl);
-                    logger.error("Failed to load image for preview", file.name, 'ImageResize');
+                    console.error("Failed to load image for preview:", file.name);
                     resolve(null);
                 };
                 img.src = objectUrl;
@@ -177,14 +176,14 @@ const ImageResize = () => {
                         error: null,
                     };
                 } catch (error) {
-                    logger.error(`Error resizing image ${img.original.name}`, error, 'ImageResize');
+                    console.error(`Error resizing image ${img.original.name}:`, error);
                     return { ...img, resized: null, error: `Failed to resize: ${error.message}` };
                 }
             });
             const resizedImages = await Promise.all(resizedImagesPromises);
             setImages(resizedImages);
         } catch (error) {
-            logger.error('An unexpected error occurred during batch resizing', error, 'ImageResize');
+            console.error('An unexpected error occurred during batch resizing:', error);
             alert('An unexpected error occurred during batch resizing. Check console for details.');
         } finally {
             setResizing(false);
@@ -223,7 +222,7 @@ const ImageResize = () => {
                 } : item
             ));
         } catch (error) {
-            logger.error('Error resizing individual image', error, 'ImageResize');
+            console.error('Error resizing individual image:', error);
             setImages(prev => prev.map((item, i) => i === index ? { ...item, resized: null, error: `Failed: ${error.message}` } : item));
             alert('There was an error resizing the image. Check console for details.');
         } finally {
@@ -346,7 +345,7 @@ const ImageResize = () => {
                 document.body.removeChild(link);
                 URL.revokeObjectURL(link.href);
             }).catch(error => {
-                logger.error("Error generating zip", error, 'ImageResize');
+                console.error("Error generating zip:", error);
                 alert("Failed to generate zip file. Please try again.");
             });
         }

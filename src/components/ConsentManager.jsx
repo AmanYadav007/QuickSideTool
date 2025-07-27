@@ -7,15 +7,13 @@ import {
   isEuropeanUser, 
   revokeConsent 
 } from '../utils/consent';
-import * as pdfjsLib from 'pdfjs-dist/build/pdf';
-import 'pdfjs-dist/build/pdf.worker.entry';
 
 const ConsentManager = () => {
   const [showConsent, setShowConsent] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [preferences, setPreferences] = useState({
-    necessary: true,
+    necessary: true, // Always true
     analytics: false,
     marketing: false,
     preferences: false

@@ -3,7 +3,6 @@ import { useDropzone } from 'react-dropzone';
 import { ArrowLeft, Upload, Download, Image as ImageIcon, Trash2, X, Loader2 } from 'lucide-react'; // Added X and Loader2
 import { Link } from 'react-router-dom';
 import JSZip from 'jszip';
-import logger from '../utils/logger';
 
 const ImageCompressor = () => {
   const [images, setImages] = useState([]);
@@ -53,7 +52,7 @@ const ImageCompressor = () => {
         };
         img.onerror = () => {
           URL.revokeObjectURL(objectUrl); // Revoke even if error
-          logger.error("Failed to load image for preview", file.name, 'ImageCompressor');
+          console.error("Failed to load image for preview:", file.name);
           resolve(null); // Resolve with null to filter out bad files
         };
         img.src = objectUrl; // Use the created object URL
@@ -142,14 +141,14 @@ const ImageCompressor = () => {
           const compressedFile = await compressImage(img.original, quality, outputFormat);
           return { ...img, compressed: compressedFile, error: null };
         } catch (error) {
-          logger.error(`Error compressing image ${img.original.name}`, error, 'ImageCompressor');
+          console.error(`Error compressing image ${img.original.name}:`, error);
           return { ...img, compressed: null, error: `Failed: ${error.message}` };
         }
       });
       const compressedResults = await Promise.all(compressedImagesPromises);
       setImages(compressedResults);
     } catch (error) {
-      logger.error('An unexpected error occurred during batch compression', error, 'ImageCompressor');
+      console.error('An unexpected error occurred during batch compression:', error);
       alert('An unexpected error occurred during batch compression. Check console for details.');
     } finally {
       setCompressing(false);
@@ -201,7 +200,7 @@ const ImageCompressor = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href); // Clean up the URL
     } catch (error) {
-      logger.error("Error generating zip", error, 'ImageCompressor');
+      console.error("Error generating zip:", error);
       alert("Failed to generate zip file. Please try again.");
     }
   };
