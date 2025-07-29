@@ -15,6 +15,11 @@ import ImageCompressor from "./components/ImageCompressor";
 import QrCodeGenerator from "./components/QrCodeGenerator";
 import PDFLinkRemover from "./components/PDFLinkRemover";
 import PDFUnlocker from "./components/PDFUnlocker";
+import PDFToWordConverter from "./components/PDFToWordConverter";
+import OCRProcessor from "./components/OCRProcessor";
+import PDFCompressor from "./components/PDFCompressor";
+import WordToPDFConverter from "./components/WordToPDFConverter";
+import FileConverter from "./components/FileConverter";
 import DiamondQuestGame from "./components/DiamondQuestGame";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -32,8 +37,8 @@ function App() {
       <GTMBody />
       <ErrorBoundary>
         <AuthProvider>
-          <Router>
-            <Routes>
+    <Router>
+      <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/about" element={<About />} />
@@ -41,18 +46,23 @@ function App() {
               <Route path="/help" element={<Help />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/toolkit" element={<Toolkit />} />
-              <Route path="/pdf-tool" element={<PDFTool />} />
-              <Route path="/image-tools" element={<ImageTools />} />
-              <Route path="/image-tools/resize" element={<ImageResize />} />
-              <Route path="/image-tools/compress" element={<ImageCompressor />} />
+        <Route path="/pdf-tool" element={<PDFTool />} />
+        <Route path="/image-tools" element={<ImageTools />} />
+        <Route path="/image-tools/resize" element={<ImageResize />} />
+        <Route path="/image-tools/compress" element={<ImageCompressor />} />
               <Route path="/qr-tool" element={<QrCodeGenerator />} />
-              <Route path="/unlock-pdf" element={<PDFUnlocker />} />
-              <Route path="/pdf-link-remove" element={<PDFLinkRemover />} />
-              <Route path="/diamond-mines" element={<DiamondQuestGame />} />
+        <Route path="/unlock-pdf" element={<PDFUnlocker />} />
+        <Route path="/pdf-link-remove" element={<PDFLinkRemover />} />
+              <Route path="/pdf-to-word" element={<PDFToWordConverter />} />
+              <Route path="/ocr-processor" element={<OCRProcessor />} />
+              <Route path="/pdf-compressor" element={<PDFCompressor />} />
+              <Route path="/word-to-pdf" element={<WordToPDFConverter />} />
+              <Route path="/file-converter" element={<FileConverter />} />
+        <Route path="/diamond-mines" element={<DiamondQuestGame />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
-            </Routes>
-          </Router>
+      </Routes>
+    </Router>
         </AuthProvider>
       </ErrorBoundary>
     </HelmetProvider>

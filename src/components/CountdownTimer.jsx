@@ -64,10 +64,10 @@ const CountdownTimer = () => {
     >
       <div className="text-center mb-6">
         <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
-          🚀 Launch Special: 50% Off!
+          🎉 Launch Celebration!
         </h3>
         <p className="text-gray-300 text-sm md:text-base">
-          Early bird pricing ends in:
+          Join thousands of users in:
         </p>
       </div>
       
@@ -79,15 +79,15 @@ const CountdownTimer = () => {
       </div>
       
       <div className="text-center">
-        <p className="text-green-400 font-semibold text-sm md:text-base mb-3">
-          Pro Plan: $4.50/month (was $9/month)
+        <p className="text-blue-400 font-semibold text-sm md:text-base mb-3">
+          🆓 100% Free Forever - No Hidden Costs!
         </p>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 text-sm md:text-base"
+          className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 text-sm md:text-base"
         >
-          Claim 50% Off Now
+          Start Using Free Tools
         </motion.button>
       </div>
     </motion.div>

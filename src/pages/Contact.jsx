@@ -36,7 +36,7 @@ const Contact = () => {
 
   // --- IMPORTANT ---
   // Paste the Web App URL from your Google Apps Script deployment here.
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMVPqt2jcrdpNEx5pths04Tu5E177BOmoWfV6hqWdwxnXDQ8CGcJNLqN7Ugh-YUOjt/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6IncKBU68LN7ZxWkBIEQJV_S_m18G1CSgPi1o4jUZ093FUSHTF-QS87BAOyepP1Vu/exec';
 
   // --- FORM SUBMISSION HANDLER ---
   const handleSubmit = async (e) => {

@@ -8,6 +8,10 @@ import {
   Gamepad2,
   Unlock,
   Link as LinkIcon,
+  FileType,
+  Eye,
+  Zap,
+  Upload,
 } from "lucide-react";
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import AdSense from '../components/AdSense';
@@ -97,12 +101,20 @@ const Toolkit = () => {
                 gradientTo="to-teal-500"
               />
               <ToolCard
+                to="/file-converter"
+                icon={<FileType size={36} />}
+                title="File Converter"
+                description="Convert files between PDF, Word, Images, and more formats."
+                gradientFrom="from-emerald-500"
+                gradientTo="to-green-500"
+              />
+              <ToolCard
                 to="/qr-tool"
                 icon={<QrCode size={36} />}
                 title="QR Code Generator"
                 description="Generate custom QR codes for links, text, and more."
-                gradientFrom="from-yellow-500"
-                gradientTo="to-orange-500"
+                gradientFrom="from-cyan-500"
+                gradientTo="to-blue-500"
               />
             <ToolCard
                 to="/pdf-link-remove"

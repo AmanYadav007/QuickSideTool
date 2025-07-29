@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  FileText, 
-  Image, 
-  QrCode, 
+import {
+  FileText,
+  Image,
+  QrCode,
   Lock, 
   Link, 
   Download, 
   Upload, 
   CheckCircle, 
-  Star, 
-  Users, 
-  Zap, 
+  Star,
+  Users,
+  Zap,
   Shield,
   ArrowRight,
   Play,
@@ -137,19 +137,19 @@ const HomePage = () => {
               <Star className="w-4 h-4 mr-2" />
               Trusted by 10,000+ users worldwide
             </div>
-            
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Your Essential
-              <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                Digital Toolkit
-              </span>
-            </h1>
+
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                Your Essential
+                <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                  Digital Toolkit
+                </span>
+              </h1>
             
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-4xl mx-auto leading-relaxed">
               Transform your productivity with professional-grade tools for PDF manipulation, image processing, QR code generation, and more.
               Everything you need to handle digital files efficiently, securely, and completely free.
-            </p>
-
+              </p>
+              
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
               {stats.map((stat, index) => (
@@ -167,7 +167,7 @@ const HomePage = () => {
                   <p className="text-gray-400 text-sm">{stat.label}</p>
                 </motion.div>
               ))}
-            </div>
+              </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
@@ -188,10 +188,10 @@ const HomePage = () => {
               </motion.button>
             </div>
           </motion.div>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* Features Section */}
+        {/* Features Section */}
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -202,31 +202,31 @@ const HomePage = () => {
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Powerful Tools for Every Need
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              </h2>
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               From PDF manipulation to image processing, we provide all the tools you need to work with digital files efficiently.
-            </p>
+              </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
+              {features.map((feature, index) => (
               <motion.div
-                key={index}
+                  key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-8 hover:border-purple-500/40 transition-all duration-300"
-              >
+                >
                 <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6">
                   <div className="text-white">{feature.icon}</div>
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
                 <p className="text-gray-300 leading-relaxed">{feature.description}</p>
               </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
       {/* Tools Suite Section */}
       <section className="py-20 px-4 bg-gradient-to-r from-purple-900/20 to-pink-900/20">
@@ -239,8 +239,8 @@ const HomePage = () => {
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Complete Tool Suite
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              </h2>
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Access our comprehensive collection of digital tools designed to streamline your workflow and boost productivity.
             </p>
           </motion.div>
@@ -302,7 +302,7 @@ const HomePage = () => {
               </RouterLink>
             </motion.div>
           </div>
-        </div>
+            </div>
       </section>
 
       {/* Testimonials Section */}
@@ -325,27 +325,27 @@ const HomePage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <motion.div
-                key={index}
+                  key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-8"
-              >
+                >
                 <div className="flex items-center mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                   ))}
-                </div>
+                    </div>
                 <p className="text-gray-300 mb-6 leading-relaxed">"{testimonial.content}"</p>
                 <div>
                   <p className="text-white font-semibold">{testimonial.name}</p>
                   <p className="text-gray-400 text-sm">{testimonial.role}</p>
-                </div>
+                  </div>
               </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
       {/* Use Cases Section */}
       <section className="py-20 px-4 bg-gradient-to-r from-purple-900/20 to-pink-900/20">
@@ -359,15 +359,15 @@ const HomePage = () => {
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Perfect for Every Use Case
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Whether you're a professional, student, or casual user, our tools adapt to your specific needs.
-            </p>
+              </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {useCases.map((useCase, index) => (
               <motion.div
-                key={index}
+                  key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -379,10 +379,10 @@ const HomePage = () => {
                 <h3 className="text-xl font-bold text-white mb-4">{useCase.title}</h3>
                 <p className="text-gray-300 leading-relaxed">{useCase.description}</p>
               </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
       {/* CTA Section */}
       <section className="py-20 px-4">
@@ -397,7 +397,7 @@ const HomePage = () => {
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
               Join thousands of users who are already saving time and improving their workflow with QuickSideTool.
-            </p>
+                </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -417,7 +417,7 @@ const HomePage = () => {
               </motion.button>
             </div>
           </motion.div>
-        </div>
+            </div>
       </section>
     </div>
   );

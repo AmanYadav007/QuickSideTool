@@ -9,6 +9,8 @@ import {
   Trash2,
   GripVertical,
   Loader2,
+  XCircle,
+  Plus,
   // RotateCw, // Removed RotateCw import as it was commented out anyway and not used for compression
 } from "lucide-react";
 // import { Link } from "react-router-dom";
@@ -390,7 +392,6 @@ const App = () => {
         });
         showNotification("Page(s) replaced successfully!", "success");
       } catch (error) {
-        console.error("Error replacing page:", error);
         showNotification("Error replacing page: " + error.message, "error");
       } finally {
         setReplaceLoading(false);
@@ -478,7 +479,7 @@ const App = () => {
         }
 
         let cumulativePagesProcessed = 0;
-
+        
         for (let fileIndex = 0; fileIndex < acceptedFiles.length; fileIndex++) {
           if (cancelProcessingRef.current) break;
 
@@ -510,7 +511,7 @@ const App = () => {
           };
 
           const pagesFromFile = await processFileIntoPageData(
-            file,
+                  file,
             updateCurrentFileProgress
           );
           newOverallPages.push(...pagesFromFile);
@@ -526,7 +527,6 @@ const App = () => {
         setPages((prevPages) => [...prevPages, ...newOverallPages]);
         showNotification("Files added and processed successfully!", "success");
       } catch (error) {
-        console.error("Error in onDrop:", error);
         if (
           !error.message.includes("Unsupported files:") &&
           !error.message.includes("Unsupported file types detected.")
@@ -602,10 +602,6 @@ const App = () => {
             copiedPage.setRotation(degrees(page.rotation || 0)); // Apply rotation
             pdfDoc.addPage(copiedPage);
           } catch (error) {
-            console.error(
-              `Error embedding PDF page ${i + 1} from file ${page.file.name}:`,
-              error
-            );
             showNotification(
               `Failed to embed PDF page ${i + 1} from ${
                 page.file.name
@@ -623,9 +619,6 @@ const App = () => {
             } else if (page.file.type.includes("png")) {
               image = await pdfDoc.embedPng(imageBytes);
             } else {
-              console.warn(
-                `Unsupported image type for page ${i + 1}: ${page.file.type}`
-              );
               showNotification(
                 `Unsupported image type for page ${i + 1} from ${
                   page.file.name
@@ -647,12 +640,6 @@ const App = () => {
               });
             }
           } catch (error) {
-            console.error(
-              `Error embedding image page ${i + 1} from file ${
-                page.file.name
-              }:`,
-              error
-            );
             showNotification(
               `Failed to embed image page ${i + 1} from ${
                 page.file.name
@@ -699,7 +686,6 @@ const App = () => {
       setTimeout(modalCleanup, 1500);
       showNotification("PDF created and downloaded successfully!", "success");
     } catch (error) {
-      console.error("Error during PDF creation:", error);
       if (
         !error.message.includes("PDF creation cancelled by user.") &&
         !error.message.includes("Failed to embed") &&
@@ -707,7 +693,7 @@ const App = () => {
       ) {
         showNotification(
           error.message ||
-            "An error occurred while creating the PDF. Please check console for details.",
+            "An error occurred while creating the PDF.",
           "error"
         );
       }
@@ -753,8 +739,8 @@ const App = () => {
     <div className="text-white font-sans antialiased relative">
       <div className={`container mx-auto pt-16 pb-8 md:pt-24 md:pb-12 space-y-8 relative z-10 ${pages.length === 0 ? 'flex flex-col items-center' : ''}`}>
         <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 drop-shadow-md animate-fade-in-down">
-          PDF & Image Combiner
-        </h1>
+            PDF & Image Combiner
+          </h1>
 
         {/* Hidden file input for replacement functionality */}
         <input
@@ -814,9 +800,9 @@ const App = () => {
         {pages.length > 0 && (
           <div className="p-7 space-y-7 bg-white/5 backdrop-blur-lg rounded-2xl shadow-xl border border-white/10 animate-fade-in-up">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-              <h2 className="text-1xl font-bold text-white">
-                Your Pages ({pages.length})
-              </h2>
+                <h2 className="text-1xl font-bold text-white">
+                  Your Pages ({pages.length})
+                </h2>
               <div className="flex gap-3">
                 {/* {pages.length > 0 && ( // Show clear all if there are pages
                   <button
@@ -834,9 +820,9 @@ const App = () => {
                     Clear All
                   </button>
                 )} */}
-                <button
+                  <button
                   onClick={createFinalPDF}
-                  disabled={isLoading || pages.length === 0}
+                    disabled={isLoading || pages.length === 0}
                   className={`px-6 py-2.5 rounded-full flex items-center justify-center font-semibold text-base whitespace-nowrap
                     transition-all duration-300 transform
                     ${
@@ -851,14 +837,14 @@ const App = () => {
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Generating PDF...
                     </>
-                  ) : (
-                    <>
+                ) : (
+                  <>
                       <Download className="w-4 h-4 mr-2" />
                       Download Combined PDF
-                    </>
-                  )}
-                </button>
-              </div>
+                  </>
+                )}
+                  </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
