@@ -15,12 +15,15 @@ const Footer = () => {
             <p className="text-white/70 mb-4 max-w-md">
               Your essential digital toolkit for professional file processing. Free, secure, and powerful tools for PDFs, images, and more.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
               <a href="https://github.com/AmanYadav007/QuickSideTool" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="hover:text-purple-300 transition">
                 <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.004.07 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.339-2.221-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.295 2.748-1.025 2.748-1.025.546 1.378.202 2.397.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.847-2.337 4.695-4.566 4.944.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.749 0 .267.18.579.688.481C19.138 20.2 22 16.447 22 12.021 22 6.484 17.523 2 12 2z"/></svg>
               </a>
               <a href="https://aguider.in/" target="_blank" rel="noopener noreferrer" aria-label="Website" className="hover:text-purple-300 transition">
                 <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 5.523 4.477 10 10 10s10-4.477 10-10c0-5.523-4.477-10-10-10zm0 18c-4.411 0-8-3.589-8-8 0-4.411 3.589-8 8-8s8 3.589 8 8c0 4.411-3.589 8-8 8zm0-14c-3.309 0-6 2.691-6 6 0 3.309 2.691 6 6 6s6-2.691 6-6c0-3.309-2.691-6-6-6zm0 10c-2.206 0-4-1.794-4-4s1.794-4 4-4 4 1.794 4 4-1.794 4-4 4z"/></svg>
+              </a>
+              <a href="https://www.producthunt.com/products/quick-side-tool?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-quick&#0045;side&#0045;tool" target="_blank" rel="noopener noreferrer" aria-label="Product Hunt">
+                <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=685960&theme=light&t=1754546624568" alt="Quick Side Tool - Chrome web store | Product Hunt" style={{ width: '250px', height: '54px' }} width="250" height="54" />
               </a>
             </div>
           </div>
