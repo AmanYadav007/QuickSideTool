@@ -63,11 +63,7 @@ const HomePage = () => {
       title: "Link Management",
       description: "Remove unwanted links and hyperlinks from PDFs"
     },
-    {
-      icon: <Download className="w-8 h-8" />,
-      title: "File Conversion",
-      description: "Convert between different file formats seamlessly"
-    }
+
   ];
 
   const stats = [

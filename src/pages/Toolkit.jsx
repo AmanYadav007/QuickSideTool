@@ -8,7 +8,6 @@ import {
   Gamepad2,
   Unlock,
   Link as LinkIcon,
-  FileType,
   Eye,
   Zap,
   Upload,
@@ -100,14 +99,7 @@ const Toolkit = () => {
                 gradientFrom="from-green-500"
                 gradientTo="to-teal-500"
               />
-              <ToolCard
-                to="/file-converter"
-                icon={<FileType size={36} />}
-                title="File Converter"
-                description="Convert files between PDF, Word, Images, and more formats."
-                gradientFrom="from-emerald-500"
-                gradientTo="to-green-500"
-              />
+
               <ToolCard
                 to="/qr-tool"
                 icon={<QrCode size={36} />}

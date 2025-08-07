@@ -19,7 +19,7 @@ import PDFToWordConverter from "./components/PDFToWordConverter";
 import OCRProcessor from "./components/OCRProcessor";
 import PDFCompressor from "./components/PDFCompressor";
 import WordToPDFConverter from "./components/WordToPDFConverter";
-import FileConverter from "./components/FileConverter";
+
 import DiamondQuestGame from "./components/DiamondQuestGame";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -57,7 +57,7 @@ function App() {
               <Route path="/ocr-processor" element={<OCRProcessor />} />
               <Route path="/pdf-compressor" element={<PDFCompressor />} />
               <Route path="/word-to-pdf" element={<WordToPDFConverter />} />
-              <Route path="/file-converter" element={<FileConverter />} />
+
         <Route path="/diamond-mines" element={<DiamondQuestGame />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
