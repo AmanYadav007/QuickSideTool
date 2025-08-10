@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import SEO from './SEO';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Download, Settings, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -88,6 +89,11 @@ const QRCodeGenerator = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-950 text-white font-sans antialiased">
+      <SEO
+        title="Free QR Code Generator – Create QR Codes Online"
+        description="Make QR codes for links, Wi‑Fi, WhatsApp, and more. High‑quality PNG/SVG, free."
+        url="https://quicksidetool.com/qr-code-generator"
+      />
       {/* Animated Background Blobs */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute w-64 h-64 rounded-full bg-blue-500/20 blur-3xl animate-blob-fade top-1/4 left-[15%] animation-delay-0"></div>

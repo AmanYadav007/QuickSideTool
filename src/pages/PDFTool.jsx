@@ -1,4 +1,5 @@
 import React from 'react';
+import SEO from '../components/SEO';
 import PDFManipulator from '../components/PDFManipulator';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText, Info, HelpCircle, CheckCircle, Users, Shield, Zap } from 'lucide-react';
@@ -6,6 +7,11 @@ import { ArrowLeft, FileText, Info, HelpCircle, CheckCircle, Users, Shield, Zap 
 const PDFTool = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white font-sans antialiased relative">
+      <SEO
+        title="Free Online PDF Tools – Compress, Unlock, Convert"
+        description="All your essential PDF utilities in one place. Merge, split, compress, unlock, and convert PDFs. Fast, secure, no sign‑up."
+        url="https://quicksidetool.com/pdf-tool"
+      />
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute w-64 h-64 rounded-full bg-sky-400/30 blur-3xl animate-blob top-1/4 left-[15%] mix-blend-lighten"></div>
         <div className="absolute w-80 h-80 rounded-full bg-purple-400/30 blur-3xl animate-blob animation-delay-2000 top-[65%] left-[70%] mix-blend-lighten"></div>

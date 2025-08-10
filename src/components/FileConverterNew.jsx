@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import SEO from './SEO';
 import { useDropzone } from 'react-dropzone';
 import { Link } from 'react-router-dom';
 import { 
@@ -78,7 +79,7 @@ const FileConverterNew = () => {
     const formData = new FormData();
     formData.append('file', file);
     
-    const backendUrl = process.env.REACT_APP_BACKEND_URL;
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://quicksidetoolbackend.onrender.com';
     
     const endpoint = conversionType === 'pdf-to-word' 
       ? '/adobe/convert/pdf-to-word' 
@@ -87,10 +88,23 @@ const FileConverterNew = () => {
     try {
       setMessage('Processing your file...');
       
-      const response = await fetch(`${backendUrl}${endpoint}`, {
+      let response = await fetch(`${backendUrl}${endpoint}`, {
         method: 'POST',
         body: formData,
       });
+
+      // If Adobe fails for PDF->Word, retry with basic converter
+      if (!response.ok && conversionType === 'pdf-to-word') {
+        try {
+          setMessage('Adobe conversion failed, retrying with basic converter...');
+          response = await fetch(`${backendUrl}/convert/pdf-to-word`, {
+            method: 'POST',
+            body: formData,
+          });
+        } catch (retryErr) {
+          // proceed to error handling below
+        }
+      }
 
       if (response.ok) {
         const blob = await response.blob();
@@ -139,6 +153,11 @@ const FileConverterNew = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-white font-sans antialiased">
+      <SEO
+        title="Free Online File Converter – PDF, DOCX, JPG, PNG"
+        description="Convert files between popular formats in your browser. Fast, private, no sign‑up."
+        url="https://quicksidetool.com/file-converter"
+      />
       <div className="relative z-10 flex-1 flex flex-col">
         {/* Header */}
         <header className="py-4 px-4 md:px-8 border-b border-white/10">

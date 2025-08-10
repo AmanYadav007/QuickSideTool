@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import SEO from '../components/SEO';
 import { useDropzone } from 'react-dropzone';
 import * as pdfjsLib from 'pdfjs-dist';
 import Tesseract from 'tesseract.js';
@@ -393,6 +394,11 @@ const OCRProcessor = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+      <SEO
+        title="OCR PDF to Word/Text – Convert Scanned PDF to Editable"
+        description="Turn scans into editable DOCX or text using OCR. Multilingual, accurate, free."
+        url="https://quicksidetool.com/ocr-processor"
+      />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">

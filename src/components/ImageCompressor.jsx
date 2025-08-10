@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import SEO from './SEO';
 import { useDropzone } from 'react-dropzone';
 import { ArrowLeft, Upload, Download, Image as ImageIcon, Trash2, X, Loader2 } from 'lucide-react'; // Added X and Loader2
 import { Link } from 'react-router-dom';
@@ -222,6 +223,11 @@ const ImageCompressor = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 to-gray-950 text-white font-sans antialiased relative">
+      <SEO
+        title="Compress Image Online – JPG/PNG/WebP to Smaller Size"
+        description="Reduce image size without big quality loss. Target KB size. Drag & drop. Free and fast."
+        url="https://quicksidetool.com/image-tools/compress"
+      />
       {/* Animated Background Blobs */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute w-64 h-64 rounded-full bg-blue-500/20 blur-3xl animate-blob-fade top-1/4 left-[15%] animation-delay-0"></div>

@@ -2,62 +2,140 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://quicksidetool.com/</loc>
-    <lastmod>2024-01-15</lastmod>
+    <lastmod>2025-08-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://quicksidetool.com/toolkit</loc>
-    <lastmod>2024-01-15</lastmod>
+    <lastmod>2025-08-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://quicksidetool.com/pdf-tool</loc>
-    <lastmod>2024-01-15</lastmod>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/pdf-editor</loc>
+    <lastmod>2025-08-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://quicksidetool.com/unlock-pdf</loc>
-    <lastmod>2024-01-15</lastmod>
+    <lastmod>2025-08-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/remove-pdf-password</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://quicksidetool.com/pdf-link-remove</loc>
-    <lastmod>2024-01-15</lastmod>
+    <lastmod>2025-08-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://quicksidetool.com/remove-links-from-pdf</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://quicksidetool.com/image-tools</loc>
-    <lastmod>2024-01-15</lastmod>
+    <lastmod>2025-08-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://quicksidetool.com/image-tools/resize</loc>
-    <lastmod>2024-01-15</lastmod>
+    <lastmod>2025-08-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/image-resizer</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://quicksidetool.com/image-tools/compress</loc>
-    <lastmod>2024-01-15</lastmod>
+    <lastmod>2025-08-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://quicksidetool.com/image-compressor</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://quicksidetool.com/qr-tool</loc>
-    <lastmod>2024-01-15</lastmod>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/qr-code-generator</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/pdf-to-word</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/pdf-to-docx</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/word-to-pdf</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/docx-to-pdf</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/pdf-compressor</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/compress-pdf</loc>
+    <lastmod>2025-08-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://quicksidetool.com/diamond-mines</loc>
-    <lastmod>2024-01-15</lastmod>
+    <lastmod>2025-08-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/file-converter</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset> 

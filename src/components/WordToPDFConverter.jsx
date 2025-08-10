@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import SEO from './SEO';
 import { useDropzone } from 'react-dropzone';
 import { PDFDocument, rgb } from 'pdf-lib';
 import mammoth from 'mammoth';
@@ -309,6 +310,11 @@ Quality Settings:
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
+      <SEO
+        title="Free Word to PDF Converter – DOCX to PDF Online"
+        description="Convert Word (DOC/DOCX) to PDF online. 100% free, no email. Preserves formatting and fonts."
+        url="https://quicksidetool.com/word-to-pdf"
+      />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import SEO from './SEO';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Link as LinkIcon, Upload, Download, FileText, Loader2, X, CheckCircle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
@@ -232,6 +233,11 @@ const PDFLinkRemover = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-950 text-white font-sans antialiased">
+      <SEO
+        title="Remove Hyperlinks from PDF – Clean PDF Links Online"
+        description="Strip all links/hyperlinks from PDF in one click. Privacy‑friendly, free tool."
+        url="https://quicksidetool.com/pdf-link-remove"
+      />
       {/* Animated Background Blobs */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute w-64 h-64 rounded-full bg-blue-500/20 blur-3xl animate-blob-fade top-1/4 left-[15%] animation-delay-0"></div>

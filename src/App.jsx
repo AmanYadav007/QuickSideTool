@@ -48,16 +48,27 @@ function App() {
               <Route path="/blog" element={<Blog />} />
               <Route path="/toolkit" element={<Toolkit />} />
         <Route path="/pdf-tool" element={<PDFTool />} />
+        {/* Keyword-friendly aliases */}
+        <Route path="/pdf-editor" element={<PDFTool />} />
         <Route path="/image-tools" element={<ImageTools />} />
         <Route path="/image-tools/resize" element={<ImageResize />} />
+        <Route path="/image-resizer" element={<ImageResize />} />
         <Route path="/image-tools/compress" element={<ImageCompressor />} />
+        <Route path="/image-compressor" element={<ImageCompressor />} />
               <Route path="/qr-tool" element={<QrCodeGenerator />} />
+        <Route path="/qr-code-generator" element={<QrCodeGenerator />} />
         <Route path="/unlock-pdf" element={<PDFUnlocker />} />
+        <Route path="/remove-pdf-password" element={<PDFUnlocker />} />
         <Route path="/pdf-link-remove" element={<PDFLinkRemover />} />
+        <Route path="/remove-links-from-pdf" element={<PDFLinkRemover />} />
               <Route path="/pdf-to-word" element={<PDFToWordConverter />} />
+        <Route path="/pdf-to-docx" element={<PDFToWordConverter />} />
               <Route path="/ocr-processor" element={<OCRProcessor />} />
+        <Route path="/ocr-pdf-to-word" element={<OCRProcessor />} />
                               <Route path="/pdf-compressor" element={<PDFCompressor />} />
+        <Route path="/compress-pdf" element={<PDFCompressor />} />
                 <Route path="/word-to-pdf" element={<WordToPDFConverter />} />
+        <Route path="/docx-to-pdf" element={<WordToPDFConverter />} />
                 <Route path="/file-converter" element={<FileConverterNew />} />
 
                 <Route path="/diamond-mines" element={<DiamondQuestGame />} />

@@ -1,10 +1,16 @@
 import React from "react";
+import SEO from "../components/SEO";
 import { Link } from "react-router-dom";
 import { Image, Minimize2, ArrowLeft, FileText, Info, HelpCircle, CheckCircle, AlertCircle } from "lucide-react";
 
 const ImageTools = () => {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-950 text-white font-sans antialiased">
+      <SEO
+        title="Free Image Tools – Compress, Resize, Convert"
+        description="Quick image utilities for creators and students. Compress JPG/PNG/WebP, resize to exact pixels, convert formats. Free and private."
+        url="https://quicksidetool.com/image-tools"
+      />
       {/* Animated Background Blobs */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute w-64 h-64 rounded-full bg-blue-500/20 blur-3xl animate-blob-fade top-1/4 left-[15%] animation-delay-0"></div>

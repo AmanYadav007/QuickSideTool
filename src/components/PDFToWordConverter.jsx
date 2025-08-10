@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import SEO from './SEO';
 import { useDropzone } from 'react-dropzone';
 import * as pdfjsLib from 'pdfjs-dist';
 import JSZip from 'jszip';
@@ -576,6 +577,11 @@ const PDFToWordConverter = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+      <SEO
+        title="Free PDF to Word Converter Online – No Email, Instant Download"
+        description="Convert PDF to Word (DOCX) free, no sign‑up. Keeps layout and fonts. Fast, secure, no watermark."
+        url="https://quicksidetool.com/pdf-to-word"
+      />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">

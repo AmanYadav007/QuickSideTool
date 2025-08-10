@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import SEO from './SEO';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Lock, Unlock, Eye, EyeOff, Loader2, Upload, X } from 'lucide-react';
 import Confetti from 'react-confetti';
@@ -173,6 +174,11 @@ const PDFUnlocker = () => {
     <div
       className={`min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br ${currentTheme.gradient} animate-gradient-shift`}
     >
+      <SEO
+        title="Remove PDF Password Online – Unlock Protected PDF"
+        description="Remove password from PDF you own. Quick, secure, and private. Runs in your browser. No files stored."
+        url="https://quicksidetool.com/unlock-pdf"
+      />
       {showConfetti && <Confetti tweenDuration={1000} recycle={false} numberOfPieces={500} />}
 
       <div className="absolute inset-0 z-0 overflow-hidden">

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import SEO from './SEO';
 import { useDropzone } from 'react-dropzone';
 import { ArrowLeft, Upload, Download, Image as ImageIcon, Lock, Unlock, Trash2, Copy, X, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -407,6 +408,11 @@ const ImageResize = () => {
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 to-gray-950 text-white font-sans antialiased relative">
+            <SEO
+                title="Resize Image Online – Exact Width & Height in Pixels"
+                description="Resize images to custom dimensions or presets. JPG/PNG/WebP supported. Batch resize supported."
+                url="https://quicksidetool.com/image-tools/resize"
+            />
             {/* Background Animated Blobs */}
             <div className="absolute inset-0 z-0 overflow-hidden">
                 <div className="absolute w-64 h-64 rounded-full bg-blue-500/20 blur-3xl animate-blob-fade top-1/4 left-[15%] animation-delay-0"></div>
