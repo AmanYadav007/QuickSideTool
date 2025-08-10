@@ -81,9 +81,10 @@ const FileConverterNew = () => {
     
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://quicksidetoolbackend.onrender.com';
     
-    const endpoint = conversionType === 'pdf-to-word' 
-      ? '/adobe/convert/pdf-to-word' 
-      : '/adobe/convert/pdf-to-excel';
+    const preferAdobe = ((process.env.REACT_APP_USE_ADOBE || 'false') + '').toLowerCase() === 'true';
+    const endpoint = preferAdobe
+      ? (conversionType === 'pdf-to-word' ? '/adobe/convert/pdf-to-word' : '/adobe/convert/pdf-to-excel')
+      : (conversionType === 'pdf-to-word' ? '/convert/pdf-to-word' : '/convert/pdf-to-excel');
 
     try {
       setMessage('Processing your file...');
@@ -93,8 +94,8 @@ const FileConverterNew = () => {
         body: formData,
       });
 
-      // If Adobe fails, retry with basic converter for Word and Excel
-      if (!response.ok) {
+      // If Adobe was tried and failed, retry with basic converter for Word and Excel
+      if (!response.ok && preferAdobe) {
         try {
           setMessage('Adobe conversion failed, retrying with basic converter...');
           const basicEndpoint = conversionType === 'pdf-to-excel' ? '/convert/pdf-to-excel' : '/convert/pdf-to-word';
