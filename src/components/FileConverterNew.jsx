@@ -93,11 +93,12 @@ const FileConverterNew = () => {
         body: formData,
       });
 
-      // If Adobe fails for PDF->Word, retry with basic converter
-      if (!response.ok && conversionType === 'pdf-to-word') {
+      // If Adobe fails, retry with basic converter for Word and Excel
+      if (!response.ok) {
         try {
           setMessage('Adobe conversion failed, retrying with basic converter...');
-          response = await fetch(`${backendUrl}/convert/pdf-to-word`, {
+          const basicEndpoint = conversionType === 'pdf-to-excel' ? '/convert/pdf-to-excel' : '/convert/pdf-to-word';
+          response = await fetch(`${backendUrl}${basicEndpoint}`, {
             method: 'POST',
             body: formData,
           });
@@ -127,8 +128,11 @@ const FileConverterNew = () => {
         handleNotification('File converted successfully!', 'success');
 
       } else {
-        const errorData = await response.json();
-        const errorMessage = errorData.detail || 'Conversion failed. Please try again.';
+        let errorMessage = 'Conversion failed. Please try again.';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch {}
         setMessage(`Error: ${errorMessage}`);
         setDownloadBlob(null);
         handleNotification(errorMessage, 'error');
