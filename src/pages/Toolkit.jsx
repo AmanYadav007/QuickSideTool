@@ -103,17 +103,19 @@ const Toolkit = () => {
                 to="/file-converter"
                 icon={<FileType size={36} />}
                 title="File Converter"
-                description="Convert PDFs to Word/Excel with Adobe quality."
+                description="Coming soon"
                 gradientFrom="from-orange-500"
                 gradientTo="to-red-500"
+                disabled
               />
               <ToolCard
                 to="/pdf-compressor"
                 icon={<Minus size={36} />}
                 title="PDF Compressor"
-                description="Reduce PDF file size while maintaining quality."
+                description="Coming soon"
                 gradientFrom="from-blue-500"
                 gradientTo="to-cyan-500"
+                disabled
               />
               <ToolCard
                 to="/qr-tool"
@@ -182,35 +184,48 @@ const ToolCard = ({
   description,
   gradientFrom,
   gradientTo,
-}) => (
-  <Link
-    to={to}
-    className="group relative rounded-2xl p-7 flex flex-col items-center text-center
-               bg-white bg-opacity-5 backdrop-filter backdrop-blur-md border border-white border-opacity-20
-               transform transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl-custom
-               hover:bg-opacity-10 overflow-hidden animate-fade-in-up"
-  >
-    {/* Animated Gradient Border on Hover */}
+  disabled = false,
+}) => {
+  const inner = (
     <div
-      className={`absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-500 ease-out group-hover:border-opacity-100 group-hover:border-gradient group-hover:${gradientFrom} group-hover:${gradientTo} pointer-events-none`}
-    ></div>
-
-    <div className="relative z-10 flex flex-col items-center">
+      className={`group relative rounded-2xl p-7 flex flex-col items-center text-center
+                 bg-white bg-opacity-5 backdrop-filter backdrop-blur-md border border-white border-opacity-20
+                 transform transition-all duration-500 ease-out overflow-hidden animate-fade-in-up
+                 ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-2 hover:shadow-2xl-custom hover:bg-opacity-10'}`}
+    >
       <div
-        className={`w-16 h-16 mb-4 rounded-full flex items-center justify-center text-white shadow-xl
-                      bg-gradient-to-br ${gradientFrom} ${gradientTo}
-                      transform transition-all duration-500 ease-out group-hover:scale-110 group-hover:shadow-2xl-active`}
-      >
-        {icon}
+        className={`absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-500 ease-out ${disabled ? '' : `group-hover:border-opacity-100 group-hover:border-gradient group-hover:${gradientFrom} group-hover:${gradientTo}`} pointer-events-none`}
+      ></div>
+
+      {disabled && (
+        <div className="absolute top-3 right-3 px-2 py-1 bg-white/10 border border-white/20 rounded-md text-xs text-white">
+          Coming soon
+        </div>
+      )}
+
+      <div className="relative z-10 flex flex-col items-center">
+        <div
+          className={`w-16 h-16 mb-4 rounded-full flex items-center justify-center text-white shadow-xl
+                        bg-gradient-to-br ${gradientFrom} ${gradientTo}
+                        transform transition-all duration-500 ease-out ${disabled ? '' : 'group-hover:scale-110 group-hover:shadow-2xl-active'}`}
+        >
+          {icon}
+        </div>
+        <h3 className={`text-xl font-bold text-white mb-2 ${disabled ? '' : 'group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-fuchsia-300'} transition-colors duration-300`}>
+          {title}
+        </h3>
+        <p className="text-sm text-gray-300 leading-relaxed opacity-90">
+          {description}
+        </p>
       </div>
-      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-cyan-300 group-hover:to-fuchsia-300 transition-colors duration-300">
-        {title}
-      </h3>
-      <p className="text-sm text-gray-300 leading-relaxed opacity-90">
-        {description}
-      </p>
     </div>
-  </Link>
-);
+  );
+
+  return disabled ? inner : (
+    <Link to={to}>
+      {inner}
+    </Link>
+  );
+};
 
 export default Toolkit;
