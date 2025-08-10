@@ -8,9 +8,8 @@ import {
   Gamepad2,
   Unlock,
   Link as LinkIcon,
-  Eye,
-  Zap,
-  Upload,
+  FileType,
+  Minus,
 } from "lucide-react";
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import AdSense from '../components/AdSense';
@@ -100,6 +99,22 @@ const Toolkit = () => {
                 gradientTo="to-teal-500"
               />
 
+              <ToolCard
+                to="/file-converter"
+                icon={<FileType size={36} />}
+                title="File Converter"
+                description="Convert PDFs to Word/Excel with Adobe quality."
+                gradientFrom="from-orange-500"
+                gradientTo="to-red-500"
+              />
+              <ToolCard
+                to="/pdf-compressor"
+                icon={<Minus size={36} />}
+                title="PDF Compressor"
+                description="Reduce PDF file size while maintaining quality."
+                gradientFrom="from-blue-500"
+                gradientTo="to-cyan-500"
+              />
               <ToolCard
                 to="/qr-tool"
                 icon={<QrCode size={36} />}

@@ -19,6 +19,7 @@ import PDFToWordConverter from "./components/PDFToWordConverter";
 import OCRProcessor from "./components/OCRProcessor";
 import PDFCompressor from "./components/PDFCompressor";
 import WordToPDFConverter from "./components/WordToPDFConverter";
+import FileConverterNew from "./components/FileConverterNew";
 
 import DiamondQuestGame from "./components/DiamondQuestGame";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -55,10 +56,11 @@ function App() {
         <Route path="/pdf-link-remove" element={<PDFLinkRemover />} />
               <Route path="/pdf-to-word" element={<PDFToWordConverter />} />
               <Route path="/ocr-processor" element={<OCRProcessor />} />
-              <Route path="/pdf-compressor" element={<PDFCompressor />} />
-              <Route path="/word-to-pdf" element={<WordToPDFConverter />} />
+                              <Route path="/pdf-compressor" element={<PDFCompressor />} />
+                <Route path="/word-to-pdf" element={<WordToPDFConverter />} />
+                <Route path="/file-converter" element={<FileConverterNew />} />
 
-        <Route path="/diamond-mines" element={<DiamondQuestGame />} />
+                <Route path="/diamond-mines" element={<DiamondQuestGame />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
       </Routes>

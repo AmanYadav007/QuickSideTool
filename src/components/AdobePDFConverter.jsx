@@ -11,27 +11,19 @@ import {
   Zap,
   Star,
   Shield,
-  Sparkles,
-  Minus,
-  Settings,
-  BarChart3,
-  Info,
-  FileDown
+  Sparkles
 } from 'lucide-react';
 import Notification from './Notification';
 
-const PDFCompressor = () => {
+const AdobePDFConverter = () => {
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [downloadBlob, setDownloadBlob] = useState(null);
-  const [compressionLevel, setCompressionLevel] = useState('medium');
-  const [useAdobe, setUseAdobe] = useState(true);
+  const [conversionType, setConversionType] = useState('word');
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState('info');
-  const [originalSize, setOriginalSize] = useState(0);
-  const [compressedSize, setCompressedSize] = useState(0);
 
   const handleNotification = (message, type = 'info') => {
     setNotificationMessage(message);
@@ -45,10 +37,8 @@ const PDFCompressor = () => {
     if (selectedFile) {
       if (selectedFile.type === 'application/pdf') {
         setFile(selectedFile);
-        setOriginalSize(selectedFile.size);
         setMessage('');
         setDownloadBlob(null);
-        setCompressedSize(0);
       } else {
         setFile(null);
         setMessage('Error: Please select a valid PDF file.');
@@ -74,8 +64,6 @@ const PDFCompressor = () => {
     const droppedFile = acceptedFiles[0];
     if (droppedFile.type === 'application/pdf') {
       setFile(droppedFile);
-      setOriginalSize(droppedFile.size);
-      setCompressedSize(0);
     } else {
       setMessage('Error: Only PDF files are accepted. Please drag and drop a .pdf file.');
       setFile(null);
@@ -100,7 +88,7 @@ const PDFCompressor = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleCompression = async () => {
+  const handleConversion = async () => {
     if (!file) {
       setMessage('Error: Please upload a PDF file first.');
       return;
@@ -112,43 +100,24 @@ const PDFCompressor = () => {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('compression_level', compressionLevel);
 
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://quicksidetoolbackend.onrender.com';
-    
-    // Choose endpoint based on Adobe preference
-    const endpoint = useAdobe ? '/adobe/compress-pdf' : '/compress-pdf';
+    const endpoint = conversionType === 'word' ? '/adobe/convert/pdf-to-word' : '/adobe/convert/pdf-to-excel';
 
     try {
-      const processingMessage = useAdobe 
-        ? 'Compressing with Adobe PDF Services...' 
-        : 'Compressing PDF...';
-      setMessage(processingMessage);
-      
-      let response = await fetch(`${backendUrl}${endpoint}`, {
+      setMessage('Processing with Adobe PDF Services...');
+      const response = await fetch(`${backendUrl}${endpoint}`, {
         method: 'POST',
         body: formData,
       });
 
-      // If Adobe fails, automatically retry with basic compression
-      if (!response.ok && useAdobe) {
-        try {
-          setMessage('Adobe compression failed, retrying with basic engine...');
-          response = await fetch(`${backendUrl}/compress-pdf`, {
-            method: 'POST',
-            body: formData,
-          });
-        } catch (retryError) {
-          // fall through to generic handler below
-        }
-      }
-
       if (response.ok) {
         const blob = await response.blob();
-        setCompressedSize(blob.size);
         
         const contentDisposition = response.headers.get('Content-Disposition');
-        let filename = `compressed_${file.name}`;
+        let filename = conversionType === 'word' 
+          ? file.name.replace(/\.pdf$/, '.docx')
+          : file.name.replace(/\.pdf$/, '.xlsx');
           
         if (contentDisposition) {
           const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
@@ -158,24 +127,18 @@ const PDFCompressor = () => {
         }
         
         setDownloadBlob({ blob, filename });
-        
-        const reductionPercent = ((originalSize - blob.size) / originalSize * 100).toFixed(1);
-        const usedAdobe = endpoint.includes('adobe') && message.indexOf('retrying') === -1 && !response.url.endsWith('/compress-pdf');
-        const successMessage = usedAdobe
-          ? `Success: PDF compressed using Adobe! Size reduced by ${reductionPercent}%. Click "Download" to save.`
-          : `Success: PDF compressed! Size reduced by ${reductionPercent}%. Click "Download" to save.`;
-        setMessage(successMessage);
-        handleNotification(`Successfully compressed PDF! Size reduced by ${reductionPercent}%`, 'success');
+        setMessage(`Success: PDF converted to ${conversionType === 'word' ? 'Word' : 'Excel'} using Adobe! Click "Download" to save.`);
+        handleNotification(`Successfully converted to ${conversionType === 'word' ? 'Word' : 'Excel'} with professional quality!`, 'success');
 
       } else {
         const errorText = await response.text();
-        setMessage(`Error: Compression failed. ${errorText || 'Please try again.'}`);
+        setMessage(`Error: Conversion failed. ${errorText || 'Please try again.'}`);
         setDownloadBlob(null);
-        handleNotification('Compression failed. Please try again.', 'error');
+        handleNotification('Conversion failed. Please try again.', 'error');
       }
     } catch (error) {
       console.error('Network or processing error:', error);
-      setMessage('Error: Failed to compress file. Check your connection or try again.');
+      setMessage('Error: Failed to convert file. Check your connection or try again.');
       setDownloadBlob(null);
       handleNotification('Network error. Please check your connection.', 'error');
     } finally {
@@ -188,55 +151,24 @@ const PDFCompressor = () => {
     setMessage('');
     setDownloadBlob(null);
     setIsLoading(false);
-    setOriginalSize(0);
-    setCompressedSize(0);
   };
 
-  const compressionLevels = [
+  const conversionOptions = [
     {
-      id: 'low',
-      title: 'Low Compression',
-      description: 'Minimal size reduction, maximum quality',
-      icon: <BarChart3 className="w-6 h-6" />,
-      features: ['High Quality', 'Minimal Size Reduction', 'Fast Processing', 'Best for Print'],
-      adobeFeatures: ['Perfect Quality', 'Smart Optimization', 'Fast Processing', 'Print Ready']
+      id: 'word',
+      title: 'PDF to Word',
+      description: 'Convert PDF to Word with layout preservation',
+      icon: <FileText className="w-6 h-6" />,
+      features: ['Layout Preservation', 'Font Matching', 'Table Conversion', 'Professional Quality']
     },
     {
-      id: 'medium',
-      title: 'Medium Compression',
-      description: 'Balanced size reduction and quality',
-      icon: <Minus className="w-6 h-6" />,
-      features: ['Good Quality', 'Moderate Size Reduction', 'Web Optimized', 'Email Friendly'],
-      adobeFeatures: ['Excellent Quality', 'Optimal Compression', 'Web Optimized', 'Email Ready']
-    },
-    {
-      id: 'high',
-      title: 'High Compression',
-      description: 'Maximum size reduction',
-      icon: <FileDown className="w-6 h-6" />,
-      features: ['Smaller File Size', 'Maximum Compression', 'Fast Loading', 'Storage Saving'],
-      adobeFeatures: ['Smart Compression', 'Maximum Size Reduction', 'Fast Loading', 'Storage Optimized']
+      id: 'excel',
+      title: 'PDF to Excel',
+      description: 'Convert PDF tables to Excel with intelligent detection',
+      icon: <FileText className="w-6 h-6" />,
+      features: ['Table Detection', 'Data Extraction', 'Formula Preservation', 'Professional Quality']
     }
   ];
-
-  const selectedLevel = compressionLevels.find(level => level.id === compressionLevel);
-
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const getCompressionSavings = () => {
-    if (originalSize === 0 || compressedSize === 0) return null;
-    const savings = originalSize - compressedSize;
-    const percentage = ((savings / originalSize) * 100).toFixed(1);
-    return { savings, percentage };
-  };
-
-  const compressionSavings = getCompressionSavings();
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-950 text-white font-sans antialiased">
@@ -262,121 +194,65 @@ const PDFCompressor = () => {
               Back to Dashboard
             </Link>
             <h1 className="text-2xl md:text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 drop-shadow-md animate-fade-in-down flex-grow px-4">
-            PDF Compressor
-          </h1>
+              Adobe PDF Converter
+            </h1>
             <div className="w-[110px] md:w-[130px] flex-shrink-0"></div>
           </div>
         </header>
 
         <main className="flex-grow container mx-auto px-4 py-8 md:py-12 flex items-center justify-center">
-          <div className="max-w-5xl w-full">
-            {/* Header Section */}
+          <div className="max-w-4xl w-full">
+            {/* Adobe Badge */}
             <div className="text-center mb-8">
-              {useAdobe && (
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">
-                  <Sparkles className="w-4 h-4" />
-                  Powered by Adobe PDF Services
-                </div>
-              )}
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                <Sparkles className="w-4 h-4" />
+                Powered by Adobe PDF Services
+              </div>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Professional PDF Compression
+                Professional PDF Conversion
               </h2>
-              <p className="text-xl text-white/80 max-w-3xl mx-auto">
-                Compress your PDFs with {useAdobe ? 'Adobe\'s advanced algorithms' : 'our efficient compression'} to reduce file size 
-                while maintaining quality. Perfect for email, web uploads, and storage optimization.
-          </p>
-        </div>
+              <p className="text-xl text-white/80 max-w-2xl mx-auto">
+                Convert your PDFs to Word or Excel with Adobe's industry-leading technology. 
+                Maintain perfect layout, fonts, and formatting.
+              </p>
+            </div>
 
-            {/* Compression Levels */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              {compressionLevels.map((level) => (
+            {/* Conversion Options */}
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              {conversionOptions.map((option) => (
                 <div
-                  key={level.id}
+                  key={option.id}
                   className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                    compressionLevel === level.id
+                    conversionType === option.id
                       ? 'border-blue-400 bg-blue-400/10'
                       : 'border-white/20 bg-white/5 hover:border-white/40'
                   }`}
-                  onClick={() => setCompressionLevel(level.id)}
+                  onClick={() => setConversionType(option.id)}
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div className={`p-2 rounded-lg ${
-                      compressionLevel === level.id ? 'bg-blue-400/20' : 'bg-white/10'
+                      conversionType === option.id ? 'bg-blue-400/20' : 'bg-white/10'
                     }`}>
-                      {level.icon}
+                      {option.icon}
                     </div>
-            <div>
-                      <h3 className="text-xl font-bold text-white">{level.title}</h3>
-                      <p className="text-white/70 text-sm">{level.description}</p>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">{option.title}</h3>
+                      <p className="text-white/70 text-sm">{option.description}</p>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {(useAdobe ? level.adobeFeatures : level.features).map((feature, index) => (
+                    {option.features.map((feature, index) => (
                       <div key={index} className="flex items-center gap-2 text-sm text-white/80">
                         <CheckCircle className="w-4 h-4 text-green-400" />
                         {feature}
                       </div>
                     ))}
                   </div>
-            </div>
+                </div>
               ))}
             </div>
 
-            {/* Quality Toggle */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 shadow-2xl mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <Settings className="w-6 h-6 text-blue-400" />
-                  <h3 className="text-xl font-bold text-white">Compression Engine</h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-white/70">Basic</span>
-                  <button
-                    onClick={() => setUseAdobe(!useAdobe)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      useAdobe ? 'bg-blue-500' : 'bg-gray-600'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        useAdobe ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                  <span className="text-sm text-white/70">Adobe Pro</span>
-                </div>
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className={`p-4 rounded-xl border-2 ${!useAdobe ? 'border-blue-400 bg-blue-400/10' : 'border-white/20 bg-white/5'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Minus className="w-5 h-5 text-gray-400" />
-                    <h4 className="font-semibold text-white">Basic Compression</h4>
-              </div>
-                  <ul className="space-y-1 text-sm text-white/70">
-                    <li>• Standard compression</li>
-                    <li>• Good quality preservation</li>
-                    <li>• Free to use</li>
-                    <li>• Reliable results</li>
-                  </ul>
-          </div>
-
-                <div className={`p-4 rounded-xl border-2 ${useAdobe ? 'border-orange-400 bg-orange-400/10' : 'border-white/20 bg-white/5'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-5 h-5 text-orange-400" />
-                    <h4 className="font-semibold text-white">Adobe Professional</h4>
-                </div>
-                  <ul className="space-y-1 text-sm text-white/70">
-                    <li>• Advanced algorithms</li>
-                    <li>• Smart optimization</li>
-                    <li>• Better compression ratios</li>
-                    <li>• Professional quality</li>
-                  </ul>
-              </div>
-          </div>
-        </div>
-
-        {/* File Upload */}
+            {/* File Upload */}
             <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 md:p-8 border border-white/10 shadow-2xl mb-8">
               <div className="flex items-center justify-center mb-6">
                 <FileText size={30} className="text-blue-400 mr-3" />
@@ -385,20 +261,20 @@ const PDFCompressor = () => {
                 </h3>
               </div>
 
-          <div
-            {...getRootProps()}
+              <div
+                {...getRootProps()}
                 className={`mt-6 bg-white/10 backdrop-blur-md rounded-2xl p-8 border-2 border-dashed
                            ${isDragActive ? 'border-teal-400 bg-teal-400/10' : 'border-white/30'}
                            transition-all duration-300 cursor-pointer hover:border-blue-400 hover:bg-blue-400/10`}
-          >
-            <input {...getInputProps()} />
+              >
+                <input {...getInputProps()} />
                 <div className="flex flex-col items-center justify-center py-4">
                   {file ? (
                     <div className="text-center">
                       <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
                       <p className="text-white font-semibold">{file.name}</p>
                       <p className="text-white/70 text-sm">
-                        Original Size: {formatFileSize(originalSize)}
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
                   ) : (
@@ -414,40 +290,20 @@ const PDFCompressor = () => {
                         <div className="flex items-center gap-1">
                           <Shield className="w-3 h-3" />
                           Secure
-          </div>
+                        </div>
                         <div className="flex items-center gap-1">
                           <Zap className="w-3 h-3" />
                           Fast
-                    </div>
+                        </div>
                         <div className="flex items-center gap-1">
                           <Star className="w-3 h-3" />
-                          {useAdobe ? 'Professional' : 'Reliable'}
-                  </div>
-              </div>
-            </div>
-          )}
+                          Professional
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-        </div>
-
-              {/* Compression Results */}
-              {compressionSavings && (
-                <div className="mt-6 bg-green-500/10 border border-green-400/30 rounded-xl p-4">
-                  <div className="grid md:grid-cols-3 gap-4 text-center">
-                    <div>
-                      <p className="text-sm text-white/70">Original Size</p>
-                      <p className="text-lg font-bold text-white">{formatFileSize(originalSize)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-white/70">Compressed Size</p>
-                      <p className="text-lg font-bold text-green-400">{formatFileSize(compressedSize)}</p>
-                    </div>
-              <div>
-                      <p className="text-sm text-white/70">Space Saved</p>
-                      <p className="text-lg font-bold text-blue-400">{compressionSavings.percentage}%</p>
               </div>
-            </div>
-            </div>
-              )}
 
               {/* Message Display */}
               {message && (
@@ -457,13 +313,13 @@ const PDFCompressor = () => {
                     : 'bg-red-500/20 border border-red-400/30'
                 }`}>
                   <p className="text-white">{message}</p>
-          </div>
-        )}
+                </div>
+              )}
 
-        {/* Action Buttons */}
+              {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mt-6">
-          <button
-                  onClick={handleCompression}
+                <button
+                  onClick={handleConversion}
                   disabled={!file || isLoading}
                   className="flex-1 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600
                            text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300
@@ -471,41 +327,41 @@ const PDFCompressor = () => {
                            flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                      {useAdobe ? 'Compressing with Adobe...' : 'Compressing...'}
-              </>
-            ) : (
-                              <>
-                      {useAdobe ? <Sparkles className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
-                      {useAdobe ? 'Compress with Adobe' : 'Compress PDF'}
-                </>
-            )}
-          </button>
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Processing with Adobe...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Convert with Adobe
+                    </>
+                  )}
+                </button>
 
                 {downloadBlob && (
-              <button
+                  <button
                     onClick={() => triggerDownload(downloadBlob.blob, downloadBlob.filename)}
                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600
                              text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300
                              transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
-              >
-                <Download className="w-5 h-5" />
-                    Download Compressed PDF
-              </button>
+                  >
+                    <Download className="w-5 h-5" />
+                    Download Result
+                  </button>
                 )}
-              
-              <button
+
+                <button
                   onClick={handleClearForm}
                   className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl
                            transition-all duration-300 border border-white/20 hover:border-white/40"
-              >
+                >
                   Clear
-              </button>
-                    </div>
-                  </div>
-                  
-            {/* Features Grid */}
+                </button>
+              </div>
+            </div>
+
+            {/* Adobe Features */}
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
                 <div className="flex items-center gap-3 mb-4">
@@ -513,31 +369,31 @@ const PDFCompressor = () => {
                   <h3 className="text-lg font-bold text-white">Secure Processing</h3>
                 </div>
                 <p className="text-white/80 text-sm">
-                  Your files are processed securely with enterprise-grade security and automatic cleanup.
-            </p>
-          </div>
-          
+                  Your files are processed securely on Adobe's servers with enterprise-grade security.
+                </p>
+              </div>
+              
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
                 <div className="flex items-center gap-3 mb-4">
                   <Zap className="w-8 h-8 text-blue-400" />
-                  <h3 className="text-lg font-bold text-white">Fast Compression</h3>
+                  <h3 className="text-lg font-bold text-white">Professional Quality</h3>
                 </div>
                 <p className="text-white/80 text-sm">
-                  {useAdobe ? 'Adobe-powered compression ensures quick and efficient file size reduction.' : 'Quick compression with reliable results.'}
-            </p>
-          </div>
-          
+                  Industry-leading Adobe technology ensures perfect layout preservation and formatting.
+                </p>
+              </div>
+              
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
                 <div className="flex items-center gap-3 mb-4">
                   <Star className="w-8 h-8 text-yellow-400" />
-                  <h3 className="text-lg font-bold text-white">Quality Preservation</h3>
+                  <h3 className="text-lg font-bold text-white">Advanced OCR</h3>
                 </div>
                 <p className="text-white/80 text-sm">
-                  {useAdobe ? 'Advanced algorithms maintain document quality while maximizing compression.' : 'Smart compression preserves document quality.'}
-            </p>
+                  Intelligent text recognition and table detection for scanned documents.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
         </main>
       </div>
 
@@ -553,4 +409,4 @@ const PDFCompressor = () => {
   );
 };
 
-export default PDFCompressor; 
+export default AdobePDFConverter;
