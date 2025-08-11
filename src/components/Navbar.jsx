@@ -10,53 +10,77 @@ const Navbar = () => {
   const isMainPage = location.pathname === '/' || location.pathname === '/home';
 
   return (
-    <nav className="w-full sticky top-0 z-50 bg-gradient-to-r from-[#1a1440]/80 via-[#1e215d]/80 to-[#2a1a4a]/80 backdrop-blur-md shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <nav className="fixed top-0 md:top-4 left-0 right-0 z-50">
+      <div className="mx-auto w-full md:w-auto md:max-w-5xl lg:max-w-6xl xl:max-w-7xl px-3 py-2 md:px-4 md:py-2.5 rounded-none md:rounded-full border-b md:border border-white/10 shadow-lg backdrop-blur-md bg-gradient-to-r from-[#082129]/85 via-[#0b2f3b]/85 to-[#0e1f2a]/85 flex items-center justify-between gap-3">
         {/* Logo */}
-        <Link to="/" className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400 bg-clip-text text-transparent tracking-wide">
-          Quick Side Tool
-        </Link>
+        <div>
+          <Link to="/" className="flex items-center gap-2 group">
+            <img src="/logo.png" alt="Quick Side Tool logo" className="h-8 md:h-10 w-auto group-hover:scale-105 transition-transform" />
+          </Link>
+        </div>
+
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-6">
           {isMainPage && (
             <>
-              <a href="#features" className="text-white/90 hover:text-purple-300 font-medium transition">Features</a>
-              <a href="#testimonials" className="text-white/90 hover:text-purple-300 font-medium transition">Reviews</a>
+              <a href="#features" className="relative group text-white/80 hover:text-cyan-300 font-medium transition">
+                Features
+                <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-gradient-to-r from-cyan-400 to-emerald-400 group-hover:w-full transition-all duration-300" />
+              </a>
+              <a href="#testimonials" className="relative group text-white/80 hover:text-cyan-300 font-medium transition">
+                Reviews
+                <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-gradient-to-r from-cyan-400 to-emerald-400 group-hover:w-full transition-all duration-300" />
+              </a>
             </>
           )}
-          <Link to="/contact" className="text-white/90 hover:text-purple-300 font-medium transition">Contact</Link>
+          <Link to="/contact" className="relative group text-white/80 hover:text-cyan-300 font-medium transition">
+            Contact
+            <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-gradient-to-r from-cyan-400 to-emerald-400 group-hover:w-full transition-all duration-300" />
+          </Link>
           <button
             onClick={() => navigate('/toolkit')}
-            className="ml-4 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
+            className="ml-2 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-600 hover:to-emerald-600 text-white font-semibold py-2 px-5 rounded-full shadow-md transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-cyan-400/30"
           >
             Get Started
           </button>
         </div>
+
         {/* Mobile Hamburger */}
-        <button className="md:hidden flex flex-col gap-1.5" onClick={() => setMenuOpen(!menuOpen)} aria-label="Open menu">
-          <span className="w-7 h-1 bg-white rounded-full" />
-          <span className="w-7 h-1 bg-white rounded-full" />
-          <span className="w-7 h-1 bg-white rounded-full" />
+        <button
+          className="md:hidden flex flex-col gap-1.5"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+        >
+          <span className="w-7 h-1 bg-white rounded-full transition-all" />
+          <span className="w-7 h-1 bg-white rounded-full transition-all" />
+          <span className="w-7 h-1 bg-white rounded-full transition-all" />
         </button>
       </div>
-              {/* Mobile Menu */}
-        {menuOpen && (
-          <div className="md:hidden bg-[#1a1440]/95 px-6 pb-4 pt-2 flex flex-col gap-4 text-lg">
-            {isMainPage && (
-              <>
-                <a href="#features" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>Features</a>
-                <a href="#testimonials" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>Reviews</a>
-              </>
-            )}
-            <Link to="/contact" className="text-white/90 hover:text-purple-300 font-medium transition" onClick={() => setMenuOpen(false)}>Contact</Link>
+
+      {/* Mobile Menu - Fullscreen overlay */}
+      {menuOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
+          <div className="absolute top-16 left-3 right-3 rounded-2xl border border-white/10 bg-[#0b2530]/95 text-white p-5 shadow-2xl">
+            <div className="flex flex-col gap-4 text-lg">
+              {isMainPage && (
+                <>
+                  <a href="#features" className="hover:text-cyan-300 transition" onClick={() => setMenuOpen(false)}>Features</a>
+                  <a href="#testimonials" className="hover:text-cyan-300 transition" onClick={() => setMenuOpen(false)}>Reviews</a>
+                </>
+              )}
+              <Link to="/contact" className="hover:text-cyan-300 transition" onClick={() => setMenuOpen(false)}>Contact</Link>
+              <a href="https://www.buymeacoffee.com/amanryadav" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-300 transition" onClick={() => setMenuOpen(false)}>Support</a>
+            </div>
             <button
               onClick={() => { setMenuOpen(false); navigate('/toolkit'); }}
-              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
+              className="mt-5 w-full bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-600 hover:to-emerald-600 text-white font-semibold py-3 rounded-full shadow-md transition-all duration-300"
             >
               Get Started
             </button>
           </div>
-        )}
+        </div>
+      )}
     </nav>
   );
 };

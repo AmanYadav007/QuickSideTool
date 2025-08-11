@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Layout from "../components/Layout";
 import {
   FileText,
   Image,
@@ -16,41 +17,7 @@ import AdSense from '../components/AdSense';
 
 const Toolkit = () => {
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white font-sans antialiased">
-      {/* Dynamic Background Elements */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute w-80 h-80 rounded-full bg-fuchsia-500 blur-3xl opacity-30 animate-float-slow top-1/4 left-1/4 transform -translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute w-96 h-96 rounded-full bg-sky-500 blur-3xl opacity-30 animate-float-slow animation-delay-2000 bottom-1/4 right-1/4 transform translate-x-1/2 translate-y-1/2"></div>
-        <div className="absolute w-72 h-72 rounded-full bg-teal-500 blur-3xl opacity-30 animate-float-slow animation-delay-4000 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute w-60 h-60 rounded-full bg-indigo-500 blur-3xl opacity-30 animate-float-slow animation-delay-6000 top-1/3 right-1/3 transform translate-x-1/2 -translate-y-1/2"></div>
-      </div>
-
-      <div className="relative z-10 flex flex-col min-h-screen">
-        {/* Header */}
-        <header className="py-5 px-4 md:px-8 border-b border-white border-opacity-10 backdrop-blur-lg shadow-lg">
-          <div className="container mx-auto flex justify-between items-center">
-            <Link to="/" className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-400 hover:from-cyan-300 hover:to-fuchsia-300 transition-all duration-300 cursor-pointer">
-              QUICK SIDE TOOL
-            </Link>
-            <div className="relative group">
-              <a
-                href="https://github.com/AmanYadav007/QuickSideTool"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white hover:text-cyan-300 transition-colors duration-300 transform hover:scale-110"
-              >
-                <Github size={28} />
-              </a>
-              {/* Tooltip */}
-              <div className="absolute right-0 top-full mt-3 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:-translate-y-1">
-                <div className="bg-gray-800 text-white text-sm py-2 px-3 rounded-lg shadow-xl text-center border border-gray-700">
-                  Contribute to Future Projects
-                </div>
-                <div className="absolute -top-1 right-5 w-3 h-3 bg-gray-800 transform rotate-45 border-t border-r border-gray-700"></div>
-              </div>
-            </div>
-          </div>
-        </header>
+    <Layout>
 
         {/* Main Content */}
         <main className="flex-grow container mx-auto px-4 md:px-8 py-16 flex flex-col items-center justify-center text-center">
@@ -156,24 +123,7 @@ const Toolkit = () => {
            <SpeedInsights />
         </main>
 
-        {/* Footer */}
-        <footer className="py-5 px-4 md:px-8 border-t border-white border-opacity-10 backdrop-blur-lg mt-12">
-          <div className="container mx-auto text-center text-gray-400 text-sm">
-            <p>
-              &copy; {new Date().getFullYear()} All rights reserved&nbsp;
-              <a
-                href="https://aguider.in/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-fuchsia-400 hover:text-fuchsia-300 transition-colors font-semibold"
-              >
-                Aman Yadav
-              </a>
-            </p>
-          </div>
-        </footer>
-      </div>
-    </div>
+    </Layout>
   );
 };
 

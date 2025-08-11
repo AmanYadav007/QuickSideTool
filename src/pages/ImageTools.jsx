@@ -1,23 +1,17 @@
 import React from "react";
 import SEO from "../components/SEO";
+import Layout from "../components/Layout";
 import { Link } from "react-router-dom";
 import { Image, Minimize2, ArrowLeft, FileText, Info, HelpCircle, CheckCircle, AlertCircle } from "lucide-react";
 
 const ImageTools = () => {
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-950 text-white font-sans antialiased">
+    <Layout>
       <SEO
         title="Free Image Tools – Compress, Resize, Convert"
         description="Quick image utilities for creators and students. Compress JPG/PNG/WebP, resize to exact pixels, convert formats. Free and private."
         url="https://quicksidetool.com/image-tools"
       />
-      {/* Animated Background Blobs */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute w-64 h-64 rounded-full bg-blue-500/20 blur-3xl animate-blob-fade top-1/4 left-[15%] animation-delay-0"></div>
-        <div className="absolute w-80 h-80 rounded-full bg-teal-500/20 blur-3xl animate-blob-fade top-[65%] left-[70%] animation-delay-2000"></div>
-        <div className="absolute w-72 h-72 rounded-full bg-cyan-500/20 blur-3xl animate-blob-fade top-[10%] left-[60%] animation-delay-4000"></div>
-        <div className="absolute w-56 h-56 rounded-full bg-green-500/20 blur-3xl animate-blob-fade top-[80%] left-[20%] animation-delay-6000"></div>
-      </div>
 
       {/* Main Content */}
       <div className="relative z-10 flex-1 flex flex-col items-center pt-8 pb-12">
@@ -277,7 +271,7 @@ const ImageTools = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 

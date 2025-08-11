@@ -15,8 +15,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import SEO from '../components/SEO';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Layout from '../components/Layout';
 
 const About = () => {
   const containerVariants = {
@@ -91,10 +90,8 @@ const About = () => {
         keywords="about QuickSideTool, our story, mission, team, values, privacy-first tools, online PDF tools, image editor"
       />
       
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-        <Navbar />
-        
-        <div className="relative z-10 pt-24">
+      <Layout>
+        <div className="relative z-10">
           {/* Hero Section */}
           <motion.section 
             className="container mx-auto px-4 py-16"
@@ -405,9 +402,7 @@ const About = () => {
             </div>
           </motion.section>
         </div>
-        
-        <Footer />
-      </div>
+      </Layout>
     </>
   );
 };

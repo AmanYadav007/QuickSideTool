@@ -4,9 +4,9 @@ const AnimatedBackground = () => {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
       {/* Animated Blobs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-full blur-3xl animate-float-slow" />
-      <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-full blur-3xl animate-float-slower" />
-      <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl animate-float-slowest" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 rounded-full blur-3xl animate-float-slow" />
+      <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-gradient-to-r from-sky-500/20 to-cyan-500/20 rounded-full blur-3xl animate-float-slower" />
+      <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-gradient-to-r from-teal-500/20 to-sky-500/20 rounded-full blur-3xl animate-float-slowest" />
       
       {/* Floating Particles */}
       <div className="absolute top-1/3 right-1/3 w-4 h-4 bg-white/30 rounded-full animate-pulse" />

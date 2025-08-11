@@ -44,19 +44,10 @@
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TBVQNN72"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
-  </body>
 
-  <script>
-/**
- * Logs a highly detailed, user-provided ASCII art spider to the console.
- *
- * This version uses a more intricate piece of art and styles it to create
- * a striking effect for developers inspecting the page.
- */
- function logDetailedSpider() {
-  // The beautiful, detailed ASCII art of the spider provided by the user.
-  // Using a template literal (backticks ``) is essential for preserving the multi-line format.
-  const detailedSpiderArt = `
+
+
+  <!--
            ;               ,
          ,;                 '.
         ;:                   :;
@@ -88,37 +79,7 @@
         ':;                 ;:"
 -hrr-     ';              ,;'
             "'           '"
-              '
-  `;
+-->
+  </body>
 
-  // CSS styles for the ASCII art.
-  // A dark, high-contrast style helps the detailed art stand out.
-  const artStyle = [
-    'color: #333', // A dark gray for a shadowy effect
-    'font-family: "Courier New", Courier, monospace',
-    'font-weight: bold',
-    'line-height: 1.1',
-  ].join(';');
-
-  // CSS styles for the accompanying message.
-  const messageStyle = [
-    'color: #888',
-    'font-size: 12px',
-    'font-style: italic',
-  ].join(';');
-
-  // Using a collapsed group keeps the console clean on page load.
-  console.groupCollapsed('A shadow lurks in the code...');
-
-  // Log the spider art and the message to the console.
-  console.log('%c%s', artStyle, detailedSpiderArt);
-  console.log('%cYou are not alone here.', messageStyle);
-
-  console.groupEnd();
-}
-
-// Call the function to display the spider in the console.
-logDetailedSpider();
-
-  </script>
 </html>

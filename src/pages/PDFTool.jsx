@@ -3,26 +3,20 @@ import SEO from '../components/SEO';
 import PDFManipulator from '../components/PDFManipulator';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText, Info, HelpCircle, CheckCircle, Users, Shield, Zap } from 'lucide-react';
+import Layout from '../components/Layout';
 
 const PDFTool = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white font-sans antialiased relative">
+    <Layout>
       <SEO
         title="Free Online PDF Tools – Compress, Unlock, Convert"
         description="All your essential PDF utilities in one place. Merge, split, compress, unlock, and convert PDFs. Fast, secure, no sign‑up."
         url="https://quicksidetool.com/pdf-tool"
       />
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-64 h-64 rounded-full bg-sky-400/30 blur-3xl animate-blob top-1/4 left-[15%] mix-blend-lighten"></div>
-        <div className="absolute w-80 h-80 rounded-full bg-purple-400/30 blur-3xl animate-blob animation-delay-2000 top-[65%] left-[70%] mix-blend-lighten"></div>
-        <div className="absolute w-72 h-72 rounded-full bg-emerald-400/30 blur-3xl animate-blob animation-delay-4000 top-[10%] left-[60%] mix-blend-lighten"></div>
-        <div className="absolute w-56 h-56 rounded-full bg-cyan-400/30 blur-3xl animate-blob animation-delay-6000 top-[80%] left-[20%] mix-blend-lighten"></div>
-      </div>
-      
       <div className="container mx-auto px-4 py-8 relative z-10">
         <Link 
           to="/toolkit" 
-          className="inline-flex items-center mb-6 px-4 py-2 bg-white bg-opacity-20 text-white rounded-full hover:bg-opacity-30 transition-all duration-300 backdrop-filter backdrop-blur-sm"
+          className="inline-flex items-center mb-6 px-4 py-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition-all duration-300 backdrop-filter backdrop-blur-sm border border-white/20"
         >
           <ArrowLeft className="mr-2" size={20} />
           Back to Dashboard
@@ -30,7 +24,7 @@ const PDFTool = () => {
 
         {/* Header Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 drop-shadow-md">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-sky-300 drop-shadow-md">
             PDF Manipulation Suite
           </h1>
           <p className="text-xl text-white/80 max-w-3xl mx-auto">
@@ -44,8 +38,8 @@ const PDFTool = () => {
         {/* About PDF Tools Section */}
         <div className="mt-16 bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-xl">
           <div className="flex items-center gap-3 mb-6">
-            <Info className="w-6 h-6 text-blue-400" />
-            <h3 className="text-2xl font-bold text-white text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300">
+            <Info className="w-6 h-6 text-cyan-400" />
+            <h3 className="text-2xl font-bold text-white text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-emerald-300">
               About PDF Manipulation
             </h3>
           </div>
@@ -65,8 +59,8 @@ const PDFTool = () => {
         {/* How-To Guide Section */}
         <div className="mt-8 bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-xl">
           <div className="flex items-center gap-3 mb-6">
-            <FileText className="w-6 h-6 text-green-400" />
-            <h3 className="text-2xl font-bold text-white text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-teal-300">
+            <FileText className="w-6 h-6 text-emerald-400" />
+            <h3 className="text-2xl font-bold text-white text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-300">
               How to Use PDF Manipulation Tools
             </h3>
           </div>
@@ -222,7 +216,7 @@ const PDFTool = () => {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
             <div className="flex items-center gap-3 mb-4">
-              <Users className="w-8 h-8 text-blue-400" />
+              <Users className="w-8 h-8 text-cyan-400" />
               <h3 className="text-lg font-bold text-white">Batch Processing</h3>
             </div>
             <p className="text-white/80 text-sm">
@@ -232,7 +226,7 @@ const PDFTool = () => {
           
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
             <div className="flex items-center gap-3 mb-4">
-              <Shield className="w-8 h-8 text-green-400" />
+              <Shield className="w-8 h-8 text-emerald-400" />
               <h3 className="text-lg font-bold text-white">Secure Processing</h3>
             </div>
             <p className="text-white/80 text-sm">
@@ -242,7 +236,7 @@ const PDFTool = () => {
           
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
             <div className="flex items-center gap-3 mb-4">
-              <Zap className="w-8 h-8 text-purple-400" />
+              <Zap className="w-8 h-8 text-sky-400" />
               <h3 className="text-lg font-bold text-white">Lightning Fast</h3>
             </div>
             <p className="text-white/80 text-sm">
@@ -251,7 +245,7 @@ const PDFTool = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 

@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <footer className="w-full bg-gradient-to-r from-[#1a1440]/90 via-[#1e215d]/90 to-[#2a1a4a]/90 text-white py-8 mt-16">
+    <footer className="w-full bg-gradient-to-r from-[#082129]/90 via-[#0b2f3b]/90 to-[#0e1f2a]/90 text-white py-8 mt-16">
       <div className="max-w-7xl mx-auto px-4">
         {/* Main Footer Content */}
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div className="md:col-span-2">
-            <div className="text-2xl font-extrabold bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400 bg-clip-text text-transparent tracking-wide mb-4">
+            <div className="text-2xl font-extrabold bg-gradient-to-r from-cyan-300 via-teal-300 to-sky-300 bg-clip-text text-transparent tracking-wide mb-4">
               QuickSideTool
             </div>
             <p className="text-white/70 mb-4 max-w-md">
@@ -22,8 +22,9 @@ const Footer = () => {
               <a href="https://aguider.in/" target="_blank" rel="noopener noreferrer" aria-label="Website" className="hover:text-purple-300 transition">
                 <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 5.523 4.477 10 10 10s10-4.477 10-10c0-5.523-4.477-10-10-10zm0 18c-4.411 0-8-3.589-8-8 0-4.411 3.589-8 8-8s8 3.589 8 8c0 4.411-3.589 8-8 8zm0-14c-3.309 0-6 2.691-6 6 0 3.309 2.691 6 6 6s6-2.691 6-6c0-3.309-2.691-6-6-6zm0 10c-2.206 0-4-1.794-4-4s1.794-4 4-4 4 1.794 4 4-1.794 4-4 4z"/></svg>
               </a>
-              <a href="https://www.producthunt.com/products/quick-side-tool?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-quick&#0045;side&#0045;tool" target="_blank" rel="noopener noreferrer" aria-label="Product Hunt">
-                <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=685960&theme=light&t=1754546624568" alt="Quick Side Tool - Chrome web store | Product Hunt" style={{ width: '250px', height: '54px' }} width="250" height="54" />
+              <a href="https://www.producthunt.com/products/quick-side-tool?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-quick&#0045;side&#0045;tool" target="_blank" rel="noopener noreferrer" aria-label="Product Hunt" className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition">
+                <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=685960&theme=light&t=1754546624568" alt="Quick Side Tool on Product Hunt" style={{ width: '200px', height: '43px' }} width="200" height="43" />
+                <span className="text-white/80 text-sm hidden md:inline">Find us on Product Hunt</span>
               </a>
             </div>
           </div>
@@ -32,10 +33,10 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Tools</h4>
             <ul className="space-y-2 text-white/70">
-              <li><Link to="/pdf-tool" className="hover:text-purple-300 transition-colors">PDF Tools</Link></li>
-              <li><Link to="/image-tools" className="hover:text-purple-300 transition-colors">Image Tools</Link></li>
-              <li><Link to="/qr-tool" className="hover:text-purple-300 transition-colors">QR Generator</Link></li>
-              <li><Link to="/unlock-pdf" className="hover:text-purple-300 transition-colors">PDF Security</Link></li>
+              <li><Link to="/pdf-tool" className="hover:text-cyan-300 transition-colors">PDF Tools</Link></li>
+              <li><Link to="/image-tools" className="hover:text-cyan-300 transition-colors">Image Tools</Link></li>
+              <li><Link to="/qr-tool" className="hover:text-cyan-300 transition-colors">QR Generator</Link></li>
+              <li><Link to="/unlock-pdf" className="hover:text-cyan-300 transition-colors">PDF Security</Link></li>
             </ul>
           </div>
 
@@ -43,10 +44,10 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Company</h4>
             <ul className="space-y-2 text-white/70">
-              <li><Link to="/about" className="hover:text-purple-300 transition-colors">About Us</Link></li>
-              <li><Link to="/contact" className="hover:text-purple-300 transition-colors">Contact</Link></li>
-              <li><Link to="/help" className="hover:text-purple-300 transition-colors">Help & Support</Link></li>
-              <li><a href="https://discord.gg/5SufsJSj" target="_blank" rel="noopener noreferrer" className="hover:text-purple-300 transition-colors">Community</a></li>
+              <li><Link to="/about" className="hover:text-cyan-300 transition-colors">About Us</Link></li>
+              <li><Link to="/contact" className="hover:text-cyan-300 transition-colors">Contact</Link></li>
+              <li><Link to="/help" className="hover:text-cyan-300 transition-colors">Help & Support</Link></li>
+              <li><a href="https://discord.gg/5SufsJSj" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-300 transition-colors">Community</a></li>
             </ul>
           </div>
         </div>
@@ -58,10 +59,10 @@ const Footer = () => {
               &copy; {new Date().getFullYear()} QuickSideTool. All rights reserved.
             </div>
             <div className="flex flex-wrap gap-6 text-sm text-white/60">
-              <Link to="/privacy-policy" className="hover:text-purple-300 transition-colors">
+              <Link to="/privacy-policy" className="hover:text-cyan-300 transition-colors">
                 Privacy Policy
               </Link>
-              <Link to="/terms-of-service" className="hover:text-purple-300 transition-colors">
+              <Link to="/terms-of-service" className="hover:text-cyan-300 transition-colors">
                 Terms of Service
               </Link>
             </div>

@@ -17,8 +17,7 @@ import {
   Zap
 } from 'lucide-react';
 import SEO from '../components/SEO';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Layout from '../components/Layout';
 
 // Main Contact Component
 const Contact = () => {
@@ -129,10 +128,8 @@ const Contact = () => {
         keywords="contact QuickSideTool, support, help, technical assistance, customer service, feedback, feature request, bug report"
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-        <Navbar />
-
-        <div className="relative z-10 pt-24">
+      <Layout>
+        <div className="relative z-10">
           {/* Hero Section */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -422,9 +419,7 @@ const Contact = () => {
             </div>
           </motion.section>
         </div>
-
-        <Footer />
-      </div>
+      </Layout>
     </>
   );
 };

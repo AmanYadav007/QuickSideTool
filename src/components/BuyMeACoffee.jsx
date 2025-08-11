@@ -14,7 +14,7 @@ const BuyMeACoffee = () => {
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 1 }}
-      className="fixed bottom-8 right-8 z-40"
+      className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-40"
     >
       {/* Tooltip */}
       <AnimatePresence>

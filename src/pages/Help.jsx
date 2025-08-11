@@ -21,8 +21,7 @@ import {
   Info
 } from 'lucide-react';
 import SEO from '../components/SEO';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Layout from '../components/Layout';
 
 const Help = () => {
   const [activeCategory, setActiveCategory] = useState('pdf');
@@ -373,10 +372,8 @@ const Help = () => {
         keywords="help, support, user guide, tutorial, how to use QuickSideTool, PDF tools help, image tools help, troubleshooting"
       />
       
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-        <Navbar />
-        
-        <div className="relative z-10 pt-24">
+      <Layout>
+        <div className="relative z-10">
           {/* Hero Section */}
           <motion.section 
             initial={{ opacity: 0, y: 20 }}
@@ -560,9 +557,7 @@ const Help = () => {
             </div>
           </motion.section>
         </div>
-        
-        <Footer />
-      </div>
+      </Layout>
     </>
   );
 };
