@@ -106,7 +106,7 @@ const testimonials = [
     role: "Marketing Manager",
     company: "TechCorp Solutions",
     text: "Our team uses this daily for document processing. The security features give us peace of mind, and the speed is incredible. Highly recommended for any business!",
-    rating: 5,
+    rating: 4,
     avatar: "👨‍💼",
   },
   {
@@ -114,7 +114,7 @@ const testimonials = [
     role: "Content Creator",
     company: "Digital Media Hub",
     text: "Love the clean interface and how fast everything works. The QR generator is perfect for my social media campaigns. This tool is a game-changer!",
-    rating: 5,
+    rating: 4,
     avatar: "👩‍💻",
   },
   {
@@ -122,7 +122,7 @@ const testimonials = [
     role: "Student",
     company: "University of Technology",
     text: "As a student, I need to handle lots of PDFs and images. This tool is free, secure, and does everything I need. The interface is so intuitive!",
-    rating: 5,
+    rating: 4,
     avatar: "👨‍🎓",
   },
 ];
@@ -644,8 +644,11 @@ const LandingPage = () => {
                           {t.avatar || "🙂"}
                         </div>
                         <div className="flex items-center gap-1">
-                          {[...Array(t.rating)].map((_, s) => (
-                            <Star key={s} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                          {Array.from({ length: 5 }).map((_, s) => (
+                            <Star
+                              key={s}
+                              className={`w-4 h-4 ${s < Math.floor(t.rating) ? 'text-yellow-400 fill-yellow-400' : s < t.rating ? 'text-yellow-400/50' : 'text-white/20'}`}
+                            />
                           ))}
                         </div>
                       </div>
@@ -840,10 +843,10 @@ const LandingPage = () => {
                 className="bg-white/10 border border-white/10 rounded-2xl p-6 shadow-lg backdrop-blur-md flex flex-col"
               >
                 <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
+                  {Array.from({ length: 5 }).map((_, i2) => (
                     <Star
-                      key={i}
-                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                      key={i2}
+                      className={`w-4 h-4 ${i2 < Math.floor(testimonial.rating) ? 'fill-yellow-400 text-yellow-400' : i2 < testimonial.rating ? 'text-yellow-400/50' : 'text-white/20'}`}
                     />
                   ))}
                 </div>
