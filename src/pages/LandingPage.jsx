@@ -703,12 +703,12 @@ const LandingPage = () => {
           </div>
         </motion.section>
 
-        {/* Powerful Tools, Simple Interface */}
-         <motion.section
+        {/* Trust, Privacy & Performance Section (replaces duplicate feature grid) */}
+        <motion.section
           initial={{ opacity: 1, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-           className="relative z-10 py-20 px-4 max-w-6xl mx-auto"
+          className="relative z-10 py-20 px-4 max-w-6xl mx-auto"
           id="features"
         >
           <motion.h2
@@ -717,29 +717,129 @@ const LandingPage = () => {
             transition={{ duration: 0.3 }}
             className="text-3xl md:text-4xl font-bold text-white mb-3 text-center"
           >
-            Powerful Tools, Simple Interface
+            Private and Blazing Fast
           </motion.h2>
           <p className="text-center text-gray-300 mb-10 max-w-3xl mx-auto">
-            Designed for speed and clarity. Every tool focuses on the task at
-            hand with minimal clicks and instant feedback.
+            Everything runs in your browser for privacy and speed. No uploads, no waiting, just results.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, i) => (
-              <div
-                key={i}
-                className="bg-white/10 border border-white/10 rounded-2xl p-6 shadow-lg backdrop-blur-md group hover:bg-white/15 transition-all duration-300"
-              >
-                <div
-                  className={`w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-teal-500/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
-                >
-                  <feature.icon className={`w-6 h-6 ${feature.color}`} />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Privacy & Security card */}
+            <div className="relative overflow-hidden bg-white/10 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white">
+                    <Lock className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Privacy & Security</h3>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-300 text-sm">{feature.desc}</p>
+                <motion.div
+                  aria-hidden
+                  className="w-10 h-10 rounded-full bg-emerald-400/20"
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
               </div>
-            ))}
+
+              <div className="flex flex-wrap gap-2 mb-6">
+                <span className="px-3 py-1 text-xs rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20">Client‑side only</span>
+                <span className="px-3 py-1 text-xs rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-400/20">Files stay on device</span>
+                <span className="px-3 py-1 text-xs rounded-full bg-sky-500/10 text-sky-300 border border-sky-400/20">Secure context (HTTPS)</span>
+              </div>
+
+              <ul className="space-y-3 text-gray-300">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-400" /> Your files never leave your browser
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-400" /> Processing happens locally for privacy
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-400" /> Encrypted transport and secure storage of settings
+                </li>
+              </ul>
+
+              <div className="mt-6">
+                <Link to="/privacy-policy" className="text-cyan-300 hover:text-cyan-200 text-sm inline-flex items-center gap-1">
+                  Read our Privacy Policy <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-emerald-400/10"
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </div>
+
+            {/* Speed & Performance card */}
+            <div className="relative overflow-hidden bg-white/10 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-500 flex items-center justify-center text-white">
+                    <Rocket className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Speed & Performance</h3>
+                </div>
+                <motion.div
+                  aria-hidden
+                  className="w-10 h-10 rounded-full bg-cyan-400/20"
+                  animate={{ y: [0, 6, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-6">
+                <span className="px-3 py-1 text-xs rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-400/20">0 uploads → 0ms network</span>
+                <span className="px-3 py-1 text-xs rounded-full bg-sky-500/10 text-sky-300 border border-sky-400/20">Median result &lt; 1s</span>
+                <span className="px-3 py-1 text-xs rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-400/20">Web Workers optimized</span>
+              </div>
+
+              {/* Simple in-browser pipeline diagram */}
+              <div className="relative rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-cyan-300" />
+                    </div>
+                    <span className="text-sm text-gray-200">You</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center">
+                      <Settings className="w-4 h-4 text-sky-300" />
+                    </div>
+                    <span className="text-sm text-gray-200">Browser (Workers)</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                      <Download className="w-4 h-4 text-indigo-300" />
+                    </div>
+                    <span className="text-sm text-gray-200">Result</span>
+                  </div>
+                </div>
+                <motion.div
+                  aria-hidden
+                  className="absolute left-4 -bottom-2 h-1 w-24 bg-gradient-to-r from-cyan-400/40 to-sky-400/40 rounded-full"
+                  animate={{ x: [0, 120, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+
+              <div className="mt-6 flex items-center gap-2 text-xs text-gray-400">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                Real‑time, in‑browser processing
+              </div>
+
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute -left-10 -top-10 w-40 h-40 rounded-full bg-cyan-400/10"
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </div>
           </div>
         </motion.section>
 
