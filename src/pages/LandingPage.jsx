@@ -287,7 +287,7 @@ const LandingPage = () => {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-           className="relative pt-16 pb-12 md:pb-12 lg:pb-24 xl:pb-16 px-4"
+           className="relative pt-8 md:pt-16 pb-12 md:pb-12 lg:pb-24 xl:pb-16 px-4"
           id="hero"
         >
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
