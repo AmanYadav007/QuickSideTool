@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
-import GoogleAds from "./components/GoogleAds";
+// import GoogleAds from "./components/GoogleAds";
 import GTMBody from "./components/GTMBody";
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/Home";
@@ -34,7 +34,7 @@ import "./index.css";
 function App() {
   return (
     <HelmetProvider>
-      <GoogleAds />
+      {/* Ads disabled */}
       <GTMBody />
       <ErrorBoundary>
         <AuthProvider>

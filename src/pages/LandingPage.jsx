@@ -43,7 +43,7 @@ import {
 import Layout from "../components/Layout";
 import BuyMeACoffee from "../components/BuyMeACoffee";
 import SEO from "../components/SEO";
-import AdSense from "../components/AdSense";
+// import AdSense from "../components/AdSense";
 import { useNavigate, Link } from "react-router-dom";
 import { submitForm } from "../utils/googleSheets";
 
@@ -743,22 +743,7 @@ const LandingPage = () => {
           </div>
         </motion.section>
 
-        {/* Ad Section 2 - Before About */}
-        <motion.section
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          className="relative z-10 py-8 px-4 max-w-4xl mx-auto"
-        >
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur-md">
-            <AdSense
-              adSlot="2025261981"
-              position="horizontal"
-              className="text-center"
-              style={{ minHeight: "90px" }}
-            />
-          </div>
-        </motion.section>
+        {/* Ads removed */}
 
         {/* About QuickSideTool */}
          <motion.section
