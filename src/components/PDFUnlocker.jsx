@@ -10,7 +10,6 @@ const PDFUnlocker = () => {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [action, setAction] = useState('unlock'); // 'unlock' or 'lock'
-  const [strength, setStrength] = useState('strong'); // 'fast' or 'strong' (lock only)
   const [showConfetti, setShowConfetti] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isInvalidDrag, setIsInvalidDrag] = useState(false);
@@ -57,17 +56,6 @@ const PDFUnlocker = () => {
     return () => { didCancel = true; clearInterval(interval); };
   }, []);
 
-  // Lightweight client-side check to avoid uploading non-encrypted PDFs
-  const isLikelyEncrypted = async (f) => {
-    try {
-      const slice = f.slice(0, Math.min(f.size, 2 * 1024 * 1024)); // first 2MB
-      const text = await slice.text();
-      // Heuristic: encrypted PDFs include an /Encrypt dictionary
-      return /\/Encrypt\b/.test(text);
-    } catch {
-      return true; // if unsure, assume encrypted to not block valid cases
-    }
-  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -133,23 +121,12 @@ const PDFUnlocker = () => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('password', password);
-    if (action === 'lock') {
-      formData.append('strength', strength);
-    }
+    // always use server defaults (fast lock)
 
     // Using environment variable for backend URL
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://quicksidetoolbackend.onrender.com';
 
     try {
-      // Fast-path: if unlocking and file appears unencrypted, avoid network roundtrip
-      if (action === 'unlock') {
-        const encrypted = await isLikelyEncrypted(file);
-        if (!encrypted) {
-          setMessage('Error: This PDF is not encrypted.');
-          setIsLoading(false);
-          return;
-        }
-      }
       const endpoint = action === 'unlock' ? '/unlock-pdf' : '/lock-pdf';
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 60 * 1000); // 60s safety timeout
@@ -293,26 +270,7 @@ const PDFUnlocker = () => {
               </div>
             </div>
 
-            {action === 'lock' && (
-              <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setStrength('fast')}
-                  className={`px-4 py-2 rounded-lg border ${strength==='fast' ? 'border-teal-400 text-white bg-white/10' : currentTheme.borderColor + ' text-gray-300'} transition`}
-                  title="AES-128 – faster, compatible"
-                >
-                  Fast (AES‑128)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStrength('strong')}
-                  className={`px-4 py-2 rounded-lg border ${strength==='strong' ? 'border-teal-400 text-white bg-white/10' : currentTheme.borderColor + ' text-gray-300'} transition`}
-                  title="AES-256 – strongest security"
-                >
-                  Strong (AES‑256)
-                </button>
-              </div>
-            )}
+            {/* strength selection removed; server locks with fast mode by default */}
 
             <div
               className={`mt-6 ${currentTheme.bgClass} backdrop-blur-md rounded-2xl p-8 border-2 border-dashed ${

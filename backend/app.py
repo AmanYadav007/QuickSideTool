@@ -18,10 +18,14 @@ logging.basicConfig(level=logging.INFO) # Set to INFO for production, DEBUG for 
 
 
 
-# Root route for health check or info
+# Root route and health endpoint
 @app.route('/')
 def home():
     return "PDF Manipulator Backend is running!"
+
+@app.route('/health')
+def health():
+    return jsonify({"status": "ok"})
 
 # Unlock PDF endpoint
 @app.route('/unlock-pdf', methods=['POST'])
@@ -52,12 +56,8 @@ def unlock_pdf():
         # Attempt to open the PDF. pikepdf.Pdf.open handles decryption directly.
         # It will raise an error if the password is incorrect or PDF is malformed.
         try:
+            # Attempt to open using the provided password. If it's wrong, PasswordError is thrown.
             pdf = pikepdf.Pdf.open(file.stream, password=password)
-            if not pdf.is_encrypted:
-                # If it opens without error *and* reports not encrypted, it means it was never locked
-                logging.info(f"Unlock PDF: File '{file.filename}' is not encrypted. Cannot unlock.")
-                return jsonify({"error": "This PDF is not encrypted. Cannot unlock."}), 400
-
         except pikepdf.PasswordError:
             logging.warning(f"Unlock PDF: Incorrect password for '{file.filename}'.")
             return jsonify({"error": "Incorrect password for this PDF."}), 400
@@ -100,7 +100,8 @@ def lock_pdf():
 
     file = request.files['file']
     password = request.form.get('password')
-    strength = request.form.get('strength', 'strong')  # 'fast' (AES-128) or 'strong' (AES-256 default)
+    # Always prefer fast lock for speed (AES-128). We keep strong available via env if needed.
+    strength = os.getenv('DEFAULT_LOCK_STRENGTH', 'fast')  # 'fast' (AES-128) or 'strong' (AES-256)
 
     # Validate file presence and type
     if file.filename == '':
