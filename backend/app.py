@@ -100,6 +100,7 @@ def lock_pdf():
 
     file = request.files['file']
     password = request.form.get('password')
+    strength = request.form.get('strength', 'strong')  # 'fast' (AES-128) or 'strong' (AES-256 default)
 
     # Validate file presence and type
     if file.filename == '':
@@ -115,11 +116,13 @@ def lock_pdf():
 
         output = io.BytesIO()
         
-        # Define modern AES-256 encryption settings
+        # Choose encryption strength
+        # R mapping: 4 => AES-128, 6 => AES-256 (modern)
+        revision = 4 if str(strength).lower() == 'fast' else 6
         encryption = pikepdf.Encryption(
             user=password,
-            owner=password, # Owner password often same as user for simplicity in tools
-            R=6 # Revision 6 for AES-256 encryption
+            owner=password,  # Owner password same as user for simplicity
+            R=revision
         )
         
         pdf.save(output, encryption=encryption)

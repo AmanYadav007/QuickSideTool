@@ -725,10 +725,11 @@ const LandingPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Privacy & Security card */}
-            <div className="relative overflow-hidden bg-white/10 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md">
+            <div className="relative overflow-hidden bg-white/10 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md transition-transform duration-300 will-change-transform hover:-translate-y-0.5 hover:shadow-xl">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white">
+                  <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white">
+                    <span className="breathing-ring" aria-hidden />
                     <Lock className="w-6 h-6" />
                   </div>
                   <h3 className="text-2xl font-bold text-white">Privacy & Security</h3>
@@ -742,9 +743,9 @@ const LandingPage = () => {
               </div>
 
               <div className="flex flex-wrap gap-2 mb-6">
-                <span className="px-3 py-1 text-xs rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20">Client‑side only</span>
-                <span className="px-3 py-1 text-xs rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-400/20">Files stay on device</span>
-                <span className="px-3 py-1 text-xs rounded-full bg-sky-500/10 text-sky-300 border border-sky-400/20">Secure context (HTTPS)</span>
+                <span className="chip px-3 py-1 text-xs rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/20">Client‑side only</span>
+                <span className="chip px-3 py-1 text-xs rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-400/20">Files stay on device</span>
+                <span className="chip px-3 py-1 text-xs rounded-full bg-sky-500/10 text-sky-300 border border-sky-400/20">Secure context (HTTPS)</span>
               </div>
 
               <ul className="space-y-3 text-gray-300">
@@ -774,10 +775,11 @@ const LandingPage = () => {
             </div>
 
             {/* Speed & Performance card */}
-            <div className="relative overflow-hidden bg-white/10 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md">
+            <div className="relative overflow-hidden bg-white/10 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md transition-transform duration-300 will-change-transform hover:-translate-y-0.5 hover:shadow-xl">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-500 flex items-center justify-center text-white">
+                  <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-500 flex items-center justify-center text-white">
+                    <span className="breathing-ring" aria-hidden />
                     <Rocket className="w-6 h-6" />
                   </div>
                   <h3 className="text-2xl font-bold text-white">Speed & Performance</h3>
@@ -791,31 +793,34 @@ const LandingPage = () => {
               </div>
 
               <div className="flex flex-wrap gap-2 mb-6">
-                <span className="px-3 py-1 text-xs rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-400/20">0 uploads → 0ms network</span>
-                <span className="px-3 py-1 text-xs rounded-full bg-sky-500/10 text-sky-300 border border-sky-400/20">Median result &lt; 1s</span>
-                <span className="px-3 py-1 text-xs rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-400/20">Web Workers optimized</span>
+                <span className="chip px-3 py-1 text-xs rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-400/20">0 uploads → 0ms network</span>
+                <span className="chip px-3 py-1 text-xs rounded-full bg-sky-500/10 text-sky-300 border border-sky-400/20">Median result &lt; 1s</span>
+                <span className="chip px-3 py-1 text-xs rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-400/20">Web Workers optimized</span>
               </div>
 
               {/* Simple in-browser pipeline diagram */}
               <div className="relative rounded-xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                    <div className="relative w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
                       <Users className="w-4 h-4 text-cyan-300" />
+                      <span className="absolute inset-0 rounded-lg border border-cyan-400/30 animate-pulse" aria-hidden />
                     </div>
                     <span className="text-sm text-gray-200">You</span>
                   </div>
                   <ArrowRight className="w-4 h-4 text-gray-400" />
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center">
+                    <div className="relative w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center">
                       <Settings className="w-4 h-4 text-sky-300" />
+                      <span className="absolute inset-0 rounded-lg border border-sky-400/30 animate-pulse" style={{animationDelay:'120ms'}} aria-hidden />
                     </div>
                     <span className="text-sm text-gray-200">Browser (Workers)</span>
                   </div>
                   <ArrowRight className="w-4 h-4 text-gray-400" />
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                    <div className="relative w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
                       <Download className="w-4 h-4 text-indigo-300" />
+                      <span className="absolute inset-0 rounded-lg border border-indigo-400/30 animate-pulse" style={{animationDelay:'240ms'}} aria-hidden />
                     </div>
                     <span className="text-sm text-gray-200">Result</span>
                   </div>

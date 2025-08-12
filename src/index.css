@@ -190,3 +190,54 @@
 .marquee-fade {
   pointer-events: none;
 }
+
+/* ---- Micro-interaction utilities for Privacy/Speed section ---- */
+@keyframes shimmer {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+@keyframes ringPulse {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  60% { transform: scale(1.05); opacity: 0.0; }
+  100% { transform: scale(1.1); opacity: 0; }
+}
+
+/* Shimmering chip/badge */
+.chip {
+  position: relative;
+  overflow: hidden;
+}
+.chip::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 40%;
+  left: -40%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  filter: blur(2px);
+  animation: shimmer 2.6s linear infinite;
+}
+
+/* Breathing ring around leading icons */
+.breathing-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 14px;
+  border: 2px solid rgba(34, 211, 238, 0.35); /* cyan-400 */
+  animation: ringPulse 2.8s ease-out infinite;
+  pointer-events: none;
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track,
+  .animate-glow,
+  .animate-pulse,
+  .chip::after,
+  .breathing-ring,
+  .stars, .stars2, .stars3 {
+    animation: none !important;
+  }
+  .tilt:hover { transform: none !important; }
+}
