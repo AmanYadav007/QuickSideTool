@@ -128,6 +128,28 @@ const PDFUnlocker = () => {
 
     try {
       const endpoint = action === 'unlock' ? '/unlock-pdf' : '/lock-pdf';
+
+      // Quick cache lookup to skip network on repeated operations
+      try {
+        const cache = await caches.open('pdf-lock-cache-v1');
+        const signature = encodeURIComponent(`${file.name}|${file.size}|${action}|${password}`);
+        const keyUrl = `https://cache.local/${action}/${signature}`;
+        const cached = await cache.match(keyUrl);
+        if (cached) {
+          const blob = await cached.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', action === 'unlock' ? `unlocked_${file.name.replace(/\.pdf$/, '')}.pdf` : `locked_${file.name.replace(/\.pdf$/, '')}.pdf`);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+          setMessage(`Success: PDF ${action === 'unlock' ? 'unlocked' : 'locked'} (from cache).`);
+          setIsLoading(false);
+          return;
+        }
+      } catch {}
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 60 * 1000); // 60s safety timeout
       const response = await fetch(`${backendUrl}${endpoint}`, {
@@ -139,6 +161,13 @@ const PDFUnlocker = () => {
 
       if (response.ok) {
         const blob = await response.blob();
+        // Save to cache for instant repeat operations
+        try {
+          const cache = await caches.open('pdf-lock-cache-v1');
+          const signature = encodeURIComponent(`${file.name}|${file.size}|${action}|${password}`);
+          const keyUrl = `https://cache.local/${action}/${signature}`;
+          await cache.put(keyUrl, new Response(blob.clone()));
+        } catch {}
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -321,8 +350,9 @@ const PDFUnlocker = () => {
               </div>
             </div>
 
-            <div
+            <form
               className={`mt-8 ${currentTheme.bgClass} backdrop-blur-md rounded-2xl p-6 border ${currentTheme.borderColor} shadow-lg animate-fade-in-up animation-delay-700`}
+              onSubmit={(e) => { e.preventDefault(); if (!isLoading) { handleAction(); } }}
             >
               <div className="relative mb-4">
                 <input
@@ -344,7 +374,7 @@ const PDFUnlocker = () => {
                 </button>
               </div>
               <button
-                onClick={handleAction}
+                type="submit"
                 disabled={isLoading || !file || !password}
                 className={`w-full py-3 bg-gradient-to-r from-blue-500 to-teal-600 hover:from-blue-600 hover:to-teal-700 text-white font-semibold rounded-lg shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center
                   disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -364,13 +394,14 @@ const PDFUnlocker = () => {
               )}
               {(message.includes('Success') || message.includes('Error')) && (
                 <button
+                  type="button"
                   onClick={handleClearForm}
                   className="mt-6 w-full py-2 bg-gray-700/80 text-white rounded-lg hover:bg-gray-800/80 transition-colors flex items-center justify-center text-sm shadow-md"
                 >
                   <X className="mr-2 w-4 h-4" /> Clear Form / Do Another
                 </button>
               )}
-            </div>
+            </form>
           </div>
         </main>
       </div>
