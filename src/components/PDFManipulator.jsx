@@ -74,7 +74,7 @@ const ProgressModal = ({
   </div>
 );
 
-const ContextMenu = ({ x, y, onClose, onReplace, onRotate, onClearAll }) => {
+const ContextMenu = ({ x, y, onClose, onReplace, onInsertBefore, onInsertAfter, onRotate, onClearAll }) => {
   const menuStyle = {
     top: Math.max(0, Math.min(y, window.innerHeight - 100)), // Ensure menu stays within viewport
     left: Math.max(0, Math.min(x, window.innerWidth - 180)), // Ensure menu stays within viewport
@@ -97,6 +97,26 @@ const ContextMenu = ({ x, y, onClose, onReplace, onRotate, onClearAll }) => {
         <FileText className="w-4 h-4 mr-2 text-blue-600" />
         <span className="text-gray-800">Replace Page</span>
       </button>
+      <button
+        className="w-full px-3 py-1.5 text-left text-gray-800 text-sm font-medium hover:bg-teal-100 flex items-center transition-colors duration-200"
+        onClick={(e) => {
+          onInsertBefore();
+          onClose();
+        }}
+      >
+        <Plus className="w-4 h-4 mr-2 text-teal-600" />
+        <span className="text-gray-800">Insert Before</span>
+      </button>
+      <button
+        className="w-full px-3 py-1.5 text-left text-gray-800 text-sm font-medium hover:bg-emerald-100 flex items-center transition-colors duration-200"
+        onClick={(e) => {
+          onInsertAfter();
+          onClose();
+        }}
+      >
+        <Plus className="w-4 h-4 mr-2 text-emerald-600" />
+        <span className="text-gray-800">Insert After</span>
+      </button>
       {/* Removed "Clear All Pages" button from ContextMenu as it was commented out */}
       {/* Removed "Rotate 90° Clockwise" button from ContextMenu as it was commented out */}
     </div>
@@ -118,6 +138,23 @@ const LoadingOverlay = ({ isLoading }) => {
   );
 };
 
+const InsertSlot = ({ onClick }) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative flex items-center justify-center rounded-lg border-2 border-dashed border-white/15 hover:border-teal-400/70 bg-white/5 hover:bg-teal-500/5 transition-all duration-200 ease-in-out group aspect-[3/4] shadow-sm hover:shadow-md"
+      title="Insert pages here"
+      aria-label="Insert pages here"
+    >
+      <div className="absolute inset-0 rounded-lg pointer-events-none bg-gradient-to-b from-transparent via-transparent to-black/15" />
+      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 group-hover:bg-blue-500 text-white shadow-lg">
+        <Plus className="w-5 h-5" />
+      </div>
+    </button>
+  );
+};
+
 // --- Main App Component ---
 
 const App = () => {
@@ -133,6 +170,7 @@ const App = () => {
   const dragOverTimeoutRef = useRef(null);
 
   const [notification, setNotification] = useState({ message: "", type: "" });
+  const [showInlineInsert, setShowInlineInsert] = useState(false);
 
   const showNotification = useCallback((message, type = "info") => {
     setNotification({ message, type });
@@ -270,6 +308,27 @@ const App = () => {
     if (fileInputRef.current && contextMenu !== null) {
       fileInputRef.current.value = "";
       fileInputRef.current.dataset.pageIndex = contextMenu.pageIndex;
+      delete fileInputRef.current.dataset.insertMode;
+      fileInputRef.current.click();
+    }
+  }, [contextMenu]);
+
+  const handleInsertBefore = useCallback(() => {
+    if (fileInputRef.current && contextMenu !== null) {
+      fileInputRef.current.value = "";
+      fileInputRef.current.multiple = true;
+      fileInputRef.current.dataset.pageIndex = contextMenu.pageIndex;
+      fileInputRef.current.dataset.insertMode = "before";
+      fileInputRef.current.click();
+    }
+  }, [contextMenu]);
+
+  const handleInsertAfter = useCallback(() => {
+    if (fileInputRef.current && contextMenu !== null) {
+      fileInputRef.current.value = "";
+      fileInputRef.current.multiple = true;
+      fileInputRef.current.dataset.pageIndex = contextMenu.pageIndex;
+      fileInputRef.current.dataset.insertMode = "after";
       fileInputRef.current.click();
     }
   }, [contextMenu]);
@@ -359,46 +418,79 @@ const App = () => {
 
   const handleFileSelect = useCallback(
     async (event) => {
-      const file = event.target.files[0];
-      const pageIndexToReplace = parseInt(event.target.dataset.pageIndex);
+      const files = Array.from(event.target.files || []);
+      const targetIndex = parseInt(event.target.dataset.pageIndex);
+      const insertMode = event.target.dataset.insertMode;
 
-      if (!file || isNaN(pageIndexToReplace)) {
+      if ((!files.length && insertMode) || isNaN(targetIndex)) {
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
           delete fileInputRef.current.dataset.pageIndex;
+          delete fileInputRef.current.dataset.insertMode;
+          fileInputRef.current.multiple = false;
         }
         return;
       }
 
       try {
-        if (!Object.values(FILE_TYPES).includes(file.type)) {
-          showNotification(
-            "Please select a valid PDF or image file (PDF, JPG, JPEG, PNG).",
-            "error"
-          );
-          return;
-        }
-
         setReplaceLoading(true);
 
-        const replacementPages = await processFileIntoPageData(file);
+        if (!insertMode) {
+          // Replace mode (single file)
+          const file = files[0];
+          if (!file || !Object.values(FILE_TYPES).includes(file.type)) {
+            showNotification(
+              "Please select a valid PDF or image file (PDF, JPG, JPEG, PNG).",
+              "error"
+            );
+            return;
+          }
+          const replacementPages = await processFileIntoPageData(file);
+          setPages((prevPages) => {
+            const updatedPages = [...prevPages];
+            updatedPages.splice(targetIndex, 1, ...replacementPages);
+            return updatedPages;
+          });
+          showNotification("Page(s) replaced successfully!", "success");
+        } else {
+          // Insert mode (multiple files allowed)
+          const invalidFiles = files.filter(
+            (f) => !Object.values(FILE_TYPES).includes(f.type)
+          );
+          if (invalidFiles.length) {
+            showNotification(
+              `Unsupported files: ${invalidFiles
+                .map((f) => f.name)
+                .join(", ")}. Please use PDF, JPG, JPEG, or PNG.`,
+              "error"
+            );
+            return;
+          }
 
-        setPages((prevPages) => {
-          const updatedPages = [...prevPages];
-          // Remove 1 page at pageIndexToReplace and insert all replacementPages
-          // If replacement is a multi-page PDF, it will insert all its pages
-          updatedPages.splice(pageIndexToReplace, 1, ...replacementPages);
-          return updatedPages;
-        });
-        showNotification("Page(s) replaced successfully!", "success");
+          let newPagesToInsert = [];
+          for (const file of files) {
+            const pagesFromFile = await processFileIntoPageData(file);
+            newPagesToInsert.push(...pagesFromFile);
+          }
+
+          setPages((prevPages) => {
+            const updatedPages = [...prevPages];
+            const atIndex = insertMode === "before" ? targetIndex : targetIndex + 1;
+            updatedPages.splice(atIndex, 0, ...newPagesToInsert);
+            return updatedPages;
+          });
+          showNotification("Page(s) inserted successfully!", "success");
+        }
       } catch (error) {
-        showNotification("Error replacing page: " + error.message, "error");
+        showNotification("Error processing file(s): " + error.message, "error");
       } finally {
         setReplaceLoading(false);
         setContextMenu(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
           delete fileInputRef.current.dataset.pageIndex;
+          delete fileInputRef.current.dataset.insertMode;
+          fileInputRef.current.multiple = false;
         }
       }
     },
@@ -742,7 +834,7 @@ const App = () => {
             PDF & Image Combiner
           </h1>
 
-        {/* Hidden file input for replacement functionality */}
+        {/* Hidden file input for replacement/insert functionality */}
         <input
           type="file"
           ref={fileInputRef}
@@ -844,26 +936,66 @@ const App = () => {
                   </>
                 )}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowInlineInsert((v) => !v)}
+                    disabled={isLoading || replaceLoading || pages.length === 0}
+                    className={`px-6 py-2.5 rounded-full flex items-center justify-center font-semibold text-base whitespace-nowrap transition-all duration-300 transform ${
+                      isLoading || replaceLoading || pages.length === 0
+                        ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                        : (showInlineInsert ? 'bg-blue-800 text-white hover:bg-blue-700' : 'bg-blue-600 text-white hover:bg-blue-700')
+                    }`}
+                  >
+                    {showInlineInsert ? 'Hide Insert +' : 'Insert Pages +'}
+                  </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-              {pages.map((page, index) => (
-                <PageCard
-                  key={`${page.preview}-${index}`}
-                  page={page}
-                  index={index}
-                  draggedItem={draggedItem}
-                  dragOverIndex={dragOverIndex}
-                  replaceLoading={replaceLoading}
-                  contextMenu={contextMenu}
-                  handleDragStart={handleDragStart}
-                  handleDragEnd={handleDragEnd}
-                  handleDragOver={handleDragOver}
-                  handleDragLeave={handleDragLeave}
-                  handleContextMenu={handleContextMenu}
-                  handleRemovePage={handleRemovePage}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-7 md:gap-6 lg:gap-7">
+              {showInlineInsert && (
+                <InsertSlot
+                  key={`insert-start`}
+                  onClick={() => {
+                    if (!fileInputRef.current) return;
+                    fileInputRef.current.value = '';
+                    fileInputRef.current.multiple = true;
+                    fileInputRef.current.dataset.pageIndex = '0';
+                    fileInputRef.current.dataset.insertMode = 'before';
+                    fileInputRef.current.click();
+                  }}
                 />
+              )}
+              {pages.map((page, index) => (
+                <React.Fragment key={`${page.preview}-${index}`}>
+                  <PageCard
+                    page={page}
+                    index={index}
+                    draggedItem={draggedItem}
+                    dragOverIndex={dragOverIndex}
+                    replaceLoading={replaceLoading}
+                    contextMenu={contextMenu}
+                    handleDragStart={handleDragStart}
+                    handleDragEnd={handleDragEnd}
+                    handleDragOver={handleDragOver}
+                    handleDragLeave={handleDragLeave}
+                    handleContextMenu={handleContextMenu}
+                    handleRemovePage={handleRemovePage}
+                    showInsertButtons={false}
+                  />
+                  {showInlineInsert && (
+                    <InsertSlot
+                      key={`insert-after-${index}`}
+                      onClick={() => {
+                        if (!fileInputRef.current) return;
+                        fileInputRef.current.value = '';
+                        fileInputRef.current.multiple = true;
+                        fileInputRef.current.dataset.pageIndex = String(index);
+                        fileInputRef.current.dataset.insertMode = 'after';
+                        fileInputRef.current.click();
+                      }}
+                    />
+                  )}
+                </React.Fragment>
               ))}
             </div>
           </div>
@@ -875,6 +1007,8 @@ const App = () => {
             y={contextMenu.y}
             onClose={() => setContextMenu(null)}
             onReplace={handleReplacePage}
+            onInsertBefore={handleInsertBefore}
+            onInsertAfter={handleInsertAfter}
             onClearAll={handleClearAll} // Kept this as it was in the original context menu props
             onRotate={handleRotatePage} // Kept this as it was in the original context menu props
           />
