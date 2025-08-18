@@ -1,16 +1,46 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import SEO from './SEO';
 import { useDropzone } from 'react-dropzone';
-import { ArrowLeft, Upload, Download, Image as ImageIcon, Trash2, X, Loader2 } from 'lucide-react'; // Added X and Loader2
+import { ArrowLeft, Upload, Download, Image as ImageIcon, Trash2, X, Loader2, Server, Monitor, Settings, CheckCircle, XCircle } from 'lucide-react'; // Added CheckCircle, XCircle
 import { Link } from 'react-router-dom';
 import JSZip from 'jszip';
+import axios from 'axios'; // Add axios for server-side compression
 
 const ImageCompressor = () => {
   const [images, setImages] = useState([]);
   const [quality, setQuality] = useState(70);
   const [compressing, setCompressing] = useState(false);
   const [outputFormat, setOutputFormat] = useState('image/jpeg'); // Default to JPEG for compression
+  const [compressionMode, setCompressionMode] = useState('client'); // 'client' or 'server'
+  const [resizeWidth, setResizeWidth] = useState('');
+  const [resizeHeight, setResizeHeight] = useState('');
+  const [preserveMetadata, setPreserveMetadata] = useState(false);
+  const [optimizeCompression, setOptimizeCompression] = useState(true);
+  const [serverUrl, setServerUrl] = useState('http://127.0.0.1:4000'); // Default backend URL
+  const [serverStatus, setServerStatus] = useState('unknown'); // 'unknown', 'connected', 'error'
   
+  // Test server connection
+  const testServerConnection = async () => {
+    try {
+      setServerStatus('unknown');
+      const response = await axios.get(`${serverUrl}/health`, { timeout: 5000 });
+      if (response.status === 200) {
+        setServerStatus('connected');
+      } else {
+        setServerStatus('error');
+      }
+    } catch (error) {
+      setServerStatus('error');
+    }
+  };
+
+  // Test connection when server URL changes
+  useEffect(() => {
+    if (compressionMode === 'server') {
+      testServerConnection();
+    }
+  }, [serverUrl, compressionMode]);
+
   // Ref to hold previous URLs for robust cleanup
   const prevUrlsRef = useRef(new Set());
 
@@ -72,6 +102,43 @@ const ImageCompressor = () => {
     multiple: true
   });
 
+  const compressImageServer = async (imageFile, compressionQuality, format, options = {}) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', imageFile);
+      formData.append('quality', compressionQuality);
+      formData.append('format', format.split('/')[1].toUpperCase());
+      formData.append('resize_width', options.resizeWidth || '');
+      formData.append('resize_height', options.resizeHeight || '');
+      formData.append('preserve_metadata', options.preserveMetadata || false);
+      formData.append('optimize', options.optimize || true);
+
+      const response = await axios.post(`${serverUrl}/compress-image`, formData, {
+        responseType: 'blob',
+        timeout: 30000, // 30 second timeout
+      });
+
+      // Create a new File object from the response
+      const originalFileNameWithoutExt = imageFile.name.split('.').slice(0, -1).join('.');
+      const extension = format.split('/')[1] || 'jpeg';
+      return new File([response.data], `${originalFileNameWithoutExt}_compressed.${extension}`, {
+        type: format,
+        lastModified: Date.now()
+      });
+    } catch (error) {
+      console.error('Server compression error:', error);
+      if (error.code === 'ECONNREFUSED') {
+        throw new Error('Cannot connect to server. Please check if the backend is running and the server URL is correct.');
+      } else if (error.response?.status === 400) {
+        throw new Error(`Server error: ${error.response.data?.error || 'Invalid request'}`);
+      } else if (error.code === 'ECONNABORTED') {
+        throw new Error('Request timed out. The server is taking too long to respond.');
+      } else {
+        throw new Error(`Server compression failed: ${error.response?.data?.error || error.message}`);
+      }
+    }
+  };
+
   const compressImage = async (imageFile, compressionQuality, format) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -130,6 +197,51 @@ const ImageCompressor = () => {
     });
   };
 
+  const compressImagesBatchServer = async () => {
+    if (images.length === 0) {
+      alert('Please add images to compress.');
+      return;
+    }
+    
+    setCompressing(true);
+    try {
+      const formData = new FormData();
+      
+      // Add all files
+      images.forEach((img, index) => {
+        formData.append('files', img.original);
+      });
+      
+      // Add compression parameters
+      formData.append('quality', quality);
+      formData.append('format', outputFormat.split('/')[1].toUpperCase());
+      formData.append('optimize', optimizeCompression);
+      
+      const response = await axios.post(`${serverUrl}/compress-images-batch`, formData, {
+        responseType: 'blob',
+        timeout: 60000, // 60 second timeout for batch processing
+      });
+      
+      // Create download link for the ZIP file
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'compressed_images.zip';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      alert(`Successfully compressed ${images.length} images! ZIP file downloaded.`);
+      
+    } catch (error) {
+      console.error('Batch server compression error:', error);
+      alert(`Batch compression failed: ${error.response?.data?.error || error.message}`);
+    } finally {
+      setCompressing(false);
+    }
+  };
+
   const compressImages = async () => {
     if (images.length === 0) {
       alert('Please add images to compress.');
@@ -139,7 +251,21 @@ const ImageCompressor = () => {
     try {
       const compressedImagesPromises = images.map(async (img) => {
         try {
-          const compressedFile = await compressImage(img.original, quality, outputFormat);
+          let compressedFile;
+          
+          if (compressionMode === 'server') {
+            // Use server-side compression with advanced options
+            compressedFile = await compressImageServer(img.original, quality, outputFormat, {
+              resizeWidth,
+              resizeHeight,
+              preserveMetadata,
+              optimize: optimizeCompression
+            });
+          } else {
+            // Use client-side compression
+            compressedFile = await compressImage(img.original, quality, outputFormat);
+          }
+          
           return { ...img, compressed: compressedFile, error: null };
         } catch (error) {
           console.error(`Error compressing image ${img.original.name}:`, error);
@@ -219,6 +345,12 @@ const ImageCompressor = () => {
     setQuality(70);
     setCompressing(false);
     setOutputFormat('image/jpeg');
+    setCompressionMode('client');
+    setResizeWidth('');
+    setResizeHeight('');
+    setPreserveMetadata(false);
+    setOptimizeCompression(true);
+    setServerUrl('http://127.0.0.1:4000');
   };
 
   return (
@@ -336,6 +468,23 @@ const ImageCompressor = () => {
                   'Compress Images'
                 )}
               </button>
+              
+              {/* Batch Server Compression Button - only show when server mode is selected */}
+              {compressionMode === 'server' && images.length > 1 && (
+                <button 
+                  onClick={compressImagesBatchServer}
+                  className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold py-2.5 px-6 rounded-full text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+                  disabled={compressing || images.length === 0}
+                  title="Faster batch processing on server"
+                >
+                  {compressing ? (
+                    <> <Loader2 className="inline-block mr-2 w-4 h-4 animate-spin" /> Processing... </>
+                  ) : (
+                    <> <Server className="inline-block mr-2 w-4 h-4" /> Batch Server </>
+                  )}
+                </button>
+              )}
+              
               <button 
                 onClick={downloadAllCompressedImages}
                 className="bg-gradient-to-r from-green-500 to-cyan-600 hover:from-green-600 hover:to-cyan-700 text-white font-semibold py-2.5 px-6 rounded-full text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
@@ -344,6 +493,165 @@ const ImageCompressor = () => {
                 <Download className="inline-block mr-2 w-4 h-4" />
                 Download All
               </button>
+            </div>
+
+            {/* Advanced Controls */}
+            <div className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10">
+              <div className="flex items-center gap-2 mb-4">
+                <Settings className="w-5 h-5 text-blue-400" />
+                <h3 className="text-white text-lg font-semibold">Advanced Options</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Compression Mode Toggle */}
+                <div className="bg-white/5 rounded-lg p-3">
+                  <label className="flex items-center gap-2 text-white text-sm font-medium mb-2">
+                    <Monitor className="w-4 h-4" />
+                    Compression Mode
+                  </label>
+                  <div className="flex bg-gray-800 rounded-lg p-1">
+                    <button
+                      onClick={() => setCompressionMode('client')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                        compressionMode === 'client'
+                          ? 'bg-blue-500 text-white shadow-md'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                      disabled={compressing}
+                    >
+                      <Monitor className="w-4 h-4" />
+                      Client
+                    </button>
+                    <button
+                      onClick={() => setCompressionMode('server')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                        compressionMode === 'server'
+                          ? 'bg-green-500 text-white shadow-md'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                      disabled={compressing}
+                    >
+                      <Server className="w-4 h-4" />
+                      Server
+                      {compressionMode === 'server' && (
+                        <span className={`ml-1 w-2 h-2 rounded-full ${
+                          serverStatus === 'connected' ? 'bg-green-400' :
+                          serverStatus === 'error' ? 'bg-red-400' : 'bg-yellow-400'
+                        }`} title={`Server: ${serverStatus}`}></span>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {compressionMode === 'client' 
+                      ? 'Fast, privacy-focused compression in your browser'
+                      : serverStatus === 'connected' 
+                        ? 'Advanced algorithms with better compression ratios'
+                        : 'Server mode unavailable - check connection'
+                    }
+                  </p>
+                </div>
+
+                {/* Resize Controls */}
+                <div className="bg-white/5 rounded-lg p-3">
+                  <label className="text-white text-sm font-medium mb-2 block">Resize (Optional)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      placeholder="Width"
+                      value={resizeWidth}
+                      onChange={(e) => setResizeWidth(e.target.value)}
+                      className="flex-1 bg-gray-800 text-white rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      disabled={compressing || compressionMode === 'client'}
+                      min="1"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Height"
+                      value={resizeHeight}
+                      onChange={(e) => setResizeHeight(e.target.value)}
+                      className="flex-1 bg-gray-800 text-white rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      disabled={compressing || compressionMode === 'client'}
+                      min="1"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Leave empty to maintain aspect ratio
+                  </p>
+                </div>
+
+                {/* Server Options */}
+                {compressionMode === 'server' && (
+                  <>
+                    <div className="bg-white/5 rounded-lg p-3">
+                      <label className="flex items-center gap-2 text-white text-sm font-medium mb-2">
+                        <input
+                          type="checkbox"
+                          checked={preserveMetadata}
+                          onChange={(e) => setPreserveMetadata(e.target.checked)}
+                          className="rounded border-gray-600 text-blue-500 focus:ring-blue-400"
+                          disabled={compressing}
+                        />
+                        Preserve Metadata
+                      </label>
+                      <p className="text-xs text-gray-400">
+                        Keep EXIF data (GPS, camera info, etc.)
+                      </p>
+                    </div>
+
+                    <div className="bg-white/5 rounded-lg p-3">
+                      <label className="flex items-center gap-2 text-white text-sm font-medium mb-2">
+                        <input
+                          type="checkbox"
+                          checked={optimizeCompression}
+                          onChange={(e) => setOptimizeCompression(e.target.checked)}
+                          className="rounded border-gray-600 text-blue-500 focus:ring-blue-400"
+                          disabled={compressing}
+                        />
+                        Optimize Compression
+                      </label>
+                      <p className="text-xs text-gray-400">
+                        Use advanced algorithms for better compression
+                      </p>
+                    </div>
+
+                    <div className="bg-white/5 rounded-lg p-3">
+                      <label className="text-white text-sm font-medium mb-2 block">Server URL</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={serverUrl}
+                          onChange={(e) => setServerUrl(e.target.value)}
+                          placeholder="http://127.0.0.1:4000"
+                          className="flex-1 bg-gray-800 text-white rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          disabled={compressing}
+                        />
+                        <button
+                          onClick={testServerConnection}
+                          className="px-3 py-1.5 bg-blue-600/80 text-white rounded-full hover:bg-blue-700 transition-colors duration-300 text-sm"
+                          disabled={compressing}
+                          title={`Test connection to ${serverUrl}`}
+                        >
+                          {serverStatus === 'unknown' ? (
+                            <Loader2 className="inline-block mr-2 w-4 h-4 animate-spin" />
+                          ) : serverStatus === 'connected' ? (
+                            <CheckCircle className="inline-block mr-2 w-4 h-4 text-green-400" />
+                          ) : (
+                            <XCircle className="inline-block mr-2 w-4 h-4 text-red-400" />
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Backend server address
+                      </p>
+                      {serverStatus === 'error' && (
+                        <p className="text-xs text-red-400 mt-1">
+                          Server connection failed. Please check the URL and ensure the backend is running.
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Image Cards */}

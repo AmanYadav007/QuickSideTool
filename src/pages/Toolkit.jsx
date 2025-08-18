@@ -62,19 +62,17 @@ const Toolkit = () => {
                 to="/file-converter"
                 icon={<FileType size={36} />}
                 title="File Converter"
-                description="Coming soon"
+                description="Convert PDFs to Word and Excel documents with advanced formatting."
                 gradientFrom="from-orange-500"
                 gradientTo="to-red-500"
-                disabled
               />
               <ToolCard
                 to="/pdf-compressor"
                 icon={<Minus size={36} />}
                 title="PDF Compressor"
-                description="Coming soon"
+                description="Reduce PDF file size while maintaining quality and readability."
                 gradientFrom="from-blue-500"
                 gradientTo="to-cyan-500"
-                disabled
               />
               <ToolCard
                 to="/qr-tool"
