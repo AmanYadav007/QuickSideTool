@@ -192,26 +192,23 @@ const PDFCompressor = () => {
   const compressionLevels = [
     {
       id: "low",
-      name: "Light Compression",
-      description: "Maintains high quality, minimal size reduction",
+      name: "Light",
+      description: "High quality, minimal size reduction",
       icon: <Star className="w-4 h-4" />,
-      color: "from-green-500 to-emerald-500",
       compression: "10-20%"
     },
     {
       id: "medium",
       name: "Balanced",
-      description: "Good balance of quality and size reduction",
+      description: "Good balance of quality and size",
       icon: <Zap className="w-4 h-4" />,
-      color: "from-blue-500 to-cyan-500",
       compression: "30-50%"
     },
     {
       id: "high",
-      name: "Maximum Compression",
+      name: "Maximum",
       description: "Maximum size reduction, some quality loss",
       icon: <Minus className="w-4 h-4" />,
-      color: "from-orange-500 to-red-500",
       compression: "50-80%"
     }
   ];
@@ -285,139 +282,39 @@ const PDFCompressor = () => {
               </p>
             </div>
 
-            {/* Compression Levels */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {/* Compression Levels - Simplified */}
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
               {compressionLevels.map((level) => (
-                <div
+                <button
                   key={level.id}
-                  className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 hover:scale-105 ${
+                  onClick={() => setCompressionLevel(level.id)}
+                  className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
                     compressionLevel === level.id
-                      ? `border-blue-400 bg-gradient-to-br ${level.color} bg-opacity-20`
+                      ? `border-blue-400 bg-blue-400/10`
                       : "border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10"
                   }`}
-                  onClick={() => setCompressionLevel(level.id)}
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className={`p-3 rounded-xl ${
-                        compressionLevel === level.id
-                          ? `bg-gradient-to-br ${level.color}`
-                          : "bg-white/10"
-                      }`}
-                    >
-                      <div className="text-white">
-                        {level.icon}
-                      </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`p-2 rounded-lg ${
+                      compressionLevel === level.id ? "bg-blue-400/20" : "bg-white/10"
+                    }`}>
+                      {level.icon}
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">
-                        {level.name}
-                      </h3>
-                      <p className="text-white/70 text-sm">
-                        {level.description}
-                      </p>
+                      <h3 className="font-semibold text-white">{level.name}</h3>
+                      <p className="text-xs text-white/60">{level.compression} reduction</p>
                     </div>
                   </div>
-                  
-                  {/* Compression ratio badge */}
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    compressionLevel === level.id
-                      ? `bg-gradient-to-r ${level.color} text-white`
-                      : "bg-white/10 text-white/70"
-                  }`}>
-                    <Minus className="w-3 h-3 mr-1" />
-                    {level.compression} reduction
-                  </div>
-                  
-                  {/* Features */}
-                  <div className="mt-4 space-y-2">
-                    {level.id === 'low' && (
-                      <>
-                        <div className="flex items-center gap-2 text-sm text-white/80">
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                          High quality preservation
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-white/80">
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                          Fast processing
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-white/80">
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                          Print ready
-                        </div>
-                      </>
-                    )}
-                    {level.id === 'medium' && (
-                      <>
-                        <div className="flex items-center gap-2 text-sm text-white/80">
-                          <CheckCircle className="w-4 h-4 text-blue-400" />
-                          Balanced quality & size
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-white/80">
-                          <CheckCircle className="w-4 h-4 text-blue-400" />
-                          Web optimized
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-white/80">
-                          <CheckCircle className="w-4 h-4 text-blue-400" />
-                          Email friendly
-                        </div>
-                      </>
-                    )}
-                    {level.id === 'high' && (
-                      <>
-                        <div className="flex items-center gap-2 text-sm text-white/80">
-                          <CheckCircle className="w-4 h-4 text-orange-400" />
-                          Maximum size reduction
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-white/80">
-                          <CheckCircle className="w-4 h-4 text-orange-400" />
-                          Storage optimized
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-white/80">
-                          <CheckCircle className="w-4 h-4 text-orange-400" />
-                          Fast loading
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
+                  <p className="text-sm text-white/70">{level.description}</p>
+                </button>
               ))}
             </div>
 
-            {/* Compression Engine Info */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 shadow-2xl mb-8">
-              <div className="flex items-center gap-3 mb-4">
-                <Settings className="w-6 h-6 text-blue-400" />
-                <h3 className="text-xl font-bold text-white">
-                  Compression Engine
-                </h3>
-              </div>
-
-              <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-xl p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <Zap className="w-5 h-5 text-blue-400" />
-                  <h4 className="font-semibold text-white">
-                    PyMuPDF Powered Compression
-                  </h4>
-                </div>
-                <ul className="space-y-2 text-sm text-white/80">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                    Advanced PDF optimization algorithms
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                    Intelligent object removal and stream compression
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                    Web-optimized output with linear PDF structure
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                    Fast processing with minimal quality loss
-                  </li>
-                </ul>
+            {/* Simple Info */}
+            <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 border border-white/10 mb-6">
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <Info className="w-4 h-4 text-blue-400" />
+                <span>Choose your compression level above. Higher compression = smaller files but may reduce quality.</span>
               </div>
             </div>
 
