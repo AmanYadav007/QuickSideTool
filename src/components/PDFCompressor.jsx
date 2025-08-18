@@ -27,7 +27,6 @@ const PDFCompressor = () => {
   const [message, setMessage] = useState("");
   const [downloadBlob, setDownloadBlob] = useState(null);
   const [compressionLevel, setCompressionLevel] = useState("medium");
-  const [useAdobe, setUseAdobe] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationType, setNotificationType] = useState("info");
@@ -119,16 +118,13 @@ const PDFCompressor = () => {
 
     const backendUrl =
       process.env.REACT_APP_BACKEND_URL ||
-      "https://quicksidetoolbackend.onrender.com";
+      "http://127.0.0.1:4000";
 
-    // Choose endpoint based on Adobe preference
-    const endpoint = useAdobe ? "/adobe/compress-pdf" : "/compress-pdf";
+    // Use the new PDF compression endpoint
+    const endpoint = "/compress-pdf";
 
     try {
-      const processingMessage = useAdobe
-        ? "Compressing with Adobe PDF Services..."
-        : "Compressing PDF...";
-      setMessage(processingMessage);
+      setMessage("Compressing PDF...");
 
       const response = await fetch(`${backendUrl}${endpoint}`, {
         method: "POST",
@@ -155,9 +151,7 @@ const PDFCompressor = () => {
           ((originalSize - blob.size) / originalSize) *
           100
         ).toFixed(1);
-        const successMessage = useAdobe
-          ? `Success: PDF compressed using Adobe! Size reduced by ${reductionPercent}%. Click "Download" to save.`
-          : `Success: PDF compressed! Size reduced by ${reductionPercent}%. Click "Download" to save.`;
+        const successMessage = `Success: PDF compressed! Size reduced by ${reductionPercent}%. Click "Download" to save.`;
         setMessage(successMessage);
         handleNotification(
           `Successfully compressed PDF! Size reduced by ${reductionPercent}%`,
@@ -198,58 +192,28 @@ const PDFCompressor = () => {
   const compressionLevels = [
     {
       id: "low",
-      title: "Low Compression",
-      description: "Minimal size reduction, maximum quality",
-      icon: <BarChart3 className="w-6 h-6" />,
-      features: [
-        "High Quality",
-        "Minimal Size Reduction",
-        "Fast Processing",
-        "Best for Print",
-      ],
-      adobeFeatures: [
-        "Perfect Quality",
-        "Smart Optimization",
-        "Fast Processing",
-        "Print Ready",
-      ],
+      name: "Light Compression",
+      description: "Maintains high quality, minimal size reduction",
+      icon: <Star className="w-4 h-4" />,
+      color: "from-green-500 to-emerald-500",
+      compression: "10-20%"
     },
     {
       id: "medium",
-      title: "Medium Compression",
-      description: "Balanced size reduction and quality",
-      icon: <Minus className="w-6 h-6" />,
-      features: [
-        "Good Quality",
-        "Moderate Size Reduction",
-        "Web Optimized",
-        "Email Friendly",
-      ],
-      adobeFeatures: [
-        "Excellent Quality",
-        "Optimal Compression",
-        "Web Optimized",
-        "Email Ready",
-      ],
+      name: "Balanced",
+      description: "Good balance of quality and size reduction",
+      icon: <Zap className="w-4 h-4" />,
+      color: "from-blue-500 to-cyan-500",
+      compression: "30-50%"
     },
     {
       id: "high",
-      title: "High Compression",
-      description: "Maximum size reduction",
-      icon: <FileDown className="w-6 h-6" />,
-      features: [
-        "Smaller File Size",
-        "Maximum Compression",
-        "Fast Loading",
-        "Storage Saving",
-      ],
-      adobeFeatures: [
-        "Smart Compression",
-        "Maximum Size Reduction",
-        "Fast Loading",
-        "Storage Optimized",
-      ],
-    },
+      name: "Maximum Compression",
+      description: "Maximum size reduction, some quality loss",
+      icon: <Minus className="w-4 h-4" />,
+      color: "from-orange-500 to-red-500",
+      compression: "50-80%"
+    }
   ];
 
   const selectedLevel = compressionLevels.find(
@@ -312,21 +276,11 @@ const PDFCompressor = () => {
           <div className="max-w-5xl w-full">
             {/* Header Section */}
             <div className="text-center mb-8">
-              {useAdobe && (
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">
-                  <Sparkles className="w-4 h-4" />
-                  Powered by Adobe PDF Services
-                </div>
-              )}
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                 Professional PDF Compression
               </h2>
               <p className="text-xl text-white/80 max-w-3xl mx-auto">
-                Compress your PDFs with{" "}
-                {useAdobe
-                  ? "Adobe's advanced algorithms"
-                  : "our efficient compression"}{" "}
-                to reduce file size while maintaining quality. Perfect for
+                Compress your PDFs with our efficient compression to reduce file size while maintaining quality. Perfect for
                 email, web uploads, and storage optimization.
               </p>
             </div>
@@ -336,118 +290,134 @@ const PDFCompressor = () => {
               {compressionLevels.map((level) => (
                 <div
                   key={level.id}
-                  className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                  className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 hover:scale-105 ${
                     compressionLevel === level.id
-                      ? "border-blue-400 bg-blue-400/10"
-                      : "border-white/20 bg-white/5 hover:border-white/40"
+                      ? `border-blue-400 bg-gradient-to-br ${level.color} bg-opacity-20`
+                      : "border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10"
                   }`}
                   onClick={() => setCompressionLevel(level.id)}
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div
-                      className={`p-2 rounded-lg ${
+                      className={`p-3 rounded-xl ${
                         compressionLevel === level.id
-                          ? "bg-blue-400/20"
+                          ? `bg-gradient-to-br ${level.color}`
                           : "bg-white/10"
                       }`}
                     >
-                      {level.icon}
+                      <div className="text-white">
+                        {level.icon}
+                      </div>
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-white">
-                        {level.title}
+                        {level.name}
                       </h3>
                       <p className="text-white/70 text-sm">
                         {level.description}
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    {(useAdobe ? level.adobeFeatures : level.features).map(
-                      (feature, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 text-sm text-white/80"
-                        >
+                  
+                  {/* Compression ratio badge */}
+                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                    compressionLevel === level.id
+                      ? `bg-gradient-to-r ${level.color} text-white`
+                      : "bg-white/10 text-white/70"
+                  }`}>
+                    <Minus className="w-3 h-3 mr-1" />
+                    {level.compression} reduction
+                  </div>
+                  
+                  {/* Features */}
+                  <div className="mt-4 space-y-2">
+                    {level.id === 'low' && (
+                      <>
+                        <div className="flex items-center gap-2 text-sm text-white/80">
                           <CheckCircle className="w-4 h-4 text-green-400" />
-                          {feature}
+                          High quality preservation
                         </div>
-                      )
+                        <div className="flex items-center gap-2 text-sm text-white/80">
+                          <CheckCircle className="w-4 h-4 text-green-400" />
+                          Fast processing
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-white/80">
+                          <CheckCircle className="w-4 h-4 text-green-400" />
+                          Print ready
+                        </div>
+                      </>
+                    )}
+                    {level.id === 'medium' && (
+                      <>
+                        <div className="flex items-center gap-2 text-sm text-white/80">
+                          <CheckCircle className="w-4 h-4 text-blue-400" />
+                          Balanced quality & size
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-white/80">
+                          <CheckCircle className="w-4 h-4 text-blue-400" />
+                          Web optimized
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-white/80">
+                          <CheckCircle className="w-4 h-4 text-blue-400" />
+                          Email friendly
+                        </div>
+                      </>
+                    )}
+                    {level.id === 'high' && (
+                      <>
+                        <div className="flex items-center gap-2 text-sm text-white/80">
+                          <CheckCircle className="w-4 h-4 text-orange-400" />
+                          Maximum size reduction
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-white/80">
+                          <CheckCircle className="w-4 h-4 text-orange-400" />
+                          Storage optimized
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-white/80">
+                          <CheckCircle className="w-4 h-4 text-orange-400" />
+                          Fast loading
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Quality Toggle */}
+            {/* Compression Engine Info */}
             <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 shadow-2xl mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <Settings className="w-6 h-6 text-blue-400" />
-                  <h3 className="text-xl font-bold text-white">
-                    Compression Engine
-                  </h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-white/70">Basic</span>
-                  <button
-                    onClick={() => setUseAdobe(!useAdobe)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      useAdobe ? "bg-blue-500" : "bg-gray-600"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        useAdobe ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                  <span className="text-sm text-white/70">Adobe Pro</span>
-                </div>
+              <div className="flex items-center gap-3 mb-4">
+                <Settings className="w-6 h-6 text-blue-400" />
+                <h3 className="text-xl font-bold text-white">
+                  Compression Engine
+                </h3>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div
-                  className={`p-4 rounded-xl border-2 ${
-                    !useAdobe
-                      ? "border-blue-400 bg-blue-400/10"
-                      : "border-white/20 bg-white/5"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <Minus className="w-5 h-5 text-gray-400" />
-                    <h4 className="font-semibold text-white">
-                      Basic Compression
-                    </h4>
-                  </div>
-                  <ul className="space-y-1 text-sm text-white/70">
-                    <li>• Standard compression</li>
-                    <li>• Good quality preservation</li>
-                    <li>• Free to use</li>
-                    <li>• Reliable results</li>
-                  </ul>
+              <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <Zap className="w-5 h-5 text-blue-400" />
+                  <h4 className="font-semibold text-white">
+                    PyMuPDF Powered Compression
+                  </h4>
                 </div>
-
-                <div
-                  className={`p-4 rounded-xl border-2 ${
-                    useAdobe
-                      ? "border-orange-400 bg-orange-400/10"
-                      : "border-white/20 bg-white/5"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-5 h-5 text-orange-400" />
-                    <h4 className="font-semibold text-white">
-                      Adobe Professional
-                    </h4>
-                  </div>
-                  <ul className="space-y-1 text-sm text-white/70">
-                    <li>• Advanced algorithms</li>
-                    <li>• Smart optimization</li>
-                    <li>• Better compression ratios</li>
-                    <li>• Professional quality</li>
-                  </ul>
-                </div>
+                <ul className="space-y-2 text-sm text-white/80">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Advanced PDF optimization algorithms
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Intelligent object removal and stream compression
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Web-optimized output with linear PDF structure
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Fast processing with minimal quality loss
+                  </li>
+                </ul>
               </div>
             </div>
 
@@ -502,7 +472,7 @@ const PDFCompressor = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <Star className="w-3 h-3" />
-                          {useAdobe ? "Professional" : "Reliable"}
+                          Reliable
                         </div>
                       </div>
                     </div>
@@ -562,18 +532,12 @@ const PDFCompressor = () => {
                   {isLoading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      {useAdobe
-                        ? "Compressing with Adobe..."
-                        : "Compressing..."}
+                      Compressing...
                     </>
                   ) : (
                     <>
-                      {useAdobe ? (
-                        <Sparkles className="w-5 h-5" />
-                      ) : (
-                        <Minus className="w-5 h-5" />
-                      )}
-                      {useAdobe ? "Compress with Adobe" : "Compress PDF"}
+                      <Minus className="w-5 h-5" />
+                      Compress PDF
                     </>
                   )}
                 </button>
@@ -625,9 +589,7 @@ const PDFCompressor = () => {
                   </h3>
                 </div>
                 <p className="text-white/80 text-sm">
-                  {useAdobe
-                    ? "Adobe-powered compression ensures quick and efficient file size reduction."
-                    : "Quick compression with reliable results."}
+                  Quick compression with reliable results.
                 </p>
               </div>
 
@@ -639,9 +601,7 @@ const PDFCompressor = () => {
                   </h3>
                 </div>
                 <p className="text-white/80 text-sm">
-                  {useAdobe
-                    ? "Advanced algorithms maintain document quality while maximizing compression."
-                    : "Smart compression preserves document quality."}
+                  Smart compression preserves document quality.
                 </p>
               </div>
             </div>
