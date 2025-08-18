@@ -27,6 +27,7 @@ const PDFCompressor = () => {
   const [message, setMessage] = useState("");
   const [downloadBlob, setDownloadBlob] = useState(null);
   const [compressionLevel, setCompressionLevel] = useState("medium");
+  const [compressionMode, setCompressionMode] = useState("advanced"); // 'basic' or 'advanced'
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationType, setNotificationType] = useState("info");
@@ -120,11 +121,14 @@ const PDFCompressor = () => {
       process.env.REACT_APP_BACKEND_URL ||
       "http://127.0.0.1:4000";
 
-    // Use the new PDF compression endpoint
-    const endpoint = "/compress-pdf";
+    // Choose endpoint based on compression mode
+    const endpoint = compressionMode === 'advanced' ? "/compress-pdf-advanced" : "/compress-pdf";
 
     try {
-      setMessage("Compressing PDF...");
+      const processingMessage = compressionMode === 'advanced' 
+        ? "Starting advanced multi-stage compression..." 
+        : "Compressing PDF...";
+      setMessage(processingMessage);
 
       const response = await fetch(`${backendUrl}${endpoint}`, {
         method: "POST",
@@ -291,6 +295,46 @@ const PDFCompressor = () => {
                 Compress your PDFs with our efficient compression to reduce file size while maintaining quality. Perfect for
                 email, web uploads, and storage optimization.
               </p>
+            </div>
+
+            {/* Compression Mode Toggle */}
+            <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 border border-white/10 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Zap className="w-5 h-5 text-blue-400" />
+                  <h3 className="text-lg font-semibold text-white">Compression Mode</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm ${compressionMode === 'basic' ? 'text-white' : 'text-white/70'}`}>Basic</span>
+                  <button
+                    onClick={() => setCompressionMode(compressionMode === 'basic' ? 'advanced' : 'basic')}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      compressionMode === 'advanced' ? 'bg-blue-500' : 'bg-gray-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        compressionMode === 'advanced' ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                  <span className={`text-sm ${compressionMode === 'advanced' ? 'text-white' : 'text-white/70'}`}>Advanced</span>
+                </div>
+              </div>
+              
+              <div className="text-sm text-white/70">
+                {compressionMode === 'advanced' ? (
+                  <div className="flex items-center gap-2 text-green-400">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Multi-stage compression with image optimization. Targets 50%+ reduction.</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-blue-400">
+                    <Info className="w-4 h-4" />
+                    <span>Basic compression for simple PDFs. Good for already-optimized files.</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Compression Levels - Simplified */}
