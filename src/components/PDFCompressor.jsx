@@ -151,11 +151,22 @@ const PDFCompressor = () => {
           ((originalSize - blob.size) / originalSize) *
           100
         ).toFixed(1);
-        const successMessage = `Success: PDF compressed! Size reduced by ${reductionPercent}%. Click "Download" to save.`;
+        
+        let successMessage;
+        if (reductionPercent < 0) {
+          successMessage = `Note: File size increased by ${Math.abs(reductionPercent)}%. This usually means the PDF was already well-optimized. The compressed version may have better web compatibility.`;
+        } else if (reductionPercent < 5) {
+          successMessage = `Success: PDF compressed! Size reduced by ${reductionPercent}%. The PDF was already well-optimized, so minimal compression was achieved.`;
+        } else {
+          successMessage = `Success: PDF compressed! Size reduced by ${reductionPercent}%. Click "Download" to save.`;
+        }
+        
         setMessage(successMessage);
         handleNotification(
-          `Successfully compressed PDF! Size reduced by ${reductionPercent}%`,
-          "success"
+          reductionPercent < 0 
+            ? `PDF processed! File size increased by ${Math.abs(reductionPercent)}% (already optimized)`
+            : `Successfully compressed PDF! Size reduced by ${reductionPercent}%`,
+          reductionPercent < 0 ? "info" : "success"
         );
       } else {
         const errorText = await response.text();
