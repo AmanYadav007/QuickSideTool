@@ -8,7 +8,10 @@ import {
   Loader2, 
   ArrowLeft,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  Upload,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import Notification from './Notification';
 
@@ -183,41 +186,95 @@ const FileConverterNew = () => {
 
         {/* Main Content */}
         <main className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
-          <div className="max-w-lg w-full bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-2xl space-y-6">
+          <div className="max-w-lg w-full bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-2xl space-y-6 hover:shadow-3xl hover:border-white/20 transition-all duration-500 animate-fade-in-up group">
             
+            {/* Header Section */}
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <FileText className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">File Converter</h2>
+              <p className="text-gray-400 text-sm">Convert your PDFs to Word or Excel with ease</p>
+            </div>
+
             {/* 1. Upload File */}
             <div>
-              <label className="block text-lg font-semibold mb-2">1. Upload File</label>
+              <label className="block text-lg font-semibold mb-3 flex items-center gap-2">
+                <Upload className="w-5 h-5 text-green-400" />
+                1. Upload File
+              </label>
               <div
                 {...getRootProps()}
-                className={`mt-2 bg-white/10 rounded-xl p-6 border-2 border-dashed ${isDragActive ? 'border-teal-400' : 'border-white/30'} transition-colors duration-300 cursor-pointer text-center`}
+                className={`mt-2 bg-white/10 rounded-xl p-6 border-2 border-dashed transition-all duration-300 cursor-pointer text-center group ${
+                  isDragActive 
+                    ? 'border-teal-400 bg-teal-400/10 scale-[1.02] shadow-lg' 
+                    : 'border-white/30 hover:border-blue-400 hover:bg-blue-400/10 hover:scale-[1.01]'
+                } ${file ? 'border-green-400 bg-green-400/10' : ''}`}
               >
                 <input {...getInputProps()} />
-                <FileText className="w-10 h-10 text-blue-400 mx-auto mb-2" />
+                <div className={`mx-auto mb-3 transition-all duration-300 ${file ? 'scale-110' : ''}`}>
+                  {file ? (
+                    <CheckCircle className="w-12 h-12 text-green-400" />
+                  ) : (
+                    <FileText className="w-12 h-12 text-blue-400 group-hover:text-blue-300" />
+                  )}
+                </div>
                 {file ? (
-                  <div>
-                    <p className="font-semibold">{file.name}</p>
-                    <p className="text-xs text-white/70">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                  <div className="space-y-2">
+                    <p className="font-semibold text-lg text-white">{file.name}</p>
+                    <div className="flex items-center justify-center gap-4 text-sm text-white/70">
+                      <span className="flex items-center gap-1">
+                        <FileText className="w-4 h-4" />
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        Ready to convert
+                      </span>
+                    </div>
                   </div>
                 ) : (
-                  <p>{isDragActive ? 'Drop the PDF here...' : 'Drag & drop a PDF, or click to select'}</p>
+                  <div className="space-y-2">
+                    <p className="text-lg font-medium text-white">
+                      {isDragActive ? 'Drop the PDF here!' : 'Drag & drop a PDF, or click to select'}
+                    </p>
+                    <p className="text-sm text-white/60">
+                      Supports PDF files up to 50MB
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
 
             {/* 2. Select Conversion */}
             <div>
-              <label htmlFor="conversionType" className="block text-lg font-semibold mb-2">2. Convert To</label>
-              <select
-                id="conversionType"
-                value={conversionType}
-                onChange={(e) => setConversionType(e.target.value)}
-                disabled={isLoading}
-                className="w-full bg-white/10 border-2 border-white/30 rounded-xl px-4 py-3 transition-colors duration-300 focus:border-blue-400 focus:ring-0"
-              >
-                <option value="pdf-to-word">PDF to Word (.docx)</option>
-                <option value="pdf-to-excel">PDF to Excel (.xlsx)</option>
-              </select>
+              <label htmlFor="conversionType" className="block text-lg font-semibold mb-3 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-400" />
+                2. Convert To
+              </label>
+              <div className="relative">
+                <select
+                  id="conversionType"
+                  value={conversionType}
+                  onChange={(e) => setConversionType(e.target.value)}
+                  disabled={isLoading}
+                  className="w-full bg-white/10 border-2 border-white/30 rounded-xl px-4 py-3.5 transition-all duration-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none appearance-none cursor-pointer hover:border-white/50 disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                >
+                  <option value="pdf-to-word" className="bg-gray-800 text-white">📄 PDF to Word (.docx)</option>
+                  <option value="pdf-to-excel" className="bg-gray-800 text-white">📊 PDF to Excel (.xlsx)</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-sm text-gray-400 mt-2">
+                {conversionType === 'pdf-to-word' 
+                  ? 'Convert PDF to editable Word document with preserved formatting'
+                  : 'Extract tables and text from PDF into organized Excel spreadsheet'
+                }
+              </p>
             </div>
 
             {/* 3. Convert Button */}
@@ -225,44 +282,90 @@ const FileConverterNew = () => {
               <button
                 onClick={handleConversion}
                 disabled={!file || isLoading}
-                className="w-full bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
               >
+                {/* Animated background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-teal-600 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Converting...</span>
+                    <Loader2 className="w-5 h-5 animate-spin relative z-10" />
+                    <span className="relative z-10">Converting...</span>
+                    {/* Progress bar */}
+                    <div className="absolute bottom-0 left-0 h-1 bg-white/30 rounded-full overflow-hidden w-full">
+                      <div className="h-full bg-white/60 rounded-full animate-pulse"></div>
+                    </div>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5" />
-                    <span>Convert File</span>
+                    <Sparkles className="w-5 h-5 relative z-10" />
+                    <span className="relative z-10">Convert File</span>
                   </>
                 )}
               </button>
+              
+              {/* File size info */}
+              {file && (
+                <div className="mt-3 text-center">
+                  <p className="text-xs text-gray-400">
+                    File size: <span className="text-white/70">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                    {conversionType === 'pdf-to-word' && (
+                      <span className="ml-2">• Estimated time: <span className="text-white/70">10-30 seconds</span></span>
+                    )}
+                    {conversionType === 'pdf-to-excel' && (
+                      <span className="ml-2">• Estimated time: <span className="text-white/70">15-45 seconds</span></span>
+                    )}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Result Area */}
             {message && (
-              <div className={`mt-4 text-center p-3 rounded-lg ${message.includes('Error') ? 'bg-red-500/20' : 'bg-green-500/20'}`}>
-                <p>{message}</p>
+              <div className={`mt-6 p-4 rounded-xl border-2 transition-all duration-300 ${
+                message.includes('Error') 
+                  ? 'bg-red-500/10 border-red-500/30 text-red-200' 
+                  : 'bg-green-500/10 border-green-500/30 text-green-200'
+              }`}>
+                <div className="flex items-center gap-3">
+                  {message.includes('Error') ? (
+                    <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                  ) : (
+                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                  )}
+                  <p className="font-medium">{message}</p>
+                </div>
               </div>
             )}
 
             {downloadBlob && (
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() => triggerDownload(downloadBlob.blob, downloadBlob.filename)}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-colors duration-300 flex items-center justify-center gap-2"
-                >
-                  <Download className="w-5 h-5" />
-                  Download Converted File
-                </button>
-                <button
-                  onClick={handleClearForm}
-                  className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold py-3 px-4 rounded-xl transition-colors duration-300"
-                >
-                  <RefreshCw className="w-5 h-5" />
-                </button>
+              <div className="mt-6 space-y-4">
+                <div className="bg-green-500/10 border-2 border-green-500/30 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <CheckCircle className="w-6 h-6 text-green-400" />
+                    <h3 className="text-lg font-semibold text-green-200">Conversion Complete!</h3>
+                  </div>
+                  <p className="text-green-200/80 text-sm">
+                    Your file has been successfully converted and is ready for download.
+                  </p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => triggerDownload(downloadBlob.blob, downloadBlob.filename)}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <Download className="w-5 h-5" />
+                    Download Converted File
+                  </button>
+                  <button
+                    onClick={handleClearForm}
+                    className="sm:w-auto bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <RefreshCw className="w-5 h-5" />
+                    Convert Another
+                  </button>
+                </div>
               </div>
             )}
           </div>
