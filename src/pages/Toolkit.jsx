@@ -13,7 +13,7 @@ import {
   Minus,
 } from "lucide-react";
 import { SpeedInsights } from "@vercel/speed-insights/react"
-// import AdSense from '../components/AdSense';
+import AdSense from '../components/AdSense';
 
 const Toolkit = () => {
   return (
@@ -30,7 +30,16 @@ const Toolkit = () => {
               your productivity and simplify daily tasks.
             </p>
 
-            {/* Ads removed */}
+            {/* Ad 1: Top of Tools Grid */}
+            <div className="col-span-full mb-8">
+              <AdSense 
+                adSlot="7091747913"
+                adFormat="auto"
+                responsive={true}
+                className="mx-auto"
+                style={{ maxWidth: '300px', minHeight: '250px' }}
+              />
+            </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               <ToolCard
@@ -99,10 +108,20 @@ const Toolkit = () => {
                 gradientTo="to-purple-500"
               />
             </div>
-                      </div>
+          </div>
 
-            {/* Ads removed */}
-           <SpeedInsights />
+          {/* Ad 2: Bottom of Tools Grid */}
+          <div className="mt-12">
+            <AdSense 
+              adSlot="7324881311"
+              adFormat="auto"
+              responsive={true}
+              className="mx-auto"
+              style={{ maxWidth: '728px', minHeight: '90px' }}
+            />
+          </div>
+
+          <SpeedInsights />
         </main>
 
     </Layout>

@@ -1,17 +1,18 @@
 // Google AdSense Configuration
 export const ADSENSE_CONFIG = {
-  // Replace with your actual AdSense Publisher ID
-  PUBLISHER_ID: 'ca-pub-6691394501138909',
+  // ✅ REAL AdSense Publisher ID
+  PUBLISHER_ID: 'ca-pub-4914476223914148',
   
-  // Ad Slots for different pages
+  // ✅ REAL Ad Slot IDs
   AD_SLOTS: {
-    // Landing Page Ads
-    LANDING_HERO: '4643686467',      // After hero section
-    LANDING_FEATURES: '2025261981',  // Before about section
+    // Homepage Ads (2-3 ads)
+    HOME_HERO: '7324881311',        // Extension Ads - After hero section
+    HOME_FEATURES: '2353624224',    // 300x600 - Before features section
+    HOME_ABOUT: '6077246815',       // Fluid layout - Before about section
     
-    // Toolkit Page Ads  
-    TOOLKIT_TOP: '3179433696',       // Top of tools grid
-    TOOLKIT_BOTTOM: '1427545936',    // Bottom of tools grid
+    // Toolkit Page Ads (1-2 ads)
+    TOOLKIT_TOP: '7091747913',      // 300x250 - Top of tools grid
+    TOOLKIT_BOTTOM: '7324881311',   // Extension Ads - Bottom of tools grid
   },
   
   // Ad Formats
@@ -19,6 +20,7 @@ export const ADSENSE_CONFIG = {
     BANNER: 'auto',
     RESPONSIVE: 'auto',
     RECTANGLE: 'rectangle',
+    FLUID: 'fluid',
   },
   
   // Ad Styles

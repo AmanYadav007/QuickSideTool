@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { getPublisherId } from '../config/adsense';
-import AdPlaceholder from './AdPlaceholder';
 import logger from '../utils/logger';
 
 const AdSense = ({ 
@@ -12,6 +11,7 @@ const AdSense = ({
   position = 'horizontal'
 }) => {
   const [showPlaceholder, setShowPlaceholder] = useState(true);
+  const [adsLoaded, setAdsLoaded] = useState(false);
 
   useEffect(() => {
     // Load AdSense script if not already loaded
@@ -21,17 +21,30 @@ const AdSense = ({
       script.async = true;
       script.crossOrigin = 'anonymous';
       document.head.appendChild(script);
+      
+      script.onload = () => {
+        logger.info('AdSense script loaded successfully');
+        setAdsLoaded(true);
+      };
+      
+      script.onerror = () => {
+        logger.error('Failed to load AdSense script');
+        setAdsLoaded(false);
+      };
+    } else if (window.adsbygoogle) {
+      setAdsLoaded(true);
     }
 
     // Check if AdSense is ready and ads are approved
     const checkAdSense = () => {
-      if (typeof window !== 'undefined' && window.adsbygoogle) {
+      if (typeof window !== 'undefined' && window.adsbygoogle && adsLoaded) {
         try {
+          // Try to push an ad - if it works, ads are approved
           (window.adsbygoogle = window.adsbygoogle || []).push({});
-          // If no error, ads might be ready
           setShowPlaceholder(false);
+          logger.info('AdSense ads are ready and approved!');
         } catch (error) {
-          logger.debug('AdSense not ready yet', error);
+          logger.debug('AdSense not ready yet or not approved:', error);
           setShowPlaceholder(true);
         }
       } else {
@@ -46,14 +59,25 @@ const AdSense = ({
     const timer = setTimeout(checkAdSense, 3000);
 
     return () => clearTimeout(timer);
-  }, [adSlot]);
+  }, [adSlot, adsLoaded]);
 
-  // For now, always show placeholder since AdSense is in approval process
-  // This will automatically switch to real ads when approved
-  if (showPlaceholder || !window.adsbygoogle) {
-    return <AdPlaceholder position={position} className={className} style={style} />;
+  // Show placeholder while loading or if ads aren't approved yet
+  if (showPlaceholder || !adsLoaded) {
+    return (
+      <div className={`ad-placeholder ${className}`} style={style}>
+        <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4 text-center">
+          <div className="text-purple-400 text-sm font-medium mb-2">
+            {!adsLoaded ? 'Loading AdSense...' : 'AdSense Loading...'}
+          </div>
+          <div className="text-purple-300 text-xs">
+            {!adsLoaded ? 'Initializing ad system' : 'Preparing ads for display'}
+          </div>
+        </div>
+      </div>
+    );
   }
 
+  // Show real AdSense ad
   return (
     <div className={`ad-container ${className}`} style={style}>
       <ins

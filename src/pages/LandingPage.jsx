@@ -43,7 +43,7 @@ import {
 import Layout from "../components/Layout";
 import BuyMeACoffee from "../components/BuyMeACoffee";
 import SEO from "../components/SEO";
-// import AdSense from "../components/AdSense";
+import AdSense from "../components/AdSense";
 import { useNavigate, Link } from "react-router-dom";
 import { submitForm } from "../utils/googleSheets";
 
@@ -569,6 +569,17 @@ const LandingPage = () => {
           </div>
         </section>
 
+        {/* Ad 1: After Hero Section */}
+        <div className="py-8 px-4 max-w-6xl mx-auto">
+          <AdSense 
+            adSlot="7324881311"
+            adFormat="auto"
+            responsive={true}
+            className="mx-auto"
+            style={{ maxWidth: '728px', minHeight: '90px' }}
+          />
+        </div>
+
         {/* What We Offer Section */}
          <motion.section
           initial={{ opacity: 1, y: 0 }}
@@ -625,6 +636,17 @@ const LandingPage = () => {
             ))}
           </div>
         </motion.section>
+
+        {/* Ad 2: After Features Section */}
+        <div className="py-8 px-4 max-w-6xl mx-auto">
+          <AdSense 
+            adSlot="2353624224"
+            adFormat="auto"
+            responsive={true}
+            className="mx-auto"
+            style={{ maxWidth: '300px', minHeight: '600px' }}
+          />
+        </div>
 
         {/* Testimonials Marquee */}
          <section className="py-20 px-4">
@@ -848,7 +870,16 @@ const LandingPage = () => {
           </div>
         </motion.section>
 
-        {/* Ads removed */}
+        {/* Ad 3: Before About Section */}
+        <div className="py-8 px-4 max-w-6xl mx-auto">
+          <AdSense 
+            adSlot="6077246815"
+            adFormat="fluid"
+            responsive={true}
+            className="mx-auto"
+            style={{ maxWidth: '100%', minHeight: '90px' }}
+          />
+        </div>
 
         {/* About QuickSideTool */}
          <motion.section
