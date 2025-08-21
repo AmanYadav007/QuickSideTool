@@ -1,20 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from 'react';
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  FileText,
+import { 
+  FileText, 
   Image,
   QrCode,
-  Lock,
-  Link as LinkIcon,
+  Lock, 
+  Link as LinkIcon, 
   Gamepad2,
-  Zap,
-  Shield,
-  Users,
-  Star,
-  ArrowRight,
+  Zap, 
+  Shield, 
+  Users, 
+  Star, 
+  ArrowRight, 
   ChevronLeft,
   ChevronRight,
-  Mail,
+  Mail, 
   CheckCircle,
   Gift,
   Heart,
@@ -43,8 +44,6 @@ import {
 import Layout from "../components/Layout";
 import BuyMeACoffee from "../components/BuyMeACoffee";
 import SEO from "../components/SEO";
-import AdSense from "../components/AdSense";
-import { useNavigate, Link } from "react-router-dom";
 import { submitForm } from "../utils/googleSheets";
 
 const features = [
@@ -217,9 +216,6 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [featureRequest, setFeatureRequest] = useState("");
-  const heroRef = useRef(null);
-  const lovedRef = useRef(null);
-
   // Removed parallax scroll hooks to drop framer-motion scroll deps
   const heroY = 0;
   const heroOpacity = 1;
@@ -275,25 +271,24 @@ const LandingPage = () => {
 
   return (
     <>
-      <SEO
+      <SEO 
         title="QuickSideTool - Free PDF Tools, Image Editor, QR Generator | Professional Digital Toolkit"
         description="Free online PDF tools, image editor, and QR code generator. Merge, split, unlock PDFs. Resize, compress images. Create QR codes. No registration required. Professional-grade tools for everyone."
         keywords="PDF tools, PDF editor, PDF merger, PDF splitter, PDF unlocker, image editor, image compressor, image resizer, QR code generator, free PDF tools, online PDF editor, document tools, file converter, free tools, professional tools"
       />
       <Layout>
-        {/* Hero Section */}
-         <motion.section
-          ref={heroRef}
+      {/* Hero Section */}
+      <motion.section 
           initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
            className="relative pt-8 md:pt-16 pb-12 md:pb-12 lg:pb-24 xl:pb-16 px-4"
-          id="hero"
-        >
+        id="hero"
+      >
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <motion.div
+        <motion.div 
               initial={{ scale: 0.98 }}
-              animate={{ scale: 1 }}
+          animate={{ scale: 1 }}
               transition={{ duration: 0.8, delay: 0.1 }}
               style={{ y: heroY, opacity: heroOpacity }}
               className="relative z-10"
@@ -306,20 +301,20 @@ const LandingPage = () => {
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-cyan-300 via-teal-300 to-sky-300 bg-clip-text text-transparent drop-shadow-lg mb-5 leading-tight">
                 Handle PDFs, Images, and QR in Seconds
-              </h1>
+          </h1>
               <p className="text-lg md:text-xl text-gray-200 mb-6 max-w-2xl leading-relaxed">
                 Merge and split PDFs, resize and compress images, and generate
                 custom QR codes — all in your browser with no sign‑up.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
                   onClick={() => navigate("/toolkit")}
                   className="bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-600 hover:to-emerald-600 text-white font-semibold py-4 px-10 rounded-full text-lg shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-cyan-400/40 flex items-center gap-2"
-                >
+            >
                   Open Toolkit <ArrowRight className="w-5 h-5" />
-                </motion.button>
+            </motion.button>
                 <a
                   href="#features"
                   className="inline-flex items-center justify-center border border-white/15 text-white/90 hover:text-white hover:bg-white/10 rounded-full px-10 py-4 transition"
@@ -437,8 +432,8 @@ const LandingPage = () => {
               animate={{ y: [0, -8, 0], x: [0, 8, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             />
-          </motion.div>
-        </motion.section>
+        </motion.div>
+      </motion.section>
 
         {/* Tools Marquee */}
          <section className="relative z-10 py-4 px-4 xl:py-2">
@@ -569,17 +564,6 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* Ad 1: After Hero Section */}
-        <div className="py-8 px-4 max-w-6xl mx-auto">
-          <AdSense 
-            adSlot="7324881311"
-            adFormat="auto"
-            responsive={true}
-            className="mx-auto"
-            style={{ maxWidth: '728px', minHeight: '90px' }}
-          />
-        </div>
-
         {/* What We Offer Section */}
          <motion.section
           initial={{ opacity: 1, y: 0 }}
@@ -634,19 +618,8 @@ const LandingPage = () => {
                 </p>
               </div>
             ))}
-          </div>
-        </motion.section>
-
-        {/* Ad 2: After Features Section */}
-        <div className="py-8 px-4 max-w-6xl mx-auto">
-          <AdSense 
-            adSlot="2353624224"
-            adFormat="auto"
-            responsive={true}
-            className="mx-auto"
-            style={{ maxWidth: '300px', minHeight: '600px' }}
-          />
         </div>
+      </motion.section>
 
         {/* Testimonials Marquee */}
          <section className="py-20 px-4">
@@ -686,61 +659,61 @@ const LandingPage = () => {
         </section>
 
         {/* Why Choose QuickSideTool */}
-         <motion.section
+      <motion.section 
           initial={{ opacity: 1, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
            className="relative z-10 py-20 px-4 max-w-6xl mx-auto"
-          id="why-us"
-        >
-          <motion.h2
+        id="why-us"
+      >
+        <motion.h2 
             initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             className="text-3xl md:text-4xl font-bold text-white mb-4 text-center"
-          >
-            Why Choose QuickSideTool?
-          </motion.h2>
+        >
+          Why Choose QuickSideTool?
+        </motion.h2>
           <p className="text-center text-gray-300 mb-10 max-w-3xl mx-auto">
             Private, fast, and completely free. Our tools run right in your
             browser so your files never leave your device.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {whyChooseUs.map((item, i) => (
+          {whyChooseUs.map((item, i) => (
               <div
-                key={i}
-                className="bg-white/10 border border-white/10 rounded-2xl p-8 shadow-lg backdrop-blur-md text-center group hover:bg-white/15 transition-all duration-300"
-              >
+              key={i}
+              className="bg-white/10 border border-white/10 rounded-2xl p-8 shadow-lg backdrop-blur-md text-center group hover:bg-white/15 transition-all duration-300"
+            >
                 <div
                   className={`w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-sky-500/20 rounded-full flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300`}
                 >
-                  <item.icon className={`w-8 h-8 ${item.color}`} />
+                <item.icon className={`w-8 h-8 ${item.color}`} />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-4">
                   {item.title}
                 </h3>
                 <p className="text-gray-300">{item.desc}</p>
               </div>
-            ))}
+          ))}
           </div>
-        </motion.section>
+      </motion.section>
 
         {/* Trust, Privacy & Performance Section (replaces duplicate feature grid) */}
-        <motion.section
+      <motion.section 
           initial={{ opacity: 1, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
           className="relative z-10 py-20 px-4 max-w-6xl mx-auto"
-          id="features"
-        >
-          <motion.h2
+        id="features"
+      >
+        <motion.h2 
             initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             className="text-3xl md:text-4xl font-bold text-white mb-3 text-center"
           >
             Private and Blazing Fast
-          </motion.h2>
+        </motion.h2>
           <p className="text-center text-gray-300 mb-10 max-w-3xl mx-auto">
             Everything runs in your browser for privacy and speed. No uploads, no waiting, just results.
           </p>
@@ -806,7 +779,7 @@ const LandingPage = () => {
                   </div>
                   <h3 className="text-2xl font-bold text-white">Speed & Performance</h3>
                 </div>
-                <motion.div
+        <motion.div 
                   aria-hidden
                   className="w-10 h-10 rounded-full bg-cyan-400/20"
                   animate={{ y: [0, 6, 0] }}
@@ -847,7 +820,7 @@ const LandingPage = () => {
                     <span className="text-sm text-gray-200">Result</span>
                   </div>
                 </div>
-                <motion.div
+            <motion.div
                   aria-hidden
                   className="absolute left-4 -bottom-2 h-1 w-24 bg-gradient-to-r from-cyan-400/40 to-sky-400/40 rounded-full"
                   animate={{ x: [0, 120, 0] }}
@@ -868,158 +841,152 @@ const LandingPage = () => {
               />
             </div>
           </div>
-        </motion.section>
+      </motion.section>
 
         {/* Ad 3: Before About Section */}
         <div className="py-8 px-4 max-w-6xl mx-auto">
-          <AdSense 
-            adSlot="6077246815"
-            adFormat="fluid"
-            responsive={true}
-            className="mx-auto"
-            style={{ maxWidth: '100%', minHeight: '90px' }}
-          />
+          {/* Removed AdSense component */}
         </div>
 
         {/* About QuickSideTool */}
-         <motion.section
+      <motion.section 
           initial={{ opacity: 1, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
            className="relative z-10 py-20 px-4 max-w-4xl mx-auto"
-          id="about"
-        >
-          <motion.div
+        id="about"
+      >
+        <motion.div
             initial={{ y: 0, opacity: 1 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="bg-white/10 border border-white/10 rounded-2xl p-8 md:p-12 shadow-xl backdrop-blur-md"
-          >
+          className="bg-white/10 border border-white/10 rounded-2xl p-8 md:p-12 shadow-xl backdrop-blur-md"
+        >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-2 text-center">
-              About QuickSideTool
-            </h2>
+            About QuickSideTool
+          </h2>
             <p className="text-center text-gray-300 mb-8">
               Free, private, browser‑first tools for everyday work.
             </p>
-            <p className="text-gray-300 text-lg mb-6 leading-relaxed">
+          <p className="text-gray-300 text-lg mb-6 leading-relaxed">
               QuickSideTool brings professional-grade tools right to your
               browser. Designed for productivity, it combines PDF manipulation,
               image processing, QR code generation, and even a fun mini-game -
               all in a beautiful, modern interface.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
                 <h3 className="text-xl font-bold text-white mb-4">
                   Key Features
                 </h3>
-                <ul className="text-gray-300 space-y-2">
-                  <li>• Client-side processing for privacy</li>
-                  <li>• No file uploads required</li>
+              <ul className="text-gray-300 space-y-2">
+                <li>• Client-side processing for privacy</li>
+                <li>• No file uploads required</li>
                   <li>
                     • Secure, privacy-focused processing (client-side and
                     server-side)
                   </li>
-                  <li>• Cross-platform compatibility</li>
-                </ul>
-              </div>
-              <div>
+                <li>• Cross-platform compatibility</li>
+              </ul>
+            </div>
+            <div>
                 <h3 className="text-xl font-bold text-white mb-4">
                   Perfect For
                 </h3>
-                <ul className="text-gray-300 space-y-2">
-                  <li>• Students and educators</li>
-                  <li>• Small businesses</li>
-                  <li>• Content creators</li>
-                  <li>• Anyone who works with files</li>
-                </ul>
-              </div>
+              <ul className="text-gray-300 space-y-2">
+                <li>• Students and educators</li>
+                <li>• Small businesses</li>
+                <li>• Content creators</li>
+                <li>• Anyone who works with files</li>
+              </ul>
             </div>
-          </motion.div>
-        </motion.section>
+          </div>
+        </motion.div>
+      </motion.section>
 
         {/* What Our Users Say */}
-         <motion.section
+      <motion.section 
           initial={{ opacity: 1, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
            className="relative z-10 py-20 px-4 max-w-6xl mx-auto"
-          id="testimonials"
-        >
-          <motion.h2
+        id="testimonials"
+      >
+        <motion.h2 
             initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             className="text-3xl md:text-4xl font-bold text-white mb-3 text-center"
-          >
-            What Our Users Say
-          </motion.h2>
+        >
+          What Our Users Say
+        </motion.h2>
           <p className="text-center text-gray-300 mb-10 max-w-3xl mx-auto">
             Real feedback from creators, students, and professionals who use
             QuickSideTool daily.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, i) => (
+          {testimonials.map((testimonial, i) => (
               <div
-                key={i}
-                className="bg-white/10 border border-white/10 rounded-2xl p-6 shadow-lg backdrop-blur-md flex flex-col"
-              >
-                <div className="flex gap-1 mb-4">
+              key={i}
+              className="bg-white/10 border border-white/10 rounded-2xl p-6 shadow-lg backdrop-blur-md flex flex-col"
+            >
+              <div className="flex gap-1 mb-4">
                   {Array.from({ length: 5 }).map((_, i2) => (
                     <Star
                       key={i2}
                       className={`w-4 h-4 ${i2 < Math.floor(testimonial.rating) ? 'fill-yellow-400 text-yellow-400' : i2 < testimonial.rating ? 'text-yellow-400/50' : 'text-white/20'}`}
                     />
-                  ))}
-                </div>
+                ))}
+              </div>
                 <p className="text-gray-200 text-sm mb-4 flex-grow">
                   "{testimonial.text}"
                 </p>
-                <div>
-                  <p className="text-white font-semibold">{testimonial.name}</p>
-                  <p className="text-gray-400 text-sm">{testimonial.role}</p>
+              <div>
+                <p className="text-white font-semibold">{testimonial.name}</p>
+                <p className="text-gray-400 text-sm">{testimonial.role}</p>
                 </div>
               </div>
-            ))}
+          ))}
           </div>
-        </motion.section>
+      </motion.section>
 
         {/* Get in Touch (single CTA) */}
-        <motion.section
+      <motion.section 
           initial={{ opacity: 1, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="relative z-10 py-16 px-4 max-w-4xl mx-auto"
-          id="newsletter"
-        >
-          <motion.div
+        className="relative z-10 py-16 px-4 max-w-4xl mx-auto" 
+        id="newsletter"
+      >
+        <motion.div
             initial={{ y: 0, opacity: 1 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="bg-white/10 border border-white/10 rounded-2xl p-8 md:p-12 shadow-xl backdrop-blur-md text-center"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          className="bg-white/10 border border-white/10 rounded-2xl p-8 md:p-12 shadow-xl backdrop-blur-md text-center"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Get in Touch
-            </h2>
-            <p className="text-gray-300 text-lg mb-8">
+          </h2>
+          <p className="text-gray-300 text-lg mb-8">
               Questions or ideas? We’d love to hear from you. Join the community
               or drop your email.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
                 type="submit"
                 className="bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-600 hover:to-emerald-600 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                <Mail className="w-4 h-4" />
+            >
+              <Mail className="w-4 h-4" />
                 Contact
-              </motion.button>
-            </div>
+            </motion.button>
+          </div>
             <div className="flex items-center justify-center gap-4 mt-6">
               <a
                 href="https://discord.gg/5SufsJSj"
@@ -1038,16 +1005,16 @@ const LandingPage = () => {
               >
                 GitHub
               </a>
-            </div>
-          </motion.div>
-        </motion.section>
+          </div>
+        </motion.div>
+      </motion.section>
 
         {/* Removed duplicate contact section to consolidate CTAs */}
 
-        <BuyMeACoffee />
+      <BuyMeACoffee />
       </Layout>
     </>
   );
 };
 
-export default LandingPage;
+export default LandingPage; 
