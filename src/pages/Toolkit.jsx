@@ -8,6 +8,8 @@ import {
   Link as LinkIcon,
   FileType,
   Minus,
+  Unlock,
+  Gamepad2,
 } from "lucide-react";
 import { SpeedInsights } from "@vercel/speed-insights/react"
 
