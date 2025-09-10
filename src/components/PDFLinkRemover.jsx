@@ -214,11 +214,21 @@ const PDFLinkRemover = () => {
     try {
       updateProcessingOverlay('Analyzing PDF structure & scanning for links...', 1, 4, 10);
       
-      // Use the advanced endpoint for better performance
-      const response = await fetch(`${backendUrl}/remove-pdf-links-advanced`, {
-        method: 'POST',
-        body: formData,
-      });
+      // Try the advanced endpoint first, fallback to regular if it fails
+      let response;
+      try {
+        response = await fetch(`${backendUrl}/remove-pdf-links-advanced`, {
+          method: 'POST',
+          body: formData,
+        });
+      } catch (advancedError) {
+        console.warn('Advanced endpoint failed, falling back to regular endpoint:', advancedError);
+        updateProcessingOverlay('Using standard processing method...', 1, 4, 15);
+        response = await fetch(`${backendUrl}/remove-pdf-links`, {
+          method: 'POST',
+          body: formData,
+        });
+      }
 
       if (response.ok) {
         updateProcessingOverlay('Processing pages in optimized batches...', 2, 4, 30); // Step 2
