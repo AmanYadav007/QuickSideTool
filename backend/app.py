@@ -242,8 +242,6 @@ def remove_pdf_links():
         pdf.save(
             output_pdf,
             compress_streams=True,  # Enable stream compression
-            object_stream_mode=pikepdf.ObjectStreamMode.generate,  # Use object streams
-            normalize_content=True,  # Normalize content streams
             linearize=True  # Linearize for faster loading
         )
         
@@ -445,11 +443,7 @@ def remove_pdf_links_advanced():
         pdf.save(
             output_pdf,
             compress_streams=True,
-            object_stream_mode=pikepdf.ObjectStreamMode.generate,
-            normalize_content=True,
-            linearize=True,
-            preserve_pdfa=True,  # Preserve PDF/A compliance
-            fix_metadata=True    # Fix metadata issues
+            linearize=True
         )
         
         output_pdf.seek(0)
