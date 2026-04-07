@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
+  "framework": "create-react-app",
+  "devCommand": "react-scripts start",
+  "installCommand": "npm install"
+}
