@@ -6,7 +6,7 @@ import AnimatedBackground from './AnimatedBackground';
 
 const Layout = ({ children, showAnimatedBackground = true }) => {
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#071a1c] via-[#0b2530] to-[#0e1b26] text-white relative overflow-x-hidden">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#08111f] via-[#0b1f2a] to-[#102f2e] text-white relative overflow-x-hidden">
       {/* Simple CSS progress bar alternative could be added later if needed */}
       {showAnimatedBackground && <AnimatedBackground />}
       <Navbar />
@@ -17,5 +17,4 @@ const Layout = ({ children, showAnimatedBackground = true }) => {
 };
 
 export default Layout;
-
 

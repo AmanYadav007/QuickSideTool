@@ -18,6 +18,12 @@ const ImageResize = () => {
     const [webpQuality, setWebpQuality] = useState(90); // 0-100
 
     const prevUrlsRef = useRef(new Set());
+    const resizePresets = [
+        { label: 'Square', width: 1080, height: 1080 },
+        { label: 'Story', width: 1080, height: 1920 },
+        { label: 'Website', width: 1200, height: 800 },
+        { label: 'Thumbnail', width: 600, height: 400 },
+    ];
 
     useEffect(() => {
         const currentOriginalUrls = new Set();
@@ -407,7 +413,7 @@ const ImageResize = () => {
     // applyPreset function is removed as presets are no longer used
 
     return (
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 to-gray-950 text-white font-sans antialiased relative">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#08111f] via-[#0b1f2a] to-[#102f2e] text-white font-sans antialiased relative">
             <SEO
                 title="Resize Image Online – Exact Width & Height in Pixels"
                 description="Resize images to custom dimensions or presets. JPG/PNG/WebP supported. Batch resize supported."
@@ -415,10 +421,10 @@ const ImageResize = () => {
             />
             {/* Background Animated Blobs */}
             <div className="absolute inset-0 z-0 overflow-hidden">
-                <div className="absolute w-64 h-64 rounded-full bg-blue-500/20 blur-3xl animate-blob-fade top-1/4 left-[15%] animation-delay-0"></div>
+                <div className="absolute w-64 h-64 rounded-full bg-amber-300/10 blur-3xl animate-blob-fade top-1/4 left-[15%] animation-delay-0"></div>
                 <div className="absolute w-80 h-80 rounded-full bg-teal-500/20 blur-3xl animate-blob-fade top-[65%] left-[70%] animation-delay-2000"></div>
-                <div className="absolute w-72 h-72 rounded-full bg-cyan-500/20 blur-3xl animate-blob-fade top-[10%] left-[60%] animation-delay-4000"></div>
-                <div className="absolute w-56 h-56 rounded-full bg-green-500/20 blur-3xl animate-blob-fade top-[80%] left-[20%] animation-delay-6000"></div>
+                <div className="absolute w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl animate-blob-fade top-[10%] left-[60%] animation-delay-4000"></div>
+                <div className="absolute w-56 h-56 rounded-full bg-emerald-500/10 blur-3xl animate-blob-fade top-[80%] left-[20%] animation-delay-6000"></div>
             </div>
 
             <div className="container mx-auto p-4 md:p-8 relative z-10 flex flex-col min-h-screen">
@@ -426,19 +432,19 @@ const ImageResize = () => {
                 <div className="flex items-center justify-between mb-8">
                     <Link
                         to="/image-tools"
-                        className="inline-flex items-center px-4 py-1.5 bg-white/10 text-white rounded-full
+                        className="inline-flex items-center px-4 py-1.5 bg-white/10 text-white rounded-lg
                                   hover:bg-white/20 transition-all duration-300 backdrop-blur-md border border-white/20
-                                  hover:border-blue-400 transform hover:scale-105 shadow-md animate-fade-in-left text-sm"
+                                  hover:border-amber-200 transform hover:scale-105 shadow-md animate-fade-in-left text-sm"
                     >
                         <ArrowLeft className="mr-2 w-4 h-4" />
                         Back To Image Tools
                     </Link>
-                    <h1 className="text-2xl md:text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 drop-shadow-md animate-fade-in-down flex-grow px-4">
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-center text-amber-100 drop-shadow-md animate-fade-in-down flex-grow px-4">
                         Batch Image Resize
                     </h1>
                     <button
                         onClick={clearAllImages}
-                        className="inline-flex items-center px-3 py-1.5 bg-red-600/80 text-white rounded-full
+                        className="inline-flex items-center px-3 py-1.5 bg-red-600/80 text-white rounded-lg
                                   hover:bg-red-700 transition-colors duration-300 transform hover:scale-105 shadow-md text-sm
                                   disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={images.length === 0 || resizing}
@@ -455,8 +461,8 @@ const ImageResize = () => {
                         border-3 border-dashed rounded-2xl p-10 text-center my-6
                         transition-all duration-300 ease-in-out cursor-pointer
                         ${isDragActive
-                            ? 'border-teal-400 bg-teal-400/10 scale-[1.01] shadow-lg'
-                            : 'border-white/30 hover:border-blue-400 hover:bg-blue-400/10'
+                            ? 'border-amber-200 bg-amber-200/10 scale-[1.01] shadow-lg'
+                            : 'border-white/30 hover:border-amber-200 hover:bg-amber-200/10'
                         }
                         ${resizing ? 'opacity-70 cursor-not-allowed pointer-events-none' : 'shadow-md'}
                         animate-fade-in
@@ -474,12 +480,37 @@ const ImageResize = () => {
 
                 {images.length > 0 && (
                     <div className="flex flex-col flex-grow bg-white/5 backdrop-blur-lg rounded-2xl shadow-xl border border-white/10 p-6 animate-fade-in-up">
+                        <div className="mb-5 flex flex-col gap-2 rounded-xl border border-amber-200/20 bg-amber-200/10 p-4 md:flex-row md:items-center md:justify-between">
+                            <div>
+                                <p className="font-semibold text-amber-100">{images.length} image{images.length > 1 ? 's' : ''} ready</p>
+                                <p className="text-sm text-slate-300">Choose a preset or enter your own size, then resize all.</p>
+                            </div>
+                            <p className="text-sm text-slate-300">Aspect ratio is locked by default.</p>
+                        </div>
+
                         {/* Common Size Controls & Output Settings - Simplified */}
                         <div className="bg-white/10 rounded-xl p-4 mb-6 flex flex-col md:flex-row flex-wrap items-center justify-center lg:justify-start gap-4 shadow-inner"> {/* Adjusted for tablet responsiveness */}
                             {/* Removed: <h2 className="text-white text-base font-semibold whitespace-nowrap mb-2 md:mb-0">Common Settings:</h2> */}
 
                             {/* Removed: Presets */}
                             {/* Removed: Resize Mode Toggle */}
+                            <div className="flex flex-wrap justify-center gap-2">
+                                {resizePresets.map((preset) => (
+                                    <button
+                                        key={preset.label}
+                                        type="button"
+                                        onClick={() => {
+                                            setGlobalLockAspectRatio(false);
+                                            setCommonWidth(preset.width);
+                                            setCommonHeight(preset.height);
+                                        }}
+                                        className="rounded-lg border border-white/10 bg-white/10 px-3 py-1.5 text-sm text-white transition hover:border-amber-200 hover:bg-amber-200/10"
+                                        disabled={resizing}
+                                    >
+                                        {preset.label}
+                                    </button>
+                                ))}
+                            </div>
 
                             {/* Dimensions Input (Always pixels) */}
                             <div className="flex items-center gap-2">
@@ -488,7 +519,7 @@ const ImageResize = () => {
                                     value={commonWidth}
                                     onChange={(e) => handleCommonWidthChange(e.target.value)}
                                     placeholder="Width"
-                                    className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1.5 w-24 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1.5 w-24 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
                                     min="1"
                                 />
                                 <span className="text-white text-base">x</span>
@@ -497,7 +528,7 @@ const ImageResize = () => {
                                     value={commonHeight}
                                     onChange={(e) => handleCommonHeightChange(e.target.value)}
                                     placeholder="Height"
-                                    className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1.5 w-24 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1.5 w-24 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
                                     min="1"
                                 />
                             </div>
@@ -515,7 +546,7 @@ const ImageResize = () => {
                                 <select
                                     value={outputFormat}
                                     onChange={(e) => setOutputFormat(e.target.value)}
-                                    className="bg-gray-800 text-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    className="bg-gray-800 text-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
                                 >
                                     <option value="original">Original Format</option>
                                     <option value="image/jpeg">JPEG</option>
@@ -548,7 +579,7 @@ const ImageResize = () => {
 
                             <button
                                 onClick={resizeAll}
-                                className="bg-gradient-to-r from-blue-500 to-teal-600 hover:from-blue-600 hover:to-teal-700 text-white font-semibold py-2.5 px-6 rounded-full text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+                                className="bg-amber-300 hover:bg-amber-200 text-slate-950 font-semibold py-2.5 px-6 rounded-lg text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
                                 disabled={resizing || (!commonWidth || !commonHeight)}
                             >
                                 {resizing ? (
@@ -559,7 +590,7 @@ const ImageResize = () => {
                             </button>
                             <button
                                 onClick={downloadAllImages}
-                                className="bg-gradient-to-r from-green-500 to-cyan-600 hover:from-green-600 hover:to-cyan-700 text-white font-semibold py-2.5 px-6 rounded-full text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+                                className="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-semibold py-2.5 px-6 rounded-lg text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
                                 disabled={resizing || images.length === 0 || !images.every(img => img.resized)}
                             >
                                 <Download className="inline-block mr-2 w-4 h-4" />
@@ -659,7 +690,7 @@ const ImageResize = () => {
                                                 value={img.customWidth}
                                                 onChange={(e) => handleIndividualWidthChange(index, e.target.value)}
                                                 placeholder="Width"
-                                                className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1 w-20 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                                className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1 w-20 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
                                                 min="1"
                                                 disabled={resizing}
                                             />
@@ -669,7 +700,7 @@ const ImageResize = () => {
                                                 value={img.customHeight}
                                                 onChange={(e) => handleIndividualHeightChange(index, e.target.value)}
                                                 placeholder="Height"
-                                                className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1 w-20 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                                className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1 w-20 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
                                                 min="1"
                                                 disabled={resizing}
                                             />
@@ -685,7 +716,7 @@ const ImageResize = () => {
                                         </button>
                                         <button
                                             onClick={() => resizeIndividual(index)}
-                                            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-1.5 px-3 rounded-lg text-sm transition-all duration-300 shadow-md hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="bg-amber-300 hover:bg-amber-200 text-slate-950 font-semibold py-1.5 px-3 rounded-lg text-sm transition-all duration-300 shadow-md hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                                             disabled={resizing || (!img.customWidth || !img.customHeight)}
                                         >
                                             Resize

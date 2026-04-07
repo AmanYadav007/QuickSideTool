@@ -6,12 +6,12 @@ import ErrorBoundary from "./components/ErrorBoundary";
 // import GoogleAds from "./components/GoogleAds";
 import GTMBody from "./components/GTMBody";
 import LandingPage from "./pages/LandingPage";
-import HomePage from "./pages/Home";
 import Toolkit from "./pages/Toolkit";
 import PDFTool from "./pages/PDFTool";
 import ImageTools from "./pages/ImageTools";
 import ImageResize from "./components/ImageResize";
 import ImageCompressor from "./components/ImageCompressor";
+import ImageFormatConverter from "./components/ImageFormatConverter";
 import QrCodeGenerator from "./components/QrCodeGenerator";
 import PDFLinkRemover from "./components/PDFLinkRemover";
 import PDFUnlocker from "./components/PDFUnlocker";
@@ -41,7 +41,7 @@ function App() {
     <Router>
       <Routes>
               <Route path="/" element={<LandingPage />} />
-              <Route path="/home" element={<HomePage />} />
+              <Route path="/home" element={<LandingPage />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/help" element={<Help />} />
@@ -55,6 +55,8 @@ function App() {
         <Route path="/image-resizer" element={<ImageResize />} />
         <Route path="/image-tools/compress" element={<ImageCompressor />} />
         <Route path="/image-compressor" element={<ImageCompressor />} />
+        <Route path="/image-tools/convert" element={<ImageFormatConverter />} />
+        <Route path="/image-converter" element={<ImageFormatConverter />} />
               <Route path="/qr-tool" element={<QrCodeGenerator />} />
         <Route path="/qr-code-generator" element={<QrCodeGenerator />} />
         <Route path="/unlock-pdf" element={<PDFUnlocker />} />

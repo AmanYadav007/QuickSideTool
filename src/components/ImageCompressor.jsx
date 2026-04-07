@@ -18,6 +18,7 @@ const ImageCompressor = () => {
   const [optimizeCompression, setOptimizeCompression] = useState(true);
   const [serverUrl, setServerUrl] = useState('http://127.0.0.1:4000'); // Default backend URL
   const [serverStatus, setServerStatus] = useState('unknown'); // 'unknown', 'connected', 'error'
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   
   // Test server connection
   const testServerConnection = async () => {
@@ -351,10 +352,11 @@ const ImageCompressor = () => {
     setPreserveMetadata(false);
     setOptimizeCompression(true);
     setServerUrl('http://127.0.0.1:4000');
+    setShowAdvancedOptions(false);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 to-gray-950 text-white font-sans antialiased relative">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#08111f] via-[#0b1f2a] to-[#102f2e] text-white font-sans antialiased relative">
       <SEO
         title="Compress Image Online – JPG/PNG/WebP to Smaller Size"
         description="Reduce image size without big quality loss. Target KB size. Drag & drop. Free and fast."
@@ -362,10 +364,10 @@ const ImageCompressor = () => {
       />
       {/* Animated Background Blobs */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute w-64 h-64 rounded-full bg-blue-500/20 blur-3xl animate-blob-fade top-1/4 left-[15%] animation-delay-0"></div>
+        <div className="absolute w-64 h-64 rounded-full bg-amber-300/10 blur-3xl animate-blob-fade top-1/4 left-[15%] animation-delay-0"></div>
         <div className="absolute w-80 h-80 rounded-full bg-teal-500/20 blur-3xl animate-blob-fade top-[65%] left-[70%] animation-delay-2000"></div>
-        <div className="absolute w-72 h-72 rounded-full bg-cyan-500/20 blur-3xl animate-blob-fade top-[10%] left-[60%] animation-delay-4000"></div>
-        <div className="absolute w-56 h-56 rounded-full bg-green-500/20 blur-3xl animate-blob-fade top-[80%] left-[20%] animation-delay-6000"></div>
+        <div className="absolute w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl animate-blob-fade top-[10%] left-[60%] animation-delay-4000"></div>
+        <div className="absolute w-56 h-56 rounded-full bg-emerald-500/10 blur-3xl animate-blob-fade top-[80%] left-[20%] animation-delay-6000"></div>
       </div>
 
       <div className="container mx-auto p-4 md:p-8 relative z-10 flex flex-col min-h-screen">
@@ -373,19 +375,19 @@ const ImageCompressor = () => {
         <div className="flex items-center justify-between mb-8">
             <Link 
               to="/image-tools" 
-              className="inline-flex items-center px-4 py-1.5 bg-white/10 text-white rounded-full 
-                         hover:bg-white/20 transition-all duration-300 backdrop-blur-md border border-white/20 
-                         hover:border-blue-400 transform hover:scale-105 shadow-md animate-fade-in-left text-sm"
+              className="inline-flex items-center px-4 py-1.5 bg-white/10 text-white rounded-lg
+                         hover:bg-white/20 transition-all duration-300 backdrop-blur-md border border-white/20
+                         hover:border-amber-200 transform hover:scale-105 shadow-md animate-fade-in-left text-sm"
             >
               <ArrowLeft className="mr-2 w-4 h-4" />
               Back To Image Tools
             </Link>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 drop-shadow-md animate-fade-in-down flex-grow px-4">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-center text-amber-100 drop-shadow-md animate-fade-in-down flex-grow px-4">
               Image Compressor
             </h1>
             <button
                 onClick={clearAllImages}
-                className="inline-flex items-center px-3 py-1.5 bg-red-600/80 text-white rounded-full 
+                className="inline-flex items-center px-3 py-1.5 bg-red-600/80 text-white rounded-lg
                            hover:bg-red-700 transition-colors duration-300 transform hover:scale-105 shadow-md text-sm
                            disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={images.length === 0 || compressing}
@@ -402,8 +404,8 @@ const ImageCompressor = () => {
             border-3 border-dashed rounded-2xl p-10 text-center my-6
             transition-all duration-300 ease-in-out cursor-pointer
             ${isDragActive
-              ? 'border-teal-400 bg-teal-400/10 scale-[1.01] shadow-lg'
-              : 'border-white/30 hover:border-blue-400 hover:bg-blue-400/10'
+              ? 'border-amber-200 bg-amber-200/10 scale-[1.01] shadow-lg'
+              : 'border-white/30 hover:border-amber-200 hover:bg-amber-200/10'
             }
             ${compressing ? 'opacity-70 cursor-not-allowed pointer-events-none' : 'shadow-md'}
             animate-fade-in
@@ -421,9 +423,24 @@ const ImageCompressor = () => {
 
         {images.length > 0 && (
           <div className="flex flex-col flex-grow bg-white/5 backdrop-blur-lg rounded-2xl shadow-xl border border-white/10 p-6 animate-fade-in-up">
+            <div className="mb-5 flex flex-col gap-2 rounded-xl border border-amber-200/20 bg-amber-200/10 p-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="font-semibold text-amber-100">{images.length} image{images.length > 1 ? 's' : ''} ready to compress</p>
+                <p className="text-sm text-slate-300">Use browser mode for the simplest private workflow.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAdvancedOptions((value) => !value)}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-amber-200 hover:bg-amber-200/10"
+              >
+                <Settings className="h-4 w-4" />
+                {showAdvancedOptions ? 'Hide advanced options' : 'Show advanced options'}
+              </button>
+            </div>
+
             {/* Common Controls */}
             <div className="bg-white/10 rounded-xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-inner">
-              <h2 className="text-white text-base font-semibold whitespace-nowrap">Compress Settings:</h2>
+              <h2 className="text-white text-base font-semibold whitespace-nowrap">Compress Settings</h2>
               
               {/* Quality Slider */}
               <div className="flex items-center gap-3 flex-grow">
@@ -447,7 +464,7 @@ const ImageCompressor = () => {
                 <select
                   value={outputFormat}
                   onChange={(e) => setOutputFormat(e.target.value)}
-                  className="bg-gray-800 text-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="bg-gray-800 text-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
                   disabled={compressing}
                 >
                   <option value="image/jpeg">JPEG</option>
@@ -459,7 +476,7 @@ const ImageCompressor = () => {
 
               <button 
                 onClick={compressImages}
-                className="bg-gradient-to-r from-blue-500 to-teal-600 hover:from-blue-600 hover:to-teal-700 text-white font-semibold py-2.5 px-6 rounded-full text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+                className="bg-amber-300 hover:bg-amber-200 text-slate-950 font-semibold py-2.5 px-6 rounded-lg text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
                 disabled={compressing || images.length === 0}
               >
                 {compressing ? (
@@ -473,7 +490,7 @@ const ImageCompressor = () => {
               {compressionMode === 'server' && images.length > 1 && (
                 <button 
                   onClick={compressImagesBatchServer}
-                  className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold py-2.5 px-6 rounded-full text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+                  className="bg-slate-600 hover:bg-slate-500 text-white font-semibold py-2.5 px-6 rounded-lg text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
                   disabled={compressing || images.length === 0}
                   title="Faster batch processing on server"
                 >
@@ -487,7 +504,7 @@ const ImageCompressor = () => {
               
               <button 
                 onClick={downloadAllCompressedImages}
-                className="bg-gradient-to-r from-green-500 to-cyan-600 hover:from-green-600 hover:to-cyan-700 text-white font-semibold py-2.5 px-6 rounded-full text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+                className="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-semibold py-2.5 px-6 rounded-lg text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
                 disabled={compressing || images.length === 0 || !images.every(img => img.compressed)}
               >
                 <Download className="inline-block mr-2 w-4 h-4" />
@@ -496,6 +513,7 @@ const ImageCompressor = () => {
             </div>
 
             {/* Advanced Controls */}
+            {showAdvancedOptions && (
             <div className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10">
               <div className="flex items-center gap-2 mb-4">
                 <Settings className="w-5 h-5 text-blue-400" />
@@ -514,7 +532,7 @@ const ImageCompressor = () => {
                       onClick={() => setCompressionMode('client')}
                       className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
                         compressionMode === 'client'
-                          ? 'bg-blue-500 text-white shadow-md'
+                          ? 'bg-amber-300 text-slate-950 shadow-md'
                           : 'text-gray-400 hover:text-white'
                       }`}
                       disabled={compressing}
@@ -526,7 +544,7 @@ const ImageCompressor = () => {
                       onClick={() => setCompressionMode('server')}
                       className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
                         compressionMode === 'server'
-                          ? 'bg-green-500 text-white shadow-md'
+                          ? 'bg-emerald-400 text-slate-950 shadow-md'
                           : 'text-gray-400 hover:text-white'
                       }`}
                       disabled={compressing}
@@ -560,7 +578,7 @@ const ImageCompressor = () => {
                       placeholder="Width"
                       value={resizeWidth}
                       onChange={(e) => setResizeWidth(e.target.value)}
-                      className="flex-1 bg-gray-800 text-white rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      className="flex-1 bg-gray-800 text-white rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
                       disabled={compressing || compressionMode === 'client'}
                       min="1"
                     />
@@ -569,7 +587,7 @@ const ImageCompressor = () => {
                       placeholder="Height"
                       value={resizeHeight}
                       onChange={(e) => setResizeHeight(e.target.value)}
-                      className="flex-1 bg-gray-800 text-white rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      className="flex-1 bg-gray-800 text-white rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
                       disabled={compressing || compressionMode === 'client'}
                       min="1"
                     />
@@ -588,7 +606,7 @@ const ImageCompressor = () => {
                           type="checkbox"
                           checked={preserveMetadata}
                           onChange={(e) => setPreserveMetadata(e.target.checked)}
-                          className="rounded border-gray-600 text-blue-500 focus:ring-blue-400"
+                          className="rounded border-gray-600 text-amber-300 focus:ring-amber-200"
                           disabled={compressing}
                         />
                         Preserve Metadata
@@ -604,7 +622,7 @@ const ImageCompressor = () => {
                           type="checkbox"
                           checked={optimizeCompression}
                           onChange={(e) => setOptimizeCompression(e.target.checked)}
-                          className="rounded border-gray-600 text-blue-500 focus:ring-blue-400"
+                          className="rounded border-gray-600 text-amber-300 focus:ring-amber-200"
                           disabled={compressing}
                         />
                         Optimize Compression
@@ -622,12 +640,12 @@ const ImageCompressor = () => {
                           value={serverUrl}
                           onChange={(e) => setServerUrl(e.target.value)}
                           placeholder="http://127.0.0.1:4000"
-                          className="flex-1 bg-gray-800 text-white rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          className="flex-1 bg-gray-800 text-white rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
                           disabled={compressing}
                         />
                         <button
                           onClick={testServerConnection}
-                          className="px-3 py-1.5 bg-blue-600/80 text-white rounded-full hover:bg-blue-700 transition-colors duration-300 text-sm"
+                          className="px-3 py-1.5 bg-amber-300 text-slate-950 rounded-lg hover:bg-amber-200 transition-colors duration-300 text-sm"
                           disabled={compressing}
                           title={`Test connection to ${serverUrl}`}
                         >
@@ -653,6 +671,7 @@ const ImageCompressor = () => {
                 )}
               </div>
             </div>
+            )}
 
             {/* Image Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
