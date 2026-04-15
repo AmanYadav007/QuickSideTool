@@ -8,7 +8,6 @@ import {
   Download, 
   Loader2, 
   CheckCircle, 
-  AlertCircle,
   Settings,
   FileType,
   FileCode,

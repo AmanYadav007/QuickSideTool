@@ -6,10 +6,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import {
   FileText,
   Download,
-  Trash2,
-  GripVertical,
   Loader2,
-  XCircle,
   Plus,
   // RotateCw, // Removed RotateCw import as it was commented out anyway and not used for compression
 } from "lucide-react";
@@ -74,7 +71,7 @@ const ProgressModal = ({
   </div>
 );
 
-const ContextMenu = ({ x, y, onClose, onReplace, onInsertBefore, onInsertAfter, onRotate, onClearAll }) => {
+const ContextMenu = ({ x, y, onClose, onReplace, onInsertBefore, onInsertAfter }) => {
   const menuStyle = {
     top: Math.max(0, Math.min(y, window.innerHeight - 100)), // Ensure menu stays within viewport
     left: Math.max(0, Math.min(x, window.innerWidth - 180)), // Ensure menu stays within viewport
@@ -201,13 +198,13 @@ const App = () => {
 
   // Cleanup for component unmount
   useEffect(() => {
+    const pdfCache = pdfCacheRef.current;
+
     return () => {
-      pages.forEach((page) => {
-        if (page.preview) {
-          URL.revokeObjectURL(page.preview);
-        }
+      activePreviewUrls.current.forEach((url) => {
+        URL.revokeObjectURL(url);
       });
-      pdfCacheRef.current.clear(); // Clear PDF document cache
+      pdfCache.clear();
       if (dragOverTimeoutRef.current) {
         clearTimeout(dragOverTimeoutRef.current);
       }
@@ -257,7 +254,7 @@ const App = () => {
         setDraggedItem(index); // Update dragged item index to follow its new position
       }, 100); // Adjust debounce time as needed
     },
-    [draggedItem, pages]
+    [draggedItem]
   );
 
   const handleDragLeave = useCallback(() => {
@@ -332,33 +329,6 @@ const App = () => {
       fileInputRef.current.click();
     }
   }, [contextMenu]);
-
-  const handleRotatePage = useCallback(
-    (angle) => {
-      if (contextMenu === null) return;
-      const pageIndexToRotate = contextMenu.pageIndex;
-
-      setPages((prevPages) => {
-        const updatedPages = [...prevPages];
-        const pageToUpdate = { ...updatedPages[pageIndexToRotate] };
-
-        const currentRotation = pageToUpdate.rotation || 0;
-        const newRotation = (currentRotation + angle) % 360;
-        pageToUpdate.rotation = newRotation;
-
-        updatedPages[pageIndexToRotate] = pageToUpdate;
-        return updatedPages;
-      });
-      showNotification(
-        `Page ${
-          pageIndexToRotate + 1
-        } rotated by ${angle} degrees! (Applies to final PDF)`,
-        "info"
-      );
-      setContextMenu(null);
-    },
-    [contextMenu, showNotification]
-  );
 
   // Helper function to process a single file (PDF or Image) into page data with progress updates
   const processFileIntoPageData = async (file, progressCallback = () => {}) => {
@@ -576,23 +546,23 @@ const App = () => {
           if (cancelProcessingRef.current) break;
 
           const file = acceptedFiles[fileIndex];
+          const processedPagesBeforeCurrentFile = cumulativePagesProcessed;
 
           const updateCurrentFileProgress = (
             statusText = "Processing files",
-            currentPageNum,
-            totalPagesInFile
+            currentPageNum
           ) => {
             modalRoot.render(
               <ProgressModal
                 progress={
-                  ((cumulativePagesProcessed + currentPageNum) /
+                  ((processedPagesBeforeCurrentFile + currentPageNum) /
                     totalExpectedPages) *
                   100
                 }
                 status={`${statusText} (File ${fileIndex + 1}/${
                   acceptedFiles.length
                 })`}
-                currentPage={cumulativePagesProcessed + currentPageNum}
+                currentPage={processedPagesBeforeCurrentFile + currentPageNum}
                 totalPages={totalExpectedPages}
                 onCancel={() => {
                   cancelProcessingRef.current = true;
@@ -797,17 +767,6 @@ const App = () => {
     }
   };
 
-  const handleClearAll = useCallback(() => {
-    pages.forEach((page) => {
-      if (page.preview) {
-        URL.revokeObjectURL(page.preview);
-      }
-    });
-    setPages([]);
-    pdfCacheRef.current.clear(); // Clear the PDF document cache as well
-    showNotification("All pages cleared!", "info");
-  }, [pages, showNotification]);
-
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
@@ -1009,8 +968,6 @@ const App = () => {
             onReplace={handleReplacePage}
             onInsertBefore={handleInsertBefore}
             onInsertAfter={handleInsertAfter}
-            onClearAll={handleClearAll} // Kept this as it was in the original context menu props
-            onRotate={handleRotatePage} // Kept this as it was in the original context menu props
           />
         )}
         <LoadingOverlay isLoading={replaceLoading} />

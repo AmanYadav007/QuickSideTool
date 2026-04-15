@@ -2,7 +2,7 @@ import React from 'react';
 import SEO from '../components/SEO';
 import PDFManipulator from '../components/PDFManipulator';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Info, HelpCircle, CheckCircle, Users, Shield, Zap } from 'lucide-react';
+import { ArrowLeft, FileText, Info, HelpCircle, Users, Shield, Zap } from 'lucide-react';
 import Layout from '../components/Layout';
 
 const PDFTool = () => {

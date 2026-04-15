@@ -14,8 +14,6 @@ const PDFUnlocker = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isInvalidDrag, setIsInvalidDrag] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [backendWarm, setBackendWarm] = useState(false);
-
   // Theme settings based on action - Adjusted for softer color palette
   const theme = {
     unlock: {
@@ -46,14 +44,12 @@ const PDFUnlocker = () => {
   // Warm up the backend to avoid cold-start delay on free hosting
   useEffect(() => {
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://quicksidetoolbackend.onrender.com';
-    let didCancel = false;
     fetch(backendUrl + '/', { method: 'GET', mode: 'cors' })
-      .then(() => { if (!didCancel) setBackendWarm(true); })
       .catch(() => {});
     const interval = setInterval(() => {
       fetch(backendUrl + '/', { method: 'GET', mode: 'cors' }).catch(() => {});
     }, 5 * 60 * 1000); // keep warm every 5 minutes
-    return () => { didCancel = true; clearInterval(interval); };
+    return () => { clearInterval(interval); };
   }, []);
 
 

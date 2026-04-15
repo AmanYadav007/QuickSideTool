@@ -7,7 +7,6 @@ const BOMB = "bomb";
 const DIAMOND_EMOJI = "💎";
 const CELEBRATE_EMOJIS = ["💎", "🎉", "✨", "💎", "🎉", "✨"];
 const BOMB_EMOJI = "💣";
-const TILE_COLOR = "#1e293b";
 const DIAMOND_COLOR = "#22c55e";
 const BOMB_COLOR = "#ef4444";
 const BG_COLOR = "#0f172a";
@@ -43,7 +42,7 @@ const DiamondQuestGame = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScoreState] = useState(getHighScore());
   const [diamondsFound, setDiamondsFound] = useState(0);
-  const [message, setMessage] = useState("Find the diamonds, avoid the bombs!");
+  const [, setMessage] = useState("Find the diamonds, avoid the bombs!");
   const [showCelebrate, setShowCelebrate] = useState(false);
   const [newHighScore, setNewHighScore] = useState(false);
   const celebrateTimeout = useRef(null);

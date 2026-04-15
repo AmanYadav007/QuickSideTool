@@ -21,7 +21,7 @@ const ImageCompressor = () => {
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   
   // Test server connection
-  const testServerConnection = async () => {
+  const testServerConnection = useCallback(async () => {
     try {
       setServerStatus('unknown');
       const response = await axios.get(`${serverUrl}/health`, { timeout: 5000 });
@@ -33,14 +33,14 @@ const ImageCompressor = () => {
     } catch (error) {
       setServerStatus('error');
     }
-  };
+  }, [serverUrl]);
 
   // Test connection when server URL changes
   useEffect(() => {
     if (compressionMode === 'server') {
       testServerConnection();
     }
-  }, [serverUrl, compressionMode]);
+  }, [compressionMode, testServerConnection]);
 
   // Ref to hold previous URLs for robust cleanup
   const prevUrlsRef = useRef(new Set());

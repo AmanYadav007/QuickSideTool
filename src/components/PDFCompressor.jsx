@@ -7,17 +7,12 @@ import {
   Download,
   Loader2,
   CheckCircle,
-  XCircle,
   ArrowLeft,
   Zap,
   Star,
   Shield,
-  Sparkles,
   Minus,
-  Settings,
-  BarChart3,
   Info,
-  FileDown,
 } from "lucide-react";
 import Notification from "./Notification";
 
@@ -39,27 +34,6 @@ const PDFCompressor = () => {
     setNotificationType(type);
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 5000);
-  };
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      if (selectedFile.type === "application/pdf") {
-        setFile(selectedFile);
-        setOriginalSize(selectedFile.size);
-        setMessage("");
-        setDownloadBlob(null);
-        setCompressedSize(0);
-      } else {
-        setFile(null);
-        setMessage("Error: Please select a valid PDF file.");
-        setDownloadBlob(null);
-      }
-    } else {
-      setFile(null);
-      setMessage("");
-      setDownloadBlob(null);
-    }
   };
 
   const onDrop = useCallback((acceptedFiles) => {
@@ -227,10 +201,6 @@ const PDFCompressor = () => {
       compression: "50-80%"
     }
   ];
-
-  const selectedLevel = compressionLevels.find(
-    (level) => level.id === compressionLevel
-  );
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";

@@ -8,7 +8,6 @@ import {
   Download, 
   Loader2, 
   CheckCircle, 
-  AlertCircle,
   Settings,
   FileType,
   FileSpreadsheet,
@@ -18,6 +17,44 @@ import {
   Zap
 } from 'lucide-react';
 import logger from '../utils/logger';
+
+const SUPPORTED_FORMATS = [
+  {
+    value: 'docx',
+    label: 'Word Document (.docx)',
+    icon: FileText,
+    description: 'Microsoft Word documents',
+    extensions: ['.docx', '.doc']
+  },
+  {
+    value: 'xlsx',
+    label: 'Excel Spreadsheet (.xlsx)',
+    icon: FileSpreadsheet,
+    description: 'Microsoft Excel spreadsheets',
+    extensions: ['.xlsx', '.xls']
+  },
+  {
+    value: 'pptx',
+    label: 'PowerPoint (.pptx)',
+    icon: Presentation,
+    description: 'Microsoft PowerPoint presentations',
+    extensions: ['.pptx', '.ppt']
+  },
+  {
+    value: 'txt',
+    label: 'Text File (.txt)',
+    icon: FileCode,
+    description: 'Plain text documents',
+    extensions: ['.txt']
+  },
+  {
+    value: 'html',
+    label: 'HTML Document (.html)',
+    icon: FileCode,
+    description: 'Web pages and HTML files',
+    extensions: ['.html', '.htm']
+  }
+];
 
 const WordToPDFConverter = () => {
   const [files, setFiles] = useState([]);
@@ -30,44 +67,6 @@ const WordToPDFConverter = () => {
   const [pageSize, setPageSize] = useState('a4'); // a4, letter, legal, a3
   const [orientation, setOrientation] = useState('portrait'); // portrait, landscape
   const [margins, setMargins] = useState('normal'); // narrow, normal, wide
-
-  const supportedFormats = [
-    { 
-      value: 'docx', 
-      label: 'Word Document (.docx)', 
-      icon: FileText,
-      description: 'Microsoft Word documents',
-      extensions: ['.docx', '.doc']
-    },
-    { 
-      value: 'xlsx', 
-      label: 'Excel Spreadsheet (.xlsx)', 
-      icon: FileSpreadsheet,
-      description: 'Microsoft Excel spreadsheets',
-      extensions: ['.xlsx', '.xls']
-    },
-    { 
-      value: 'pptx', 
-      label: 'PowerPoint (.pptx)', 
-      icon: Presentation,
-      description: 'Microsoft PowerPoint presentations',
-      extensions: ['.pptx', '.ppt']
-    },
-    { 
-      value: 'txt', 
-      label: 'Text File (.txt)', 
-      icon: FileCode,
-      description: 'Plain text documents',
-      extensions: ['.txt']
-    },
-    { 
-      value: 'html', 
-      label: 'HTML Document (.html)', 
-      icon: FileCode,
-      description: 'Web pages and HTML files',
-      extensions: ['.html', '.htm']
-    }
-  ];
 
   const qualityLevels = [
     { value: 'low', label: 'Low Quality', description: 'Smaller file size, basic formatting', size: 'Small' },
@@ -91,7 +90,7 @@ const WordToPDFConverter = () => {
   const onDrop = useCallback((acceptedFiles) => {
     const supportedFiles = acceptedFiles.filter(file => {
       const extension = '.' + file.name.split('.').pop().toLowerCase();
-      return supportedFormats.some(format => 
+      return SUPPORTED_FORMATS.some(format => 
         format.extensions.includes(extension)
       );
     });
@@ -120,7 +119,7 @@ const WordToPDFConverter = () => {
 
   const getFileType = (fileName) => {
     const extension = '.' + fileName.split('.').pop().toLowerCase();
-    return supportedFormats.find(format => format.extensions.includes(extension));
+    return SUPPORTED_FORMATS.find(format => format.extensions.includes(extension));
   };
 
   const convertDocumentToPDF = async (file) => {
@@ -414,7 +413,7 @@ Quality Settings:
           <div className="mt-6">
             <h3 className="text-lg font-semibold mb-4">Supported Formats</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {supportedFormats.map(format => (
+              {SUPPORTED_FORMATS.map(format => (
                 <div key={format.value} className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
                   {React.createElement(format.icon, { className: "w-5 h-5 text-blue-400" })}
                   <div>
