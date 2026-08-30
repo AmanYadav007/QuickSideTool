@@ -16,7 +16,9 @@ const ImageCompressor = () => {
   const [resizeHeight, setResizeHeight] = useState('');
   const [preserveMetadata, setPreserveMetadata] = useState(false);
   const [optimizeCompression, setOptimizeCompression] = useState(true);
-  const [serverUrl, setServerUrl] = useState('http://127.0.0.1:4000'); // Default backend URL
+  const defaultServerUrl =
+    process.env.REACT_APP_BACKEND_URL || 'https://quicksidetoolbackend.onrender.com';
+  const [serverUrl, setServerUrl] = useState(defaultServerUrl); // Default backend URL
   const [serverStatus, setServerStatus] = useState('unknown'); // 'unknown', 'connected', 'error'
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   
@@ -351,7 +353,7 @@ const ImageCompressor = () => {
     setResizeHeight('');
     setPreserveMetadata(false);
     setOptimizeCompression(true);
-    setServerUrl('http://127.0.0.1:4000');
+    setServerUrl(defaultServerUrl);
     setShowAdvancedOptions(false);
   };
 

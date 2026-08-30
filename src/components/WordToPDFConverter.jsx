@@ -10,8 +10,6 @@ import {
   CheckCircle, 
   Settings,
   FileType,
-  FileSpreadsheet,
-  Presentation,
   FileCode,
   Upload,
   Zap
@@ -24,21 +22,7 @@ const SUPPORTED_FORMATS = [
     label: 'Word Document (.docx)',
     icon: FileText,
     description: 'Microsoft Word documents',
-    extensions: ['.docx', '.doc']
-  },
-  {
-    value: 'xlsx',
-    label: 'Excel Spreadsheet (.xlsx)',
-    icon: FileSpreadsheet,
-    description: 'Microsoft Excel spreadsheets',
-    extensions: ['.xlsx', '.xls']
-  },
-  {
-    value: 'pptx',
-    label: 'PowerPoint (.pptx)',
-    icon: Presentation,
-    description: 'Microsoft PowerPoint presentations',
-    extensions: ['.pptx', '.ppt']
+    extensions: ['.docx']
   },
   {
     value: 'txt',
@@ -105,11 +89,6 @@ const WordToPDFConverter = () => {
     onDrop,
     accept: {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'application/msword': ['.doc'],
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-      'application/vnd.ms-excel': ['.xls'],
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
-      'application/vnd.ms-powerpoint': ['.ppt'],
       'text/plain': ['.txt'],
       'text/html': ['.html', '.htm']
     },
@@ -127,88 +106,97 @@ const WordToPDFConverter = () => {
       setCurrentFile(`Converting ${file.name}...`);
       
       const fileType = getFileType(file.name);
+      const extension = '.' + file.name.split('.').pop().toLowerCase();
       const selectedPageSize = pageSizes.find(size => size.value === pageSize);
       const selectedMargins = marginOptions.find(margin => margin.value === margins);
-      
+
       // Create a new PDF document
       const pdfDoc = await PDFDocument.create();
-      
+      const { StandardFonts } = await import('pdf-lib');
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
       // Set page size and orientation
       const pageWidth = orientation === 'landscape' ? selectedPageSize.height : selectedPageSize.width;
       const pageHeight = orientation === 'landscape' ? selectedPageSize.width : selectedPageSize.height;
-      
+
       const page = pdfDoc.addPage([pageWidth, pageHeight]);
-      
+
       // Calculate content area with margins
       const marginSize = selectedMargins.size;
       const contentWidth = pageWidth - (marginSize * 2);
-      
+
       let textContent = '';
-      
-      // Process different file types
-      if (fileType?.value === 'docx' || fileType?.value === 'xlsx' || fileType?.value === 'pptx') {
-        // For Word documents, use mammoth to extract text
-        try {
-          const arrayBuffer = await file.arrayBuffer();
-          const result = await mammoth.extractRawText({ arrayBuffer });
-          textContent = result.value;
-        } catch (error) {
-          logger.warn('Failed to extract text with mammoth, using fallback:', error);
-          textContent = `Converted from: ${file.name}\nFile Type: ${fileType?.label || 'Unknown'}\n\nThis document has been converted to PDF format.`;
-        }
-      } else if (fileType?.value === 'txt') {
-        // For text files, read directly
+
+      // Only formats we can faithfully read in the browser. No silent placeholder output.
+      if (extension === '.docx') {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        textContent = result.value;
+      } else if (extension === '.txt') {
         textContent = await file.text();
-      } else if (fileType?.value === 'html') {
-        // For HTML files, extract text content
+      } else if (extension === '.html' || extension === '.htm') {
         const htmlContent = await file.text();
-        // Simple HTML to text conversion
-        textContent = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        textContent = htmlContent
+          .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+          .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+          .replace(/<\/(p|div|br|li|h[1-6]|tr)>/gi, '\n')
+          .replace(/<[^>]*>/g, ' ')
+          .replace(/[ \t]+/g, ' ')
+          .replace(/\n\s*\n\s*\n+/g, '\n\n')
+          .trim();
       } else {
-        textContent = `Converted from: ${file.name}\nFile Type: ${fileType?.label || 'Unknown'}\n\nThis document has been converted to PDF format.`;
+        throw new Error(
+          `${extension} files can't be converted in the browser. Supported: .docx, .txt, .html`
+        );
       }
 
-      // Add conversion info
-      textContent = `Converted from: ${file.name}
-File Type: ${fileType?.label || 'Unknown'}
-File Size: ${(file.size / 1024 / 1024).toFixed(2)} MB
-Conversion Date: ${new Date().toLocaleDateString()}
-Quality: ${qualityLevels.find(q => q.value === outputQuality)?.label}
+      if (!textContent || !textContent.trim()) {
+        throw new Error(`No readable text found in ${file.name}`);
+      }
 
-${textContent}
+      // Helvetica/WinAnsi can't encode every character; replace the rest rather than throw.
+      const sanitize = (s) =>
+        // eslint-disable-next-line no-control-regex
+        (s || '').replace(/\r/g, '').replace(/[^\x09\x0A\x20-\x7E\xA0-\xFF]/g, '?');
 
-Quality Settings:
-• Output Quality: ${outputQuality}
-• Page Size: ${selectedPageSize.label}
-• Orientation: ${orientation}
-• Margins: ${selectedMargins.label}
-• Include Metadata: ${includeMetadata ? 'Yes' : 'No'}`;
-
-      // Add text to the page
       const fontSize = outputQuality === 'high' ? 12 : outputQuality === 'medium' ? 10 : 8;
-      const lineHeight = fontSize * 1.2;
-      
-      const lines = textContent.split('\n');
-      let currentY = pageHeight - marginSize - fontSize;
+      const lineHeight = fontSize * 1.4;
+
       let currentPage = page;
-      
-      for (const line of lines) {
+      let currentY = pageHeight - marginSize - fontSize;
+      const emitLine = (text) => {
         if (currentY < marginSize) {
-          // Add new page if needed
           currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
           currentY = pageHeight - marginSize - fontSize;
         }
-        
-        currentPage.drawText(line, {
+        currentPage.drawText(text, {
           x: marginSize,
           y: currentY,
           size: fontSize,
+          font,
           color: rgb(0, 0, 0),
-          maxWidth: contentWidth
         });
-        
         currentY -= lineHeight;
-      }
+      };
+
+      sanitize(textContent).split('\n').forEach((rawLine) => {
+        if (rawLine === '') {
+          currentY -= lineHeight;
+          return;
+        }
+        const words = rawLine.split(/\s+/);
+        let line = '';
+        words.forEach((word) => {
+          const candidate = line ? `${line} ${word}` : word;
+          if (font.widthOfTextAtSize(candidate, fontSize) > contentWidth && line) {
+            emitLine(line);
+            line = word;
+          } else {
+            line = candidate;
+          }
+        });
+        if (line) emitLine(line);
+      });
 
       // Add metadata if requested
       if (includeMetadata) {
