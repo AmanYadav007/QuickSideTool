@@ -6,6 +6,21 @@ import { Link } from 'react-router-dom';
 import JSZip from 'jszip';
 import axios from 'axios'; // Add axios for server-side compression
 
+// Run `task` over `items` with at most `limit` promises in flight, preserving order.
+const mapWithConcurrency = async (items, limit, task) => {
+  const results = new Array(items.length);
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+      results[index] = await task(items[index], index);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+};
+
 const ImageCompressor = () => {
   const [images, setImages] = useState([]);
   const [quality, setQuality] = useState(70);
@@ -44,31 +59,19 @@ const ImageCompressor = () => {
     }
   }, [compressionMode, testServerConnection]);
 
-  // Ref to hold previous URLs for robust cleanup
-  const prevUrlsRef = useRef(new Set());
-
-  // Effect to revoke object URLs when images are removed or replaced
-  useEffect(() => {
-    const currentOriginalUrls = new Set();
-    const currentCompressedUrls = new Set();
-
-    images.forEach(img => {
-      if (img.original) currentOriginalUrls.add(URL.createObjectURL(img.original));
-      if (img.compressed) currentCompressedUrls.add(URL.createObjectURL(img.compressed));
-    });
-
-    prevUrlsRef.current.forEach(url => {
-      if (!currentOriginalUrls.has(url) && !currentCompressedUrls.has(url)) {
-        URL.revokeObjectURL(url);
-      }
-    });
-
-    prevUrlsRef.current = new Set([...currentOriginalUrls, ...currentCompressedUrls]);
-
-    return () => {
-      prevUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
-    };
-  }, [images]);
+  // Object URLs are created once per file (in onDrop / after compression) and stored on
+  // the image object. Revoke everything still outstanding when the component unmounts.
+  const imagesRef = useRef(images);
+  imagesRef.current = images;
+  useEffect(
+    () => () => {
+      imagesRef.current.forEach(img => {
+        if (img.originalUrl) URL.revokeObjectURL(img.originalUrl);
+        if (img.compressedUrl) URL.revokeObjectURL(img.compressedUrl);
+      });
+    },
+    []
+  );
 
   const onDrop = useCallback((acceptedFiles) => {
     const newImagesPromises = acceptedFiles.map(file => {
@@ -76,10 +79,11 @@ const ImageCompressor = () => {
         const img = new Image();
         const objectUrl = URL.createObjectURL(file); // Create URL once
         img.onload = () => {
-          URL.revokeObjectURL(objectUrl); // Revoke temporary URL after image is loaded
           resolve({
             original: file,
+            originalUrl: objectUrl,
             compressed: null,
+            compressedUrl: null,
             error: null, // Add error state for individual image
             dimensions: { width: img.width, height: img.height } // Store original dimensions
           });
@@ -113,8 +117,8 @@ const ImageCompressor = () => {
       formData.append('format', format.split('/')[1].toUpperCase());
       formData.append('resize_width', options.resizeWidth || '');
       formData.append('resize_height', options.resizeHeight || '');
-      formData.append('preserve_metadata', options.preserveMetadata || false);
-      formData.append('optimize', options.optimize || true);
+      formData.append('preserve_metadata', String(Boolean(options.preserveMetadata)));
+      formData.append('optimize', String(options.optimize !== false));
 
       const response = await axios.post(`${serverUrl}/compress-image`, formData, {
         responseType: 'blob',
@@ -182,7 +186,13 @@ const ImageCompressor = () => {
             (blob) => {
               if (blob) {
                 const originalFileNameWithoutExt = imageFile.name.split('.').slice(0, -1).join('.');
-                resolve(new File([blob], `${originalFileNameWithoutExt}_compressed.${fileExtension}`, {
+                // Re-encoding can produce a larger file than the source (already-optimised
+                // input, format mismatch). Keep the original in that case.
+                const payload =
+                  blob.size >= imageFile.size && outputMimeType === imageFile.type
+                    ? imageFile
+                    : blob;
+                resolve(new File([payload], `${originalFileNameWithoutExt}_compressed.${fileExtension}`, {
                   type: outputMimeType,
                   lastModified: Date.now()
                 }));
@@ -233,7 +243,7 @@ const ImageCompressor = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
       
       alert(`Successfully compressed ${images.length} images! ZIP file downloaded.`);
       
@@ -252,10 +262,10 @@ const ImageCompressor = () => {
     }
     setCompressing(true);
     try {
-      const compressedImagesPromises = images.map(async (img) => {
+      const compressedResults = await mapWithConcurrency(images, 4, async (img) => {
         try {
           let compressedFile;
-          
+
           if (compressionMode === 'server') {
             // Use server-side compression with advanced options
             compressedFile = await compressImageServer(img.original, quality, outputFormat, {
@@ -269,13 +279,18 @@ const ImageCompressor = () => {
             compressedFile = await compressImage(img.original, quality, outputFormat);
           }
           
-          return { ...img, compressed: compressedFile, error: null };
+          if (img.compressedUrl) URL.revokeObjectURL(img.compressedUrl);
+          return {
+            ...img,
+            compressed: compressedFile,
+            compressedUrl: URL.createObjectURL(compressedFile),
+            error: null,
+          };
         } catch (error) {
           console.error(`Error compressing image ${img.original.name}:`, error);
-          return { ...img, compressed: null, error: `Failed: ${error.message}` };
+          return { ...img, compressed: null, compressedUrl: null, error: `Failed: ${error.message}` };
         }
       });
-      const compressedResults = await Promise.all(compressedImagesPromises);
       setImages(compressedResults);
     } catch (error) {
       console.error('An unexpected error occurred during batch compression:', error);
@@ -291,12 +306,13 @@ const ImageCompressor = () => {
       return;
     }
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(compressedImage);
+    const href = URL.createObjectURL(compressedImage);
+    link.href = href;
     link.download = compressedImage.name; // Use the name from the File object
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(link.href); // Clean up the URL
+    setTimeout(() => URL.revokeObjectURL(href), 10000);
   }, []);
 
   const downloadAllCompressedImages = async () => {
@@ -316,19 +332,31 @@ const ImageCompressor = () => {
     }
 
     const zip = new JSZip();
+    const usedNames = new Set();
     compressedImagesReady.forEach((img) => {
-      zip.file(img.compressed.name, img.compressed);
+      let name = img.compressed.name;
+      if (usedNames.has(name)) {
+        const dot = name.lastIndexOf('.');
+        const stem = dot === -1 ? name : name.slice(0, dot);
+        const ext = dot === -1 ? '' : name.slice(dot);
+        let n = 2;
+        while (usedNames.has(`${stem} (${n})${ext}`)) n += 1;
+        name = `${stem} (${n})${ext}`;
+      }
+      usedNames.add(name);
+      zip.file(name, img.compressed);
     });
 
     try {
       const content = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 9 } });
       const link = document.createElement('a');
-      link.href = URL.createObjectURL(content);
+      const href = URL.createObjectURL(content);
+      link.href = href;
       link.download = "compressed_images.zip";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(link.href); // Clean up the URL
+      setTimeout(() => URL.revokeObjectURL(href), 10000);
     } catch (error) {
       console.error("Error generating zip:", error);
       alert("Failed to generate zip file. Please try again.");
@@ -337,13 +365,18 @@ const ImageCompressor = () => {
 
   const removeImage = useCallback((indexToRemove) => {
     setImages(prevImages => {
-      const newImages = prevImages.filter((_, index) => index !== indexToRemove);
-      // The `useEffect` for `prevUrlsRef` will handle revoking the URLs.
-      return newImages;
+      const target = prevImages[indexToRemove];
+      if (target?.originalUrl) URL.revokeObjectURL(target.originalUrl);
+      if (target?.compressedUrl) URL.revokeObjectURL(target.compressedUrl);
+      return prevImages.filter((_, index) => index !== indexToRemove);
     });
   }, []);
 
   const clearAllImages = () => {
+    images.forEach(img => {
+      if (img.originalUrl) URL.revokeObjectURL(img.originalUrl);
+      if (img.compressedUrl) URL.revokeObjectURL(img.compressedUrl);
+    });
     setImages([]);
     setQuality(70);
     setCompressing(false);
@@ -444,7 +477,7 @@ const ImageCompressor = () => {
             <div className="bg-white/10 rounded-xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-inner">
               <h2 className="text-white text-base font-semibold whitespace-nowrap">Compress Settings</h2>
               
-              {/* Quality Slider */}
+              {/* Quality Slider — PNG is lossless, so quality has no effect there */}
               <div className="flex items-center gap-3 flex-grow">
                 <span className="text-white text-sm whitespace-nowrap">Quality:</span>
                 <input
@@ -453,11 +486,13 @@ const ImageCompressor = () => {
                   max="100"
                   value={quality}
                   onChange={(e) => setQuality(parseInt(e.target.value))}
-                  className="w-full h-2 bg-white/30 rounded-lg appearance-none cursor-pointer range-sm"
+                  className="w-full h-2 bg-white/30 rounded-lg appearance-none cursor-pointer range-sm disabled:opacity-40"
                   title={`Compression Quality: ${quality}%`}
-                  disabled={compressing}
+                  disabled={compressing || outputFormat === 'image/png'}
                 />
-                <span className="text-white text-sm w-8 text-right">{quality}%</span>
+                <span className="text-white text-sm w-8 text-right">
+                  {outputFormat === 'image/png' ? 'n/a' : `${quality}%`}
+                </span>
               </div>
 
               {/* Output Format */}
@@ -702,7 +737,7 @@ const ImageCompressor = () => {
                       <p className="text-white/80 text-sm mb-1">Original ({img.dimensions.width}x{img.dimensions.height})</p>
                       <div className="relative w-full h-36 bg-gray-800 rounded-lg overflow-hidden flex items-center justify-center border border-gray-700">
                         <img 
-                          src={URL.createObjectURL(img.original)} 
+                          src={img.originalUrl}
                           alt="Original" 
                           className="object-contain max-w-full max-h-full"
                         />
@@ -716,7 +751,7 @@ const ImageCompressor = () => {
                       <div className="relative w-full h-36 bg-gray-800 rounded-lg overflow-hidden flex items-center justify-center border border-gray-700">
                         {img.compressed ? (
                           <img 
-                            src={URL.createObjectURL(img.compressed)} 
+                            src={img.compressedUrl}
                             alt="Compressed" 
                             className="object-contain max-w-full max-h-full"
                           />

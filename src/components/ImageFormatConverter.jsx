@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import SEO from "./SEO";
 import { Link } from "react-router-dom";
 import { useDropzone } from "react-dropzone";
@@ -29,6 +29,18 @@ const ImageFormatConverter = () => {
 
   const selectedFormat = outputFormats.find((format) => format.value === outputFormat) || outputFormats[0];
 
+  // Revoke any outstanding preview URLs when the component unmounts.
+  const imagesRef = useRef(images);
+  imagesRef.current = images;
+  useEffect(
+    () => () => {
+      imagesRef.current.forEach((image) => {
+        if (image?.previewUrl) URL.revokeObjectURL(image.previewUrl);
+      });
+    },
+    []
+  );
+
   const onDrop = useCallback((acceptedFiles) => {
     const nextImages = acceptedFiles.map((file) => ({
       original: file,
@@ -53,16 +65,15 @@ const ImageFormatConverter = () => {
     }
 
     setIsConverting(true);
-    const converted = await Promise.all(
-      images.map(async (image) => {
-        try {
-          const convertedFile = await convertImage(image.original, selectedFormat, quality);
-          return { ...image, converted: convertedFile, error: "" };
-        } catch (error) {
-          return { ...image, converted: null, error: error.message };
-        }
-      })
-    );
+    const label = selectedFormat.label;
+    const converted = await mapWithConcurrency(images, 4, async (image) => {
+      try {
+        const convertedFile = await convertImage(image.original, selectedFormat, quality);
+        return { ...image, converted: convertedFile, convertedLabel: label, error: "" };
+      } catch (error) {
+        return { ...image, converted: null, convertedLabel: "", error: error.message };
+      }
+    });
     setImages(converted);
     setIsConverting(false);
   };
@@ -100,7 +111,20 @@ const ImageFormatConverter = () => {
     }
 
     const zip = new JSZip();
-    convertedImages.forEach((image) => zip.file(image.converted.name, image.converted));
+    const usedNames = new Set();
+    convertedImages.forEach((image) => {
+      let name = image.converted.name;
+      if (usedNames.has(name)) {
+        const dot = name.lastIndexOf(".");
+        const stem = dot === -1 ? name : name.slice(0, dot);
+        const ext = dot === -1 ? "" : name.slice(dot);
+        let n = 2;
+        while (usedNames.has(`${stem} (${n})${ext}`)) n += 1;
+        name = `${stem} (${n})${ext}`;
+      }
+      usedNames.add(name);
+      zip.file(name, image.converted);
+    });
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);
     triggerDownload(url, "converted_images.zip");
@@ -230,7 +254,7 @@ const ImageFormatConverter = () => {
                     {image.converted ? (
                       <p className="inline-flex items-center gap-2 text-sm text-emerald-200">
                         <CheckCircle className="h-4 w-4" />
-                        Converted to {selectedFormat.label}
+                        Converted to {image.convertedLabel || selectedFormat.label}
                       </p>
                     ) : image.error ? (
                       <p className="text-sm text-red-200">{image.error}</p>
@@ -269,6 +293,11 @@ const convertImage = (file, outputFormat, quality) => {
       canvas.width = image.naturalWidth;
       canvas.height = image.naturalHeight;
       const context = canvas.getContext("2d");
+      // JPEG has no alpha channel; without a fill, transparent pixels turn black.
+      if (outputFormat.value === "image/jpeg") {
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      }
       context.drawImage(image, 0, 0);
       URL.revokeObjectURL(sourceUrl);
 
@@ -298,6 +327,21 @@ const convertImage = (file, outputFormat, quality) => {
 
     image.src = sourceUrl;
   });
+};
+
+// Run `task` over `items` with at most `limit` promises in flight, preserving order.
+const mapWithConcurrency = async (items, limit, task) => {
+  const results = new Array(items.length);
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+      results[index] = await task(items[index], index);
+    }
+  });
+  await Promise.all(workers);
+  return results;
 };
 
 const triggerDownload = (href, filename) => {
