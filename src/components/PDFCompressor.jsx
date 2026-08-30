@@ -432,9 +432,11 @@ const PDFCompressor = () => {
               {message && (
                 <div
                   className={`mt-4 p-4 rounded-lg ${
-                    message.includes("Success")
-                      ? "bg-green-500/20 border border-green-400/30"
-                      : "bg-red-500/20 border border-red-400/30"
+                    message.startsWith("Error:")
+                      ? "bg-red-500/20 border border-red-400/30"
+                      : message.startsWith("Note:")
+                      ? "bg-blue-500/20 border border-blue-400/30"
+                      : "bg-green-500/20 border border-green-400/30"
                   }`}
                 >
                   <p className="text-white">{message}</p>

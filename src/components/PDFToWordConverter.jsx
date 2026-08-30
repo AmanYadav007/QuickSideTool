@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import SEO from './SEO';
 import { useDropzone } from 'react-dropzone';
 import * as pdfjsLib from 'pdfjs-dist';
-import JSZip from 'jszip';
 import { 
   FileText, 
   Download, 
@@ -295,164 +294,98 @@ const PDFToWordConverter = () => {
   };
 
   const convertToDocx = async (data) => {
-    try {
-      // Create a more sophisticated DOCX structure with proper formatting
-      let paragraphs = '';
-      
-      if (preserveFormatting && data.textBlocks) {
-        // Process each page and text block with formatting
-        data.textBlocks.forEach((block, pageIndex) => {
-          // Add page break if not first page
-          if (pageIndex > 0) {
-            paragraphs += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+    // Build a real .docx with the `docx` library instead of hand-rolled OOXML.
+    // The library handles XML escaping, content types, and valid table structure.
+    const {
+      Document, Packer, Paragraph, TextRun, HeadingLevel, PageBreak,
+      Table, TableRow, TableCell, WidthType,
+    } = await import('docx');
+
+    const runsForItems = (items) =>
+      items.map((item) => {
+        const name = (item.fontName || '').toLowerCase();
+        return new TextRun({
+          text: item.text || '',
+          bold: name.includes('bold'),
+          italics: name.includes('italic'),
+          size: Math.max(8, Math.round(item.fontSize * 2)) || 24,
+        });
+      });
+
+    const children = [];
+
+    const pushTable = (rows) => {
+      if (!rows.length) return;
+      const colCount = Math.max(...rows.map((r) => r.columns.length));
+      children.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: rows.map(
+            (row) =>
+              new TableRow({
+                children: Array.from({ length: colCount }, (_, i) =>
+                  new TableCell({
+                    children: [new Paragraph(row.columns[i] ? row.columns[i].text : '')],
+                  })
+                ),
+              })
+          ),
+        })
+      );
+      children.push(new Paragraph(''));
+    };
+
+    if (preserveFormatting && data.textBlocks && data.textBlocks.length) {
+      data.textBlocks.forEach((block, pageIndex) => {
+        if (pageIndex > 0) {
+          children.push(new Paragraph({ children: [new PageBreak()] }));
+        }
+
+        const elements =
+          block.organizedText && block.organizedText.length
+            ? block.organizedText
+            : [{ type: 'paragraph', text: block.text, items: block.items || [] }];
+
+        let tableBuffer = [];
+        elements.forEach((element) => {
+          if (element.type === 'table_row') {
+            tableBuffer.push(element);
+            return;
           }
-          
-          // Process organized text structure
-          if (block.organizedText) {
-            block.organizedText.forEach(element => {
-              switch (element.type) {
-                case 'heading':
-                  const headingLevel = element.level || 1;
-                  const headingText = element.items.map(item => {
-                    const fontSize = Math.round(item.fontSize * 2);
-                    const isBold = item.fontName && item.fontName.toLowerCase().includes('bold');
-                    const isItalic = item.fontName && item.fontName.toLowerCase().includes('italic');
-                    
-                    let runProps = '<w:rPr>';
-                    if (fontSize !== 24) runProps += `<w:sz w:val="${fontSize}"/>`;
-                    if (isBold) runProps += '<w:b/>';
-                    if (isItalic) runProps += '<w:i/>';
-                    runProps += '</w:rPr>';
-                    
-                    return `<w:r>${runProps}<w:t xml:space="preserve">${item.text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</w:t></w:r>`;
-                  }).join('');
-                  
-                  paragraphs += `<w:p><w:pPr><w:pStyle w:val="Heading${headingLevel}"/><w:spacing w:after="240"/></w:pPr>${headingText}</w:p>`;
-                  break;
-                  
-                case 'table_row':
-                  // Create table row
-                  const tableCells = element.columns.map(column => 
-                    `<w:tc><w:tcPr><w:tcW w:w="2000" w:type="dxa"/></w:tcPr><w:p><w:r><w:t xml:space="preserve">${column.text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</w:t></w:r></w:p></w:tc>`
-                  ).join('');
-                  paragraphs += `<w:tr>${tableCells}</w:tr>`;
-                  break;
-                  
-                case 'paragraph':
-                default:
-                  // Regular paragraph
-                  const paragraphText = element.items.map(item => {
-                    const fontSize = Math.round(item.fontSize * 2);
-                    const isBold = item.fontName && item.fontName.toLowerCase().includes('bold');
-                    const isItalic = item.fontName && item.fontName.toLowerCase().includes('italic');
-                    
-                    let runProps = '';
-                    if (fontSize !== 24 || isBold || isItalic) {
-                      runProps = '<w:rPr>';
-                      if (fontSize !== 24) runProps += `<w:sz w:val="${fontSize}"/>`;
-                      if (isBold) runProps += '<w:b/>';
-                      if (isItalic) runProps += '<w:i/>';
-                      runProps += '</w:rPr>';
-                    }
-                    
-                    return `<w:r>${runProps}<w:t xml:space="preserve">${item.text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</w:t></w:r>`;
-                  }).join('');
-                  
-                  paragraphs += `<w:p><w:pPr><w:spacing w:after="120"/></w:pPr>${paragraphText}</w:p>`;
-                  break;
-              }
-            });
+          if (tableBuffer.length) {
+            pushTable(tableBuffer);
+            tableBuffer = [];
+          }
+          if (element.type === 'heading') {
+            children.push(
+              new Paragraph({
+                heading: element.level === 1 ? HeadingLevel.HEADING_1 : HeadingLevel.HEADING_2,
+                children: element.items && element.items.length
+                  ? runsForItems(element.items)
+                  : [new TextRun(element.text || '')],
+              })
+            );
           } else {
-            // Fallback to simple processing
-            const lines = [];
-            let currentLine = [];
-            let lastY = null;
-            
-            block.items.forEach(item => {
-              if (lastY === null || Math.abs(item.y - lastY) < 15) {
-                currentLine.push(item);
-              } else {
-                if (currentLine.length > 0) {
-                  lines.push([...currentLine]);
-                }
-                currentLine = [item];
-              }
-              lastY = item.y;
-            });
-            if (currentLine.length > 0) {
-              lines.push(currentLine);
-            }
-            
-            lines.forEach(line => {
-              line.sort((a, b) => a.x - b.x);
-              const paragraphText = line.map(item => {
-                const fontSize = Math.round(item.fontSize * 2);
-                const isBold = item.fontName && item.fontName.toLowerCase().includes('bold');
-                const isItalic = item.fontName && item.fontName.toLowerCase().includes('italic');
-                
-                let runProps = '';
-                if (fontSize !== 24 || isBold || isItalic) {
-                  runProps = '<w:rPr>';
-                  if (fontSize !== 24) runProps += `<w:sz w:val="${fontSize}"/>`;
-                  if (isBold) runProps += '<w:b/>';
-                  if (isItalic) runProps += '<w:i/>';
-                  runProps += '</w:rPr>';
-                }
-                
-                return `<w:r>${runProps}<w:t xml:space="preserve">${item.text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</w:t></w:r>`;
-              }).join('');
-              
-              paragraphs += `<w:p><w:pPr><w:spacing w:after="120"/></w:pPr>${paragraphText}</w:p>`;
-            });
+            children.push(
+              new Paragraph({
+                children: element.items && element.items.length
+                  ? runsForItems(element.items)
+                  : [new TextRun(element.text || '')],
+              })
+            );
           }
         });
-      } else {
-        // Simple text conversion
-        const lines = data.fullText.split('\n');
-        lines.forEach(line => {
-          if (line.trim()) {
-            paragraphs += `<w:p><w:r><w:t xml:space="preserve">${line.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</w:t></w:r></w:p>`;
-          } else {
-            paragraphs += '<w:p><w:r><w:t xml:space="preserve"> </w:t></w:r></w:p>';
-          }
-        });
-      }
-      
-      const docxContent = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:body>
-    ${paragraphs}
-  </w:body>
-</w:document>`;
-      
-      // Create proper DOCX file structure
-      const zip = new JSZip();
-      zip.file("word/document.xml", docxContent);
-      zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Default Extension="xml" ContentType="application/xml"/>
-  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats.org.wordprocessingml.document.main+xml"/>
-</Types>`);
-      
-      zip.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-</Relationships>`);
-      
-      zip.file("word/_rels/document.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-</Relationships>`);
-      
-      const docxBlob = await zip.generateAsync({ type: "blob" });
-      return { blob: docxBlob, fileName: `${data.fileName.replace('.pdf', '')}.docx` };
-    } catch (error) {
-      logger.error('Error creating DOCX:', error);
-      // Fallback to simple text file if DOCX creation fails
-      const content = data.fullText;
-      const blob = new Blob([content], { type: 'text/plain' });
-      return { blob, fileName: `${data.fileName.replace('.pdf', '')}.txt` };
+        if (tableBuffer.length) pushTable(tableBuffer);
+      });
+    } else {
+      data.fullText.split('\n').forEach((line) => {
+        children.push(new Paragraph(line));
+      });
     }
+
+    const doc = new Document({ sections: [{ children }] });
+    const blob = await Packer.toBlob(doc);
+    return { blob, fileName: `${data.fileName.replace(/\.pdf$/i, '')}.docx` };
   };
 
   const convertToRTF = async (data) => {

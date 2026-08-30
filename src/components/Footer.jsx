@@ -1,76 +1,86 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Github } from 'lucide-react';
 
-const Footer = () => {
-  return (
-    <footer className="w-full bg-[#091923] text-white py-8 mt-16 border-t border-white/10">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Main Footer Content */}
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
-          {/* Company Info */}
-          <div className="md:col-span-2">
-            <div className="text-2xl font-extrabold text-amber-200 tracking-wide mb-4">
-              QuickSideTool
-            </div>
-            <p className="text-white/70 mb-4 max-w-md">
-              Your essential digital toolkit for professional file processing. Free, secure, and powerful tools for PDFs, images, and more.
-            </p>
-            <div className="flex gap-4 items-center">
-              <a href="https://github.com/AmanYadav007/QuickSideTool" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="hover:text-amber-200 transition">
-                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.004.07 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.339-2.221-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.295 2.748-1.025 2.748-1.025.546 1.378.202 2.397.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.847-2.337 4.695-4.566 4.944.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.749 0 .267.18.579.688.481C19.138 20.2 22 16.447 22 12.021 22 6.484 17.523 2 12 2z"/></svg>
-              </a>
-              <a href="https://aguider.in/" target="_blank" rel="noopener noreferrer" aria-label="Website" className="hover:text-amber-200 transition">
-                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 5.523 4.477 10 10 10s10-4.477 10-10c0-5.523-4.477-10-10-10zm0 18c-4.411 0-8-3.589-8-8 0-4.411 3.589-8 8-8s8 3.589 8 8c0 4.411-3.589 8-8 8zm0-14c-3.309 0-6 2.691-6 6 0 3.309 2.691 6 6 6s6-2.691 6-6c0-3.309-2.691-6-6-6zm0 10c-2.206 0-4-1.794-4-4s1.794-4 4-4 4 1.794 4 4-1.794 4-4 4z"/></svg>
-              </a>
-              <a href="https://www.producthunt.com/products/quick-side-tool?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-quick&#0045;side&#0045;tool" target="_blank" rel="noopener noreferrer" aria-label="Product Hunt" className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition">
-                <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=685960&theme=light&t=1754546624568" alt="Quick Side Tool on Product Hunt" style={{ width: '200px', height: '43px' }} width="200" height="43" />
-                <span className="text-white/80 text-sm hidden md:inline">Find us on Product Hunt</span>
-              </a>
-            </div>
-          </div>
+const COLUMNS = [
+  {
+    heading: 'PDF',
+    links: [
+      { label: 'Compress PDF', to: '/pdf-compressor' },
+      { label: 'Organise & Merge', to: '/pdf-tool' },
+      { label: 'Unlock PDF', to: '/unlock-pdf' },
+      { label: 'PDF to Word', to: '/pdf-to-word' },
+    ],
+  },
+  {
+    heading: 'Image',
+    links: [
+      { label: 'Resize Image', to: '/image-tools/resize' },
+      { label: 'Compress Image', to: '/image-tools/compress' },
+      { label: 'Convert Image', to: '/image-tools/convert' },
+    ],
+  },
+  {
+    heading: 'More',
+    links: [
+      { label: 'QR Generator', to: '/qr-tool' },
+      { label: 'OCR Scanner', to: '/ocr-processor' },
+      { label: 'All tools', to: '/toolkit' },
+    ],
+  },
+  {
+    heading: 'Company',
+    links: [
+      { label: 'About', to: '/about' },
+      { label: 'Contact', to: '/contact' },
+      { label: 'Privacy', to: '/privacy-policy' },
+      { label: 'Terms', to: '/terms-of-service' },
+    ],
+  },
+];
 
-          {/* Tools */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Tools</h4>
-            <ul className="space-y-2 text-white/70">
-              <li><Link to="/pdf-tool" className="hover:text-amber-200 transition-colors">PDF Tools</Link></li>
-              <li><Link to="/image-tools" className="hover:text-amber-200 transition-colors">Image Tools</Link></li>
-              <li><Link to="/qr-tool" className="hover:text-amber-200 transition-colors">QR Generator</Link></li>
-              <li><Link to="/unlock-pdf" className="hover:text-amber-200 transition-colors">PDF Security</Link></li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Company</h4>
-            <ul className="space-y-2 text-white/70">
-              <li><Link to="/about" className="hover:text-amber-200 transition-colors">About Us</Link></li>
-              <li><Link to="/contact" className="hover:text-amber-200 transition-colors">Contact</Link></li>
-              <li><Link to="/help" className="hover:text-amber-200 transition-colors">Help & Support</Link></li>
-              <li><a href="https://discord.gg/5SufsJSj" target="_blank" rel="noopener noreferrer" className="hover:text-amber-200 transition-colors">Community</a></li>
-            </ul>
-          </div>
+const Footer = () => (
+  <footer className="border-t border-border bg-card/30">
+    <div className="mx-auto w-full max-w-content px-4 py-10 md:px-6">
+      <div className="grid grid-cols-2 gap-6 md:grid-cols-5 md:gap-8">
+        <div className="col-span-2 md:col-span-1">
+          <p className="text-lg font-extrabold tracking-tight text-text">QuickSideTool</p>
+          <p className="mt-1.5 text-sm text-secondary">Fast. Free. Secure.</p>
+          <a
+            href="https://github.com/AmanYadav007/QuickSideTool"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="QuickSideTool on GitHub"
+            className="mt-4 inline-flex text-secondary transition-colors hover:text-text"
+          >
+            <Github className="h-5 w-5" aria-hidden="true" />
+          </a>
         </div>
-        
-        {/* Legal Links */}
-        <div className="border-t border-white/10 pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-white/60">
-              &copy; {new Date().getFullYear()} QuickSideTool. All rights reserved.
-            </div>
-            <div className="flex flex-wrap gap-6 text-sm text-white/60">
-              <Link to="/privacy-policy" className="hover:text-amber-200 transition-colors">
-                Privacy Policy
-              </Link>
-              <Link to="/terms-of-service" className="hover:text-amber-200 transition-colors">
-                Terms of Service
-              </Link>
-            </div>
-          </div>
-        </div>
+
+        {COLUMNS.map((column) => (
+          <nav key={column.heading} aria-label={column.heading}>
+            <h3 className="text-sm font-semibold text-text">{column.heading}</h3>
+            <ul className="mt-3 space-y-2">
+              {column.links.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className="text-sm text-secondary transition-colors hover:text-text"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))}
       </div>
-    </footer>
-  );
-};
+
+      <p className="mt-8 border-t border-border pt-5 text-sm text-secondary">
+        &copy; {new Date().getFullYear()} QuickSideTool. All rights reserved.
+      </p>
+    </div>
+  </footer>
+);
 
 export default Footer;

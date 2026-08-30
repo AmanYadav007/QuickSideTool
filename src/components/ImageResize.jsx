@@ -17,7 +17,8 @@ const ImageResize = () => {
     const [jpegQuality, setJpegQuality] = useState(90); // 0-100
     const [webpQuality, setWebpQuality] = useState(90); // 0-100
 
-    const prevUrlsRef = useRef(new Set());
+    const imagesRef = useRef(images);
+    imagesRef.current = images;
     const resizePresets = [
         { label: 'Square', width: 1080, height: 1080 },
         { label: 'Story', width: 1080, height: 1920 },
@@ -25,27 +26,17 @@ const ImageResize = () => {
         { label: 'Thumbnail', width: 600, height: 400 },
     ];
 
-    useEffect(() => {
-        const currentOriginalUrls = new Set();
-        const currentResizedUrls = new Set();
-
-        images.forEach(img => {
-            if (img.original) currentOriginalUrls.add(URL.createObjectURL(img.original));
-            if (img.resized) currentResizedUrls.add(URL.createObjectURL(img.resized));
-        });
-
-        prevUrlsRef.current.forEach(url => {
-            if (!currentOriginalUrls.has(url) && !currentResizedUrls.has(url)) {
-                URL.revokeObjectURL(url);
-            }
-        });
-
-        prevUrlsRef.current = new Set([...currentOriginalUrls, ...currentResizedUrls]);
-
-        return () => {
-            prevUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
-        };
-    }, [images]);
+    // Object URLs are created once per file (in onDrop / after resize) and stored on the
+    // image object. Revoke everything still outstanding when the component unmounts.
+    useEffect(
+        () => () => {
+            imagesRef.current.forEach(img => {
+                if (img.originalUrl) URL.revokeObjectURL(img.originalUrl);
+                if (img.resizedUrl) URL.revokeObjectURL(img.resizedUrl);
+            });
+        },
+        []
+    );
 
     // Set initial common dimensions if first image is added and no common dimensions set
     useEffect(() => {
@@ -62,10 +53,11 @@ const ImageResize = () => {
                 const img = new Image();
                 const objectUrl = URL.createObjectURL(file);
                 img.onload = () => {
-                    URL.revokeObjectURL(objectUrl);
                     resolve({
                         original: file,
+                        originalUrl: objectUrl,
                         resized: null,
+                        resizedUrl: null,
                         width: img.width,
                         height: img.height,
                         aspectRatio: img.width / img.height,
@@ -133,7 +125,7 @@ const ImageResize = () => {
                     canvas.toBlob(
                         (blob) => {
                             if (blob) {
-                                const originalFileName = imageFile.name.split('.')[0];
+                                const originalFileName = imageFile.name.replace(/\.[^/.]+$/, '');
                                 resolve(new File([blob], `${originalFileName}_${newWidth}x${newHeight}.${fileExtension}`, {
                                     type: outputMimeType,
                                     lastModified: Date.now()
@@ -172,19 +164,30 @@ const ImageResize = () => {
         try {
             const resizedImagesPromises = images.map(async (img) => {
                 try {
-                    const resizedFile = await resizeImage(img.original, targetWidth, targetHeight, outputFormat, qualityToUse);
+                    // With aspect lock on, fit each image inside the target box using its OWN
+                    // ratio so images that aren't the same shape as the box aren't stretched.
+                    let w = targetWidth;
+                    let h = targetHeight;
+                    if (globalLockAspectRatio && img.aspectRatio) {
+                        const scale = Math.min(targetWidth / img.width, targetHeight / img.height);
+                        w = Math.max(1, Math.round(img.width * scale));
+                        h = Math.max(1, Math.round(img.height * scale));
+                    }
+                    const resizedFile = await resizeImage(img.original, w, h, outputFormat, qualityToUse);
+                    if (img.resizedUrl) URL.revokeObjectURL(img.resizedUrl);
                     return {
                         ...img,
-                        width: targetWidth, // Update the displayed dimensions to new dimensions
-                        height: targetHeight,
-                        customWidth: targetWidth, // Also update individual controls to reflect new size
-                        customHeight: targetHeight,
+                        width: w, // Update the displayed dimensions to new dimensions
+                        height: h,
+                        customWidth: w, // Also update individual controls to reflect new size
+                        customHeight: h,
                         resized: resizedFile,
+                        resizedUrl: URL.createObjectURL(resizedFile),
                         error: null,
                     };
                 } catch (error) {
                     console.error(`Error resizing image ${img.original.name}:`, error);
-                    return { ...img, resized: null, error: `Failed to resize: ${error.message}` };
+                    return { ...img, resized: null, resizedUrl: null, error: `Failed to resize: ${error.message}` };
                 }
             });
             const resizedImages = await Promise.all(resizedImagesPromises);
@@ -217,17 +220,20 @@ const ImageResize = () => {
         setImages(prev => prev.map((item, i) => i === index ? { ...item, error: null } : item)); // Clear previous error
         try {
             const resizedImageFile = await resizeImage(img.original, targetWidth, targetHeight, outputFormat, qualityToUse);
-            setImages(prev => prev.map((item, i) =>
-                i === index ? {
+            setImages(prev => prev.map((item, i) => {
+                if (i !== index) return item;
+                if (item.resizedUrl) URL.revokeObjectURL(item.resizedUrl);
+                return {
                     ...item,
                     width: targetWidth,
                     height: targetHeight,
                     customWidth: targetWidth, // Update individual controls to reflect new size
                     customHeight: targetHeight,
                     resized: resizedImageFile,
+                    resizedUrl: URL.createObjectURL(resizedImageFile),
                     error: null,
-                } : item
-            ));
+                };
+            }));
         } catch (error) {
             console.error('Error resizing individual image:', error);
             setImages(prev => prev.map((item, i) => i === index ? { ...item, resized: null, error: `Failed: ${error.message}` } : item));
@@ -329,28 +335,41 @@ const ImageResize = () => {
 
         if (images.length === 1) {
             const link = document.createElement('a');
-            link.href = URL.createObjectURL(images[0].resized);
+            const href = URL.createObjectURL(images[0].resized);
+            link.href = href;
             link.download = images[0].resized.name;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
+            // Delay revoke so the browser has started the download (Firefox/Safari).
+            setTimeout(() => URL.revokeObjectURL(href), 10000);
         } else {
             const zip = new JSZip();
+            const usedNames = new Set();
             images.forEach(img => {
-                if (img.resized) {
-                    zip.file(img.resized.name, img.resized);
+                if (!img.resized) return;
+                let name = img.resized.name;
+                if (usedNames.has(name)) {
+                    const dot = name.lastIndexOf('.');
+                    const stem = dot === -1 ? name : name.slice(0, dot);
+                    const ext = dot === -1 ? '' : name.slice(dot);
+                    let n = 2;
+                    while (usedNames.has(`${stem} (${n})${ext}`)) n += 1;
+                    name = `${stem} (${n})${ext}`;
                 }
+                usedNames.add(name);
+                zip.file(name, img.resized);
             });
 
             zip.generateAsync({ type: 'blob', compression: "DEFLATE", compressionOptions: { level: 9 } }).then(content => {
                 const link = document.createElement('a');
-                link.href = URL.createObjectURL(content);
+                const href = URL.createObjectURL(content);
+                link.href = href;
                 link.download = 'resized_images.zip';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                URL.revokeObjectURL(link.href);
+                setTimeout(() => URL.revokeObjectURL(href), 10000);
             }).catch(error => {
                 console.error("Error generating zip:", error);
                 alert("Failed to generate zip file. Please try again.");
@@ -398,11 +417,18 @@ const ImageResize = () => {
 
     const removeImage = useCallback((index) => {
         setImages(prevImages => {
+            const target = prevImages[index];
+            if (target?.originalUrl) URL.revokeObjectURL(target.originalUrl);
+            if (target?.resizedUrl) URL.revokeObjectURL(target.resizedUrl);
             return prevImages.filter((_, i) => i !== index);
         });
     }, []);
 
     const clearAllImages = () => {
+        images.forEach(img => {
+            if (img.originalUrl) URL.revokeObjectURL(img.originalUrl);
+            if (img.resizedUrl) URL.revokeObjectURL(img.resizedUrl);
+        });
         setImages([]);
         setCommonWidth('');
         setCommonHeight('');
@@ -649,7 +675,7 @@ const ImageResize = () => {
                                             <p className="text-white/80 text-sm mb-1">Original ({img.width}x{img.height})</p>
                                             <div className="relative w-full h-48 bg-gray-800 rounded-lg overflow-hidden flex items-center justify-center border border-gray-700"> {/* Increased height to h-48 */}
                                                 <img
-                                                    src={URL.createObjectURL(img.original)}
+                                                    src={img.originalUrl}
                                                     alt="Original"
                                                     className="object-contain max-w-full max-h-full"
                                                 />
@@ -664,7 +690,7 @@ const ImageResize = () => {
                                             <div className="relative w-full h-48 bg-gray-800 rounded-lg overflow-hidden flex items-center justify-center border border-gray-700"> {/* Increased height to h-48 */}
                                                 {img.resized ? (
                                                     <img
-                                                        src={URL.createObjectURL(img.resized)}
+                                                        src={img.resizedUrl}
                                                         alt="Resized"
                                                         className="object-contain max-w-full max-h-full"
                                                     />

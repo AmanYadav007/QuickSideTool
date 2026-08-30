@@ -7,6 +7,7 @@ import Confetti from 'react-confetti';
 const PDFUnlocker = () => {
   const [file, setFile] = useState(null);
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [action, setAction] = useState('unlock'); // 'unlock' or 'lock'
@@ -39,10 +40,15 @@ const PDFUnlocker = () => {
   // Clear message when action changes
   useEffect(() => {
     setMessage('');
+    setConfirmPassword('');
   }, [action]);
 
   // Warm up the backend to avoid cold-start delay on free hosting
   useEffect(() => {
+    // Evict any PDFs + plaintext passwords a previous version cached in the browser.
+    if (typeof caches !== 'undefined') {
+      caches.delete('pdf-lock-cache-v1').catch(() => {});
+    }
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://quicksidetoolbackend.onrender.com';
     fetch(backendUrl + '/', { method: 'GET', mode: 'cors' })
       .catch(() => {});
@@ -111,6 +117,11 @@ const PDFUnlocker = () => {
       return;
     }
 
+    if (action === 'lock' && password !== confirmPassword) {
+      setMessage('Error: Passwords do not match. Re-enter to confirm.');
+      return;
+    }
+
     setIsLoading(true);
     setMessage(''); // Clear previous messages
 
@@ -125,27 +136,6 @@ const PDFUnlocker = () => {
     try {
       const endpoint = action === 'unlock' ? '/unlock-pdf' : '/lock-pdf';
 
-      // Quick cache lookup to skip network on repeated operations
-      try {
-        const cache = await caches.open('pdf-lock-cache-v1');
-        const signature = encodeURIComponent(`${file.name}|${file.size}|${action}|${password}`);
-        const keyUrl = `https://cache.local/${action}/${signature}`;
-        const cached = await cache.match(keyUrl);
-        if (cached) {
-          const blob = await cached.blob();
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.setAttribute('download', action === 'unlock' ? `unlocked_${file.name.replace(/\.pdf$/, '')}.pdf` : `locked_${file.name.replace(/\.pdf$/, '')}.pdf`);
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          window.URL.revokeObjectURL(url);
-          setMessage(`Success: PDF ${action === 'unlock' ? 'unlocked' : 'locked'} (from cache).`);
-          setIsLoading(false);
-          return;
-        }
-      } catch {}
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 60 * 1000); // 60s safety timeout
       const response = await fetch(`${backendUrl}${endpoint}`, {
@@ -157,13 +147,6 @@ const PDFUnlocker = () => {
 
       if (response.ok) {
         const blob = await response.blob();
-        // Save to cache for instant repeat operations
-        try {
-          const cache = await caches.open('pdf-lock-cache-v1');
-          const signature = encodeURIComponent(`${file.name}|${file.size}|${action}|${password}`);
-          const keyUrl = `https://cache.local/${action}/${signature}`;
-          await cache.put(keyUrl, new Response(blob.clone()));
-        } catch {}
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -209,6 +192,7 @@ const PDFUnlocker = () => {
   const handleClearForm = () => {
     setFile(null);
     setPassword('');
+    setConfirmPassword('');
     setMessage('');
     setShowConfetti(false);
     setIsDragging(false);
@@ -221,7 +205,7 @@ const PDFUnlocker = () => {
     >
       <SEO
         title="Remove PDF Password Online – Unlock Protected PDF"
-        description="Remove password from PDF you own. Quick, secure, and private. Runs in your browser. No files stored."
+        description="Remove password from a PDF you own. Files are processed over an encrypted connection and deleted right after processing."
         url="https://quicksidetool.com/unlock-pdf"
       />
       {showConfetti && <Confetti tweenDuration={1000} recycle={false} numberOfPieces={500} />}
@@ -369,9 +353,21 @@ const PDFUnlocker = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              {action === 'lock' && (
+                <div className="relative mb-4">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`w-full p-3 bg-white/10 text-white rounded-lg border ${currentTheme.borderColor} focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-white/50 transition-all duration-200`}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
               <button
                 type="submit"
-                disabled={isLoading || !file || !password}
+                disabled={isLoading || !file || !password || (action === 'lock' && !confirmPassword)}
                 className={`w-full py-3 bg-gradient-to-r from-blue-500 to-teal-600 hover:from-blue-600 hover:to-teal-700 text-white font-semibold rounded-lg shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center
                   disabled:opacity-50 disabled:cursor-not-allowed`}
               >

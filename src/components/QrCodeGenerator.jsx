@@ -57,10 +57,14 @@ const QRCodeGenerator = () => {
     switch (qrType) {
       case "text":
         return form.text.trim();
-      case "wifi":
-        return form.wifiSsid.trim()
-          ? `WIFI:T:${form.wifiEncryption};S:${escapeWifiValue(form.wifiSsid)};P:${escapeWifiValue(form.wifiPassword)};;`
-          : "";
+      case "wifi": {
+        if (!form.wifiSsid.trim()) return "";
+        const ssid = escapeWifiValue(form.wifiSsid);
+        if (form.wifiEncryption === "nopass") {
+          return `WIFI:T:nopass;S:${ssid};;`;
+        }
+        return `WIFI:T:${form.wifiEncryption};S:${ssid};P:${escapeWifiValue(form.wifiPassword)};;`;
+      }
       case "whatsapp":
         return form.whatsappPhone.trim()
           ? `https://wa.me/${digitsOnly(form.whatsappPhone)}${form.whatsappMessage ? `?text=${encodeURIComponent(form.whatsappMessage)}` : ""}`
@@ -81,7 +85,7 @@ const QRCodeGenerator = () => {
               form.contactPhone.trim() ? `TEL:${form.contactPhone.trim()}` : "",
               form.contactEmail.trim() ? `EMAIL:${form.contactEmail.trim()}` : "",
               "END:VCARD",
-            ].filter(Boolean).join("\n")
+            ].filter(Boolean).join("\r\n")
           : "";
       case "url":
       default:
@@ -238,15 +242,17 @@ const QRCodeGenerator = () => {
               ref={qrRef}
               className="mt-6 flex justify-center rounded-lg border border-white/10 bg-white p-6"
             >
-              <QRCodeSVG
-                value={valueForPreview}
-                size={effectiveSize}
-                fgColor={qrFgColor}
-                bgColor={qrBgColor}
-                className="h-auto max-h-[280px] w-auto max-w-full"
-                level="H"
-                includeMargin
-              />
+              <QRBoundary key={valueForPreview}>
+                <QRCodeSVG
+                  value={valueForPreview}
+                  size={effectiveSize}
+                  fgColor={qrFgColor}
+                  bgColor={qrBgColor}
+                  className="h-auto max-h-[280px] w-auto max-w-full"
+                  level="M"
+                  includeMargin
+                />
+              </QRBoundary>
             </div>
 
             <div className="mt-5 flex gap-3">
@@ -274,6 +280,25 @@ const QRCodeGenerator = () => {
     </div>
   );
 };
+
+// qrcode.react throws during render if the content exceeds QR capacity. Contain it
+// here so a too-long value shows a message instead of blanking the whole app.
+class QRBoundary extends React.Component {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    if (this.state.failed) {
+      return (
+        <p className="max-w-[280px] py-12 text-center text-sm font-medium text-slate-600">
+          This content is too long to fit in a QR code. Shorten it and try again.
+        </p>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const QRFields = ({ qrType, form, updateForm }) => {
   if (qrType === "text") {

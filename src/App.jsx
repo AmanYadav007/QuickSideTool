@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -76,6 +76,8 @@ function App() {
                 <Route path="/diamond-mines" element={<DiamondQuestGame />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
+              {/* Unknown URLs fall back to the landing page instead of a blank screen */}
+              <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
         </AuthProvider>

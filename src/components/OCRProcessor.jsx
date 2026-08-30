@@ -28,81 +28,81 @@ const OCRProcessor = () => {
   const [progress, setProgress] = useState(0);
   const [currentFile, setCurrentFile] = useState('');
   const [ocrResults, setOcrResults] = useState([]);
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [selectedLanguage, setSelectedLanguage] = useState('eng');
   const [ocrMode, setOcrMode] = useState('accurate'); // fast, accurate, best
   const [outputFormat, setOutputFormat] = useState('txt');
   const [confidence, setConfidence] = useState(0.8);
   const [extractTables, setExtractTables] = useState(true);
   const [preserveLayout, setPreserveLayout] = useState(true);
 
+  // `code` values are Tesseract traineddata names (https://github.com/tesseract-ocr/tessdata).
+  // tesseract.js downloads `<code>.traineddata.gz` on demand, so these must not be ISO-639-1 codes.
   const languages = [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-    { code: 'fr', name: 'French', flag: '🇫🇷' },
-    { code: 'de', name: 'German', flag: '🇩🇪' },
-    { code: 'it', name: 'Italian', flag: '🇮🇹' },
-    { code: 'pt', name: 'Portuguese', flag: '🇵🇹' },
-    { code: 'ru', name: 'Russian', flag: '🇷🇺' },
-    { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
-    { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
-    { code: 'ko', name: 'Korean', flag: '🇰🇷' },
-    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
-    { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
-    { code: 'th', name: 'Thai', flag: '🇹🇭' },
-    { code: 'vi', name: 'Vietnamese', flag: '🇻🇳' },
-    { code: 'nl', name: 'Dutch', flag: '🇳🇱' },
-    { code: 'pl', name: 'Polish', flag: '🇵🇱' },
-    { code: 'tr', name: 'Turkish', flag: '🇹🇷' },
-    { code: 'sv', name: 'Swedish', flag: '🇸🇪' },
-    { code: 'da', name: 'Danish', flag: '🇩🇰' },
-    { code: 'no', name: 'Norwegian', flag: '🇳🇴' },
-    { code: 'fi', name: 'Finnish', flag: '🇫🇮' },
-    { code: 'cs', name: 'Czech', flag: '🇨🇿' },
-    { code: 'hu', name: 'Hungarian', flag: '🇭🇺' },
-    { code: 'ro', name: 'Romanian', flag: '🇷🇴' },
-    { code: 'bg', name: 'Bulgarian', flag: '🇧🇬' },
-    { code: 'hr', name: 'Croatian', flag: '🇭🇷' },
-    { code: 'sk', name: 'Slovak', flag: '🇸🇰' },
-    { code: 'sl', name: 'Slovenian', flag: '🇸🇮' },
-    { code: 'et', name: 'Estonian', flag: '🇪🇪' },
-    { code: 'lv', name: 'Latvian', flag: '🇱🇻' },
-    { code: 'lt', name: 'Lithuanian', flag: '🇱🇹' },
-    { code: 'mt', name: 'Maltese', flag: '🇲🇹' },
-    { code: 'el', name: 'Greek', flag: '🇬🇷' },
-    { code: 'he', name: 'Hebrew', flag: '🇮🇱' },
-    { code: 'fa', name: 'Persian', flag: '🇮🇷' },
-    { code: 'ur', name: 'Urdu', flag: '🇵🇰' },
-    { code: 'bn', name: 'Bengali', flag: '🇧🇩' },
-    { code: 'ta', name: 'Tamil', flag: '🇮🇳' },
-    { code: 'te', name: 'Telugu', flag: '🇮🇳' },
-    { code: 'ml', name: 'Malayalam', flag: '🇮🇳' },
-    { code: 'kn', name: 'Kannada', flag: '🇮🇳' },
-    { code: 'gu', name: 'Gujarati', flag: '🇮🇳' },
-    { code: 'pa', name: 'Punjabi', flag: '🇮🇳' },
-    { code: 'mr', name: 'Marathi', flag: '🇮🇳' },
-    { code: 'or', name: 'Odia', flag: '🇮🇳' },
-    { code: 'as', name: 'Assamese', flag: '🇮🇳' },
-    { code: 'ne', name: 'Nepali', flag: '🇳🇵' },
-    { code: 'si', name: 'Sinhala', flag: '🇱🇰' },
-    { code: 'my', name: 'Burmese', flag: '🇲🇲' },
-    { code: 'km', name: 'Khmer', flag: '🇰🇭' },
-    { code: 'lo', name: 'Lao', flag: '🇱🇦' },
-    { code: 'mn', name: 'Mongolian', flag: '🇲🇳' },
-    { code: 'ka', name: 'Georgian', flag: '🇬🇪' },
-    { code: 'am', name: 'Amharic', flag: '🇪🇹' },
-    { code: 'sw', name: 'Swahili', flag: '🇹🇿' },
-    { code: 'zu', name: 'Zulu', flag: '🇿🇦' },
-    { code: 'af', name: 'Afrikaans', flag: '🇿🇦' },
-    { code: 'id', name: 'Indonesian', flag: '🇮🇩' },
-    { code: 'ms', name: 'Malay', flag: '🇲🇾' },
-    { code: 'tl', name: 'Filipino', flag: '🇵🇭' },
-    { code: 'uk', name: 'Ukrainian', flag: '🇺🇦' },
-    { code: 'be', name: 'Belarusian', flag: '🇧🇾' },
-    { code: 'mk', name: 'Macedonian', flag: '🇲🇰' },
-    { code: 'sq', name: 'Albanian', flag: '🇦🇱' },
-    { code: 'bs', name: 'Bosnian', flag: '🇧🇦' },
-    { code: 'sr', name: 'Serbian', flag: '🇷🇸' },
-    { code: 'me', name: 'Montenegrin', flag: '🇲🇪' }
+    { code: 'eng', name: 'English', flag: '🇺🇸' },
+    { code: 'spa', name: 'Spanish', flag: '🇪🇸' },
+    { code: 'fra', name: 'French', flag: '🇫🇷' },
+    { code: 'deu', name: 'German', flag: '🇩🇪' },
+    { code: 'ita', name: 'Italian', flag: '🇮🇹' },
+    { code: 'por', name: 'Portuguese', flag: '🇵🇹' },
+    { code: 'rus', name: 'Russian', flag: '🇷🇺' },
+    { code: 'chi_sim', name: 'Chinese (Simplified)', flag: '🇨🇳' },
+    { code: 'chi_tra', name: 'Chinese (Traditional)', flag: '🇹🇼' },
+    { code: 'jpn', name: 'Japanese', flag: '🇯🇵' },
+    { code: 'kor', name: 'Korean', flag: '🇰🇷' },
+    { code: 'ara', name: 'Arabic', flag: '🇸🇦' },
+    { code: 'hin', name: 'Hindi', flag: '🇮🇳' },
+    { code: 'tha', name: 'Thai', flag: '🇹🇭' },
+    { code: 'vie', name: 'Vietnamese', flag: '🇻🇳' },
+    { code: 'nld', name: 'Dutch', flag: '🇳🇱' },
+    { code: 'pol', name: 'Polish', flag: '🇵🇱' },
+    { code: 'tur', name: 'Turkish', flag: '🇹🇷' },
+    { code: 'swe', name: 'Swedish', flag: '🇸🇪' },
+    { code: 'dan', name: 'Danish', flag: '🇩🇰' },
+    { code: 'nor', name: 'Norwegian', flag: '🇳🇴' },
+    { code: 'fin', name: 'Finnish', flag: '🇫🇮' },
+    { code: 'ces', name: 'Czech', flag: '🇨🇿' },
+    { code: 'hun', name: 'Hungarian', flag: '🇭🇺' },
+    { code: 'ron', name: 'Romanian', flag: '🇷🇴' },
+    { code: 'bul', name: 'Bulgarian', flag: '🇧🇬' },
+    { code: 'hrv', name: 'Croatian', flag: '🇭🇷' },
+    { code: 'slk', name: 'Slovak', flag: '🇸🇰' },
+    { code: 'slv', name: 'Slovenian', flag: '🇸🇮' },
+    { code: 'est', name: 'Estonian', flag: '🇪🇪' },
+    { code: 'lav', name: 'Latvian', flag: '🇱🇻' },
+    { code: 'lit', name: 'Lithuanian', flag: '🇱🇹' },
+    { code: 'mlt', name: 'Maltese', flag: '🇲🇹' },
+    { code: 'ell', name: 'Greek', flag: '🇬🇷' },
+    { code: 'heb', name: 'Hebrew', flag: '🇮🇱' },
+    { code: 'fas', name: 'Persian', flag: '🇮🇷' },
+    { code: 'urd', name: 'Urdu', flag: '🇵🇰' },
+    { code: 'ben', name: 'Bengali', flag: '🇧🇩' },
+    { code: 'tam', name: 'Tamil', flag: '🇮🇳' },
+    { code: 'tel', name: 'Telugu', flag: '🇮🇳' },
+    { code: 'mal', name: 'Malayalam', flag: '🇮🇳' },
+    { code: 'kan', name: 'Kannada', flag: '🇮🇳' },
+    { code: 'guj', name: 'Gujarati', flag: '🇮🇳' },
+    { code: 'pan', name: 'Punjabi', flag: '🇮🇳' },
+    { code: 'mar', name: 'Marathi', flag: '🇮🇳' },
+    { code: 'ori', name: 'Odia', flag: '🇮🇳' },
+    { code: 'asm', name: 'Assamese', flag: '🇮🇳' },
+    { code: 'nep', name: 'Nepali', flag: '🇳🇵' },
+    { code: 'sin', name: 'Sinhala', flag: '🇱🇰' },
+    { code: 'mya', name: 'Burmese', flag: '🇲🇲' },
+    { code: 'khm', name: 'Khmer', flag: '🇰🇭' },
+    { code: 'lao', name: 'Lao', flag: '🇱🇦' },
+    { code: 'kat', name: 'Georgian', flag: '🇬🇪' },
+    { code: 'amh', name: 'Amharic', flag: '🇪🇹' },
+    { code: 'swa', name: 'Swahili', flag: '🇹🇿' },
+    { code: 'afr', name: 'Afrikaans', flag: '🇿🇦' },
+    { code: 'ind', name: 'Indonesian', flag: '🇮🇩' },
+    { code: 'msa', name: 'Malay', flag: '🇲🇾' },
+    { code: 'fil', name: 'Filipino', flag: '🇵🇭' },
+    { code: 'ukr', name: 'Ukrainian', flag: '🇺🇦' },
+    { code: 'bel', name: 'Belarusian', flag: '🇧🇾' },
+    { code: 'mkd', name: 'Macedonian', flag: '🇲🇰' },
+    { code: 'sqi', name: 'Albanian', flag: '🇦🇱' },
+    { code: 'bos', name: 'Bosnian', flag: '🇧🇦' },
+    { code: 'srp', name: 'Serbian', flag: '🇷🇸' }
   ];
 
   const ocrModes = [
@@ -114,7 +114,7 @@ const OCRProcessor = () => {
   const outputFormats = [
     { value: 'txt', label: 'Plain Text (.txt)', icon: FileText },
     { value: 'docx', label: 'Word Document (.docx)', icon: FileText },
-    { value: 'pdf', label: 'Searchable PDF (.pdf)', icon: FileText },
+    { value: 'pdf', label: 'Text PDF (.pdf)', icon: FileText },
     { value: 'json', label: 'Structured JSON (.json)', icon: FileText },
     { value: 'csv', label: 'CSV Spreadsheet (.csv)', icon: FileText },
     { value: 'html', label: 'HTML Document (.html)', icon: FileText }
@@ -289,12 +289,87 @@ const OCRProcessor = () => {
     }
   };
 
-  const exportResults = (format) => {
+  const buildDocxBlob = async () => {
+    const { Document, Packer, Paragraph, HeadingLevel, TextRun } = await import('docx');
+    const children = [];
+    ocrResults.forEach((result) => {
+      children.push(
+        new Paragraph({
+          heading: HeadingLevel.HEADING_2,
+          text: `${result.fileName} - Page ${result.pageIndex + 1}`,
+        })
+      );
+      (result.text || '').split('\n').forEach((line) => {
+        children.push(new Paragraph({ children: [new TextRun(line)] }));
+      });
+      children.push(new Paragraph({ text: '' }));
+    });
+    const doc = new Document({ sections: [{ children }] });
+    return Packer.toBlob(doc);
+  };
+
+  const buildPdfBlob = async () => {
+    const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib');
+    const pdfDoc = await PDFDocument.create();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontSize = 11;
+    const margin = 50;
+    const pageWidth = 595;
+    const pageHeight = 842;
+    const maxWidth = pageWidth - margin * 2;
+    const lineHeight = fontSize * 1.4;
+
+    let page = pdfDoc.addPage([pageWidth, pageHeight]);
+    let y = pageHeight - margin;
+    const newPage = () => {
+      page = pdfDoc.addPage([pageWidth, pageHeight]);
+      y = pageHeight - margin;
+    };
+    // pdf-lib's StandardFonts only support WinAnsi; drop characters it cannot encode.
+    // eslint-disable-next-line no-control-regex
+    const sanitize = (s) => (s || '').replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, '?');
+    const drawLine = (text, size = fontSize) => {
+      if (y < margin + lineHeight) newPage();
+      page.drawText(text, { x: margin, y, size, font, color: rgb(0, 0, 0) });
+      y -= lineHeight;
+    };
+    const wrap = (text) => {
+      const words = sanitize(text).split(/\s+/);
+      let current = '';
+      const lines = [];
+      words.forEach((word) => {
+        const candidate = current ? `${current} ${word}` : word;
+        if (font.widthOfTextAtSize(candidate, fontSize) > maxWidth && current) {
+          lines.push(current);
+          current = word;
+        } else {
+          current = candidate;
+        }
+      });
+      if (current) lines.push(current);
+      return lines.length ? lines : [''];
+    };
+
+    ocrResults.forEach((result) => {
+      drawLine(sanitize(`${result.fileName} - Page ${result.pageIndex + 1}`), 13);
+      y -= lineHeight * 0.3;
+      (result.text || '').split('\n').forEach((rawLine) => {
+        wrap(rawLine).forEach((line) => drawLine(line));
+      });
+      y -= lineHeight;
+    });
+
+    const bytes = await pdfDoc.save();
+    return new Blob([bytes], { type: 'application/pdf' });
+  };
+
+  const exportResults = async (format) => {
     if (ocrResults.length === 0) return;
 
     let content = '';
     let mimeType = '';
     let extension = '';
+    let blobOverride = null;
 
     switch (format) {
       case 'txt':
@@ -356,11 +431,33 @@ const OCRProcessor = () => {
         extension = 'html';
         break;
       
+      case 'docx':
+        try {
+          blobOverride = await buildDocxBlob();
+        } catch (error) {
+          logger.error('DOCX export failed:', error);
+          setCurrentFile(`Export failed: ${error.message}`);
+          return;
+        }
+        extension = 'docx';
+        break;
+
+      case 'pdf':
+        try {
+          blobOverride = await buildPdfBlob();
+        } catch (error) {
+          logger.error('PDF export failed:', error);
+          setCurrentFile(`Export failed: ${error.message}`);
+          return;
+        }
+        extension = 'pdf';
+        break;
+
       default:
         return;
     }
 
-    const blob = new Blob([content], { type: mimeType });
+    const blob = blobOverride || new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
