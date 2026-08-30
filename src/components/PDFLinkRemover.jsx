@@ -101,23 +101,31 @@ const PDFLinkRemover = () => {
 
   const processingOverlayRootRef = useRef(null);
   const processingOverlayCleanupRef = useRef(() => {});
+  const abortControllerRef = useRef(null);
+  const cancelledRef = useRef(false);
 
   const createAndShowProcessingOverlay = useCallback(() => {
+    cancelledRef.current = false;
     const overlayDiv = document.createElement('div');
     document.body.appendChild(overlayDiv);
-    processingOverlayRootRef.current = createRoot(overlayDiv);
+    const root = createRoot(overlayDiv);
+    processingOverlayRootRef.current = root;
     processingOverlayCleanupRef.current = () => {
-      if (processingOverlayRootRef.current) {
-        processingOverlayRootRef.current.unmount();
-      }
-      if (overlayDiv && document.body.contains(overlayDiv)) {
-        document.body.removeChild(overlayDiv);
-      }
+      processingOverlayCleanupRef.current = () => {}; // idempotent
+      processingOverlayRootRef.current = null;
+      // Defer unmount: React forbids unmounting a root while it is rendering.
+      setTimeout(() => {
+        root.unmount();
+        if (overlayDiv && document.body.contains(overlayDiv)) {
+          document.body.removeChild(overlayDiv);
+        }
+      }, 0);
     };
-    return processingOverlayRootRef.current;
+    return root;
   }, []);
 
   const updateProcessingOverlay = useCallback((status, currentStep, totalSteps, progress = 0) => {
+    if (cancelledRef.current) return;
     if (processingOverlayRootRef.current) {
       processingOverlayRootRef.current.render(
         <OrbitalFlowProcessingOverlay
@@ -126,6 +134,8 @@ const PDFLinkRemover = () => {
           totalSteps={totalSteps}
           progress={progress}
           onCancel={() => {
+            cancelledRef.current = true;
+            if (abortControllerRef.current) abortControllerRef.current.abort();
             setMessage('Process cancelled.');
             setProcessing(false);
             processingOverlayCleanupRef.current();
@@ -187,57 +197,74 @@ const PDFLinkRemover = () => {
     createAndShowProcessingOverlay();
     updateProcessingOverlay('Initializing advanced processing...', 1, 4); // Initial message
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://quicksidetoolbackend.onrender.com';
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    // A fresh FormData per request — a request that failed may have consumed the body.
+    const makeRequest = (endpoint) =>
+      fetch(`${backendUrl}${endpoint}`, {
+        method: 'POST',
+        body: (() => {
+          const fd = new FormData();
+          fd.append('file', file);
+          return fd;
+        })(),
+        signal: controller.signal,
+      });
 
     try {
       updateProcessingOverlay('Analyzing PDF structure & scanning for links...', 1, 4, 10);
-      
-      // Try the advanced endpoint first, fallback to regular if it fails
+
+      // Try the advanced endpoint; fall back to the regular one whether it throws
+      // (network error) OR returns a non-OK status (404/500/etc.).
       let response;
       try {
-        response = await fetch(`${backendUrl}/remove-pdf-links-advanced`, {
-          method: 'POST',
-          body: formData,
-        });
+        response = await makeRequest('/remove-pdf-links-advanced');
       } catch (advancedError) {
-        console.warn('Advanced endpoint failed, falling back to regular endpoint:', advancedError);
-        updateProcessingOverlay('Using standard processing method...', 1, 4, 15);
-        response = await fetch(`${backendUrl}/remove-pdf-links`, {
-          method: 'POST',
-          body: formData,
-        });
+        if (advancedError.name === 'AbortError') throw advancedError;
+        console.warn('Advanced endpoint threw, falling back:', advancedError);
+        response = null;
+      }
+      if (!response || !response.ok) {
+        if (response && response.status >= 500) {
+          console.warn('Advanced endpoint returned', response.status, '- falling back');
+        }
+        if (!response || response.status === 404 || response.status >= 500) {
+          updateProcessingOverlay('Using standard processing method...', 1, 4, 15);
+          response = await makeRequest('/remove-pdf-links');
+        }
       }
 
       if (response.ok) {
         updateProcessingOverlay('Processing pages in optimized batches...', 2, 4, 30); // Step 2
-        
-        // Simulate progress updates during blob processing
+
         const reader = response.body.getReader();
         const chunks = [];
         let receivedLength = 0;
         const contentLength = +response.headers.get('Content-Length');
-        
+
         while (true) {
           const { done, value } = await reader.read();
-          
+
           if (done) break;
-          
+
           chunks.push(value);
           receivedLength += value.length;
-          
-          // Update progress based on download progress
+
           if (contentLength) {
             const progress = Math.round((receivedLength / contentLength) * 50) + 25; // 25-75% range
             updateProcessingOverlay(`Downloading processed PDF... ${progress}%`, 3, 4, progress);
+          } else {
+            // Chunked/gzipped responses have no Content-Length — show activity, not a stuck bar.
+            updateProcessingOverlay('Downloading processed PDF...', 3, 4, 60);
           }
         }
-        
+
         // Combine chunks into blob
         const blob = new Blob(chunks, { type: 'application/pdf' });
-        
+
         const contentDisposition = response.headers.get('Content-Disposition');
         let filename = `links_removed_${file.name.replace(/\.pdf$/, '')}.pdf`;
         if (contentDisposition) {
@@ -262,12 +289,17 @@ const PDFLinkRemover = () => {
           errorMessage = errorText;
         }
         
+        updateProcessingOverlay('Processing failed.', 1, 4, 0);
         setMessage(`Error: Failed to remove links. ${errorMessage}`);
         setDownloadBlob(null);
       }
     } catch (error) {
+      if (error.name === 'AbortError') {
+        // User cancelled — message + cleanup already handled by onCancel.
+        return;
+      }
       console.error('Network or processing error:', error);
-      
+
       // More specific error messages
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         setMessage('Error: Network connection failed. Please check your internet connection and try again.');
@@ -278,10 +310,13 @@ const PDFLinkRemover = () => {
       }
       setDownloadBlob(null);
     } finally {
-      setTimeout(() => {
-        processingOverlayCleanupRef.current();
-        setProcessing(false);
-      }, 1500); // Reduced time for better UX
+      abortControllerRef.current = null;
+      if (!cancelledRef.current) {
+        setTimeout(() => {
+          processingOverlayCleanupRef.current();
+          setProcessing(false);
+        }, 1200);
+      }
     }
   };
 

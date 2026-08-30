@@ -1,26 +1,33 @@
 import React from "react";
 import Layout from "../components/Layout";
 import ToolDirectory from "../components/ToolDirectory";
+import AdSlot from "../components/AdSlot";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const Toolkit = () => {
   return (
-    <Layout showAnimatedBackground={false}>
-      <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-8 md:px-8 md:pt-14">
-        <div className="mb-10 rounded-lg border border-white/10 bg-[#081f29]/80 p-6 md:p-8">
-          <p className="text-sm font-semibold uppercase tracking-wide text-cyan-300">
+    <Layout>
+      <main className="mx-auto w-full max-w-content px-4 py-8 md:px-6 md:py-12">
+        <div className="max-w-2xl">
+          <p className="text-sm font-semibold uppercase tracking-wide text-primaryHover">
             Toolkit
           </p>
-          <h1 className="mt-2 text-4xl font-bold text-white md:text-5xl">
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-text md:text-4xl">
             Choose a tool
           </h1>
-          <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">
-            Everything is listed in one place. Click the tool you need and the
-            full tool page opens with all its options.
+          <p className="mt-3 text-base leading-relaxed text-secondary md:text-lg">
+            Everything in one place. Pick a tool and its full page opens with all
+            the options.
           </p>
         </div>
 
-        <ToolDirectory showIntro={false} />
+        <div className="mt-8">
+          <ToolDirectory />
+        </div>
+
+        <div className="pt-8">
+          <AdSlot size="leaderboard" />
+        </div>
         <SpeedInsights />
       </main>
     </Layout>

@@ -164,7 +164,6 @@ const App = () => {
   const cancelProcessingRef = useRef(false);
   const pdfCacheRef = useRef(new Map());
   const fileInputRef = useRef(null);
-  const dragOverTimeoutRef = useRef(null);
 
   const [notification, setNotification] = useState({ message: "", type: "" });
   const [showInlineInsert, setShowInlineInsert] = useState(false);
@@ -204,10 +203,10 @@ const App = () => {
       activePreviewUrls.current.forEach((url) => {
         URL.revokeObjectURL(url);
       });
+      pdfCache.forEach((doc) => {
+        if (doc?.destroy) doc.destroy();
+      });
       pdfCache.clear();
-      if (dragOverTimeoutRef.current) {
-        clearTimeout(dragOverTimeoutRef.current);
-      }
     };
   }, []);
 
@@ -239,20 +238,16 @@ const App = () => {
 
       setDragOverIndex(index); // Set the index for visual feedback
 
-      if (dragOverTimeoutRef.current) {
-        clearTimeout(dragOverTimeoutRef.current);
-      }
-
-      // Debounce the actual state update for reordering
-      dragOverTimeoutRef.current = setTimeout(() => {
-        setPages((prevPages) => {
-          const newPages = [...prevPages];
-          const [draggedPage] = newPages.splice(draggedItem, 1);
-          newPages.splice(index, 0, draggedPage);
-          return newPages;
-        });
-        setDraggedItem(index); // Update dragged item index to follow its new position
-      }, 100); // Adjust debounce time as needed
+      // Reorder synchronously as the pointer crosses each item. A timer here raced
+      // the pointer and shuffled pages unpredictably on fast drags.
+      setPages((prevPages) => {
+        if (draggedItem === index) return prevPages;
+        const newPages = [...prevPages];
+        const [draggedPage] = newPages.splice(draggedItem, 1);
+        newPages.splice(index, 0, draggedPage);
+        return newPages;
+      });
+      setDraggedItem(index); // Dragged item now lives at this index
     },
     [draggedItem]
   );
@@ -264,9 +259,17 @@ const App = () => {
   const handleRemovePage = useCallback(
     (indexToRemove) => {
       setPages((prevPages) => {
+        const removed = prevPages[indexToRemove];
         const newPages = prevPages.filter(
           (_, index) => index !== indexToRemove
         );
+        if (removed?.preview) URL.revokeObjectURL(removed.preview);
+        // Drop the cached pdf.js document once no page references that file anymore.
+        if (removed?.file && !newPages.some((p) => p.file === removed.file)) {
+          const cached = pdfCacheRef.current.get(removed.file);
+          if (cached?.destroy) cached.destroy();
+          pdfCacheRef.current.delete(removed.file);
+        }
         showNotification("Page removed successfully!", "success");
         return newPages;
       });
@@ -661,7 +664,11 @@ const App = () => {
             const [copiedPage] = await pdfDoc.copyPages(srcDoc, [
               page.pageIndex,
             ]);
-            copiedPage.setRotation(degrees(page.rotation || 0)); // Apply rotation
+            // Preserve the source page's own rotation (scans/landscape slides often
+            // carry 90°) and add any user-applied rotation on top of it.
+            const sourceAngle = copiedPage.getRotation().angle || 0;
+            const finalAngle = (((sourceAngle + (page.rotation || 0)) % 360) + 360) % 360;
+            copiedPage.setRotation(degrees(finalAngle));
             pdfDoc.addPage(copiedPage);
           } catch (error) {
             showNotification(
@@ -711,7 +718,11 @@ const App = () => {
             continue;
           }
         }
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        // Yield to the event loop periodically so the progress modal can paint,
+        // without adding a fixed delay to every single page.
+        if (i % 20 === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
       }
 
       if (cancelProcessingRef.current) {

@@ -1,83 +1,135 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle, Shield, Zap } from "lucide-react";
+import { ArrowRight, Check, Lock, Zap } from "lucide-react";
 import Layout from "../components/Layout";
 import SEO from "../components/SEO";
-import ToolDirectory from "../components/ToolDirectory";
+import ToolDirectory, { ToolCategory, categories } from "../components/ToolDirectory";
+import UploadZone from "../components/UploadZone";
+import AdSlot from "../components/AdSlot";
+
+const BADGES = [
+  { label: "Free", icon: Check },
+  { label: "No signup", icon: Zap },
+  { label: "Secure", icon: Lock },
+];
+
+const FAQS = [
+  {
+    q: "Is QuickSideTool really free?",
+    a: "Yes. Every tool on this site is free to use with no account, no watermark and no daily limit.",
+  },
+  {
+    q: "Do my files get uploaded to a server?",
+    a: "The PDF and image tools run in your browser, so your files stay on your device. Nothing is stored after you close the tab.",
+  },
+  {
+    q: "What file sizes can I use?",
+    a: "Anything your browser can hold in memory — in practice that means files up to a few hundred megabytes on a modern laptop.",
+  },
+  {
+    q: "Which formats are supported?",
+    a: "PDF and DOCX for documents, plus PNG, JPG, WebP and GIF for images.",
+  },
+];
 
 const LandingPage = () => {
+  const [pdfCategory, ...restCategories] = categories;
+
   return (
     <>
       <SEO
         title="QuickSideTool - Free PDF Tools, Image Tools, QR Generator"
-        description="Simple online tools for PDFs, images, QR codes, OCR, and file conversion. Pick a tool, choose the options, and download the result."
-        keywords="PDF tools, image tools, QR code generator, PDF compressor, PDF unlocker, PDF to Word, Word to PDF, OCR processor, file converter"
+        description="Compress PDFs, resize images, convert files and generate QR codes. Free, no signup, runs in your browser."
       />
-      <Layout showAnimatedBackground={false}>
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-8 md:px-8 md:pt-14">
-          <section className="rounded-lg border border-white/10 bg-[#081f29]/80 p-6 shadow-2xl md:p-10">
-            <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-center">
-              <div>
-                <div className="mb-4 inline-flex items-center rounded-lg border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-sm font-medium text-cyan-100">
-                  Free browser tools
-                </div>
-                <h1 className="max-w-4xl text-4xl font-bold leading-tight text-white md:text-6xl">
-                  We have all the tools you need.
-                </h1>
-                <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-300">
-                  Click a tool, open the tool page, choose the options, and get
-                  your file ready. Simple screens, clear actions, no confusing
-                  dashboard.
-                </p>
+      <Layout>
+        {/* ---------- Hero ---------- */}
+        <section className="border-b border-border/60">
+          <div className="mx-auto flex min-h-hero-mobile w-full max-w-content flex-col items-center justify-center px-4 py-10 text-center md:min-h-hero md:px-6 md:py-14">
+            <h1 className="max-w-3xl text-3xl font-extrabold leading-tight tracking-tight text-text sm:text-4xl md:text-5xl lg:text-[52px] lg:leading-[56px]">
+              Every file tool you'll ever need.
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-secondary md:text-lg">
+              Compress PDFs, resize images, convert files and generate QR codes —
+              free and secure.
+            </p>
 
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <a
-                    href="#tools"
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300"
-                  >
-                    See all tools <ArrowRight className="h-5 w-5" />
-                  </a>
-                  <Link
-                    to="/pdf-tool"
-                    className="inline-flex items-center justify-center rounded-lg border border-white/15 px-5 py-3 font-semibold text-white transition hover:bg-white/10"
-                  >
-                    Open PDF Tools
-                  </Link>
-                </div>
-              </div>
+            <div className="mt-7 w-full">
+              <UploadZone />
+            </div>
 
-              <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-                  How it works
-                </p>
-                <div className="mt-5 space-y-4">
-                  <Step icon={CheckCircle} title="Choose a tool" text="PDF, image, QR, OCR, or converter." />
-                  <Step icon={Zap} title="Use the options" text="Each tool page keeps its existing controls." />
-                  <Step icon={Shield} title="Download result" text="Finish the task without extra navigation." />
-                </div>
-              </div>
+            <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+              {BADGES.map(({ label, icon: Icon }) => (
+                <li key={label} className="flex items-center gap-1.5 text-sm text-secondary">
+                  <Icon className="h-4 w-4 text-primaryHover" aria-hidden="true" />
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* ---------- Ad: after hero ---------- */}
+        <div className="mx-auto w-full max-w-content px-4 pt-6 md:px-6">
+          <AdSlot size="leaderboard" />
+        </div>
+
+        {/* ---------- Tools ---------- */}
+        <main
+          id="tools"
+          className="mx-auto w-full max-w-content scroll-mt-20 px-4 py-6 md:px-6"
+        >
+          <ToolCategory {...pdfCategory} />
+
+          {/* ---------- Ad: after first tool section ---------- */}
+          <div className="py-6">
+            <AdSlot size="leaderboard" />
+          </div>
+
+          <ToolDirectory only={restCategories.map((c) => c.id)} />
+
+          {/* ---------- FAQ ---------- */}
+          <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 md:p-6">
+            <h2 className="text-xl font-bold text-text md:text-2xl">
+              Frequently asked questions
+            </h2>
+            <div className="mt-4 divide-y divide-border">
+              {FAQS.map((faq) => (
+                <details key={faq.q} className="group py-3">
+                  <summary className="cursor-pointer list-none text-base font-semibold text-text marker:hidden">
+                    <span className="flex items-center justify-between gap-3">
+                      {faq.q}
+                      <ArrowRight
+                        className="h-4 w-4 shrink-0 text-secondary transition-transform duration-200 group-open:rotate-90"
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </summary>
+                  <p className="mt-2 pr-7 text-sm leading-relaxed text-secondary">
+                    {faq.a}
+                  </p>
+                </details>
+              ))}
             </div>
           </section>
 
-          <div id="tools" className="mt-12 scroll-mt-28">
-            <ToolDirectory />
+          {/* ---------- Ad: before footer ---------- */}
+          <div className="pt-6">
+            <AdSlot size="leaderboard" />
           </div>
+        </main>
+
+        {/* ---------- Sticky mobile CTA ---------- */}
+        <div className="sticky bottom-0 z-40 border-t border-border bg-background/95 px-4 py-3 backdrop-blur-md md:hidden">
+          <Link
+            to="/toolkit"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-base font-semibold text-white transition hover:bg-primaryHover"
+          >
+            Choose a tool <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
       </Layout>
     </>
   );
 };
-
-const Step = ({ icon: Icon, title, text }) => (
-  <div className="flex gap-3">
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-200">
-      <Icon className="h-5 w-5" />
-    </div>
-    <div>
-      <div className="font-semibold text-white">{title}</div>
-      <div className="mt-1 text-sm leading-6 text-slate-300">{text}</div>
-    </div>
-  </div>
-);
 
 export default LandingPage;

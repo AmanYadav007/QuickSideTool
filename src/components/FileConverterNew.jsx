@@ -84,32 +84,15 @@ const FileConverterNew = () => {
     
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://quicksidetoolbackend.onrender.com';
     
-    const preferAdobe = ((process.env.REACT_APP_USE_ADOBE || 'false') + '').toLowerCase() === 'true';
-    const endpoint = preferAdobe
-      ? (conversionType === 'pdf-to-word' ? '/adobe/convert/pdf-to-word' : '/adobe/convert/pdf-to-excel')
-      : (conversionType === 'pdf-to-word' ? '/convert/pdf-to-word' : '/convert/pdf-to-excel');
+    const endpoint = conversionType === 'pdf-to-word' ? '/convert/pdf-to-word' : '/convert/pdf-to-excel';
 
     try {
       setMessage('Processing your file...');
-      
-      let response = await fetch(`${backendUrl}${endpoint}`, {
+
+      const response = await fetch(`${backendUrl}${endpoint}`, {
         method: 'POST',
         body: formData,
       });
-
-      // If Adobe was tried and failed, retry with basic converter for Word and Excel
-      if (!response.ok && preferAdobe) {
-        try {
-          setMessage('Adobe conversion failed, retrying with basic converter...');
-          const basicEndpoint = conversionType === 'pdf-to-excel' ? '/convert/pdf-to-excel' : '/convert/pdf-to-word';
-          response = await fetch(`${backendUrl}${basicEndpoint}`, {
-            method: 'POST',
-            body: formData,
-          });
-        } catch (retryErr) {
-          // proceed to error handling below
-        }
-      }
 
       if (response.ok) {
         const blob = await response.blob();
@@ -135,7 +118,8 @@ const FileConverterNew = () => {
         let errorMessage = 'Conversion failed. Please try again.';
         try {
           const errorData = await response.json();
-          errorMessage = errorData.detail || errorMessage;
+          // Flask backend returns { error: "..." }.
+          errorMessage = errorData.error || errorData.detail || errorMessage;
         } catch {}
         setMessage(`Error: ${errorMessage}`);
         setDownloadBlob(null);
