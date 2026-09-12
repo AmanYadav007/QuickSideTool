@@ -11,14 +11,12 @@ const ImageResize = () => {
     const [globalLockAspectRatio, setGlobalLockAspectRatio] = useState(true);
     const [commonWidth, setCommonWidth] = useState('');
     const [commonHeight, setCommonHeight] = useState('');
-    // resizeMode and commonScale states are removed as per request.
 
-    const [outputFormat, setOutputFormat] = useState('original'); // 'original', 'image/jpeg', 'image/png', 'image/webp'
-    const [jpegQuality, setJpegQuality] = useState(90); // 0-100
-    const [webpQuality, setWebpQuality] = useState(90); // 0-100
+    const [outputFormat, setOutputFormat] = useState('original');
+    const [jpegQuality, setJpegQuality] = useState(90);
+    const [webpQuality, setWebpQuality] = useState(90);
 
     const imagesRef = useRef(images);
-    imagesRef.current = images;
     const resizePresets = [
         { label: 'Square', width: 1080, height: 1080 },
         { label: 'Story', width: 1080, height: 1920 },
@@ -26,8 +24,6 @@ const ImageResize = () => {
         { label: 'Thumbnail', width: 600, height: 400 },
     ];
 
-    // Object URLs are created once per file (in onDrop / after resize) and stored on the
-    // image object. Revoke everything still outstanding when the component unmounts.
     useEffect(
         () => () => {
             imagesRef.current.forEach(img => {
@@ -38,7 +34,6 @@ const ImageResize = () => {
         []
     );
 
-    // Set initial common dimensions if first image is added and no common dimensions set
     useEffect(() => {
         if (images.length > 0 && commonWidth === '' && commonHeight === '') {
             setCommonWidth(images[0].width);
@@ -64,8 +59,7 @@ const ImageResize = () => {
                         lockAspectRatio: true,
                         customWidth: img.width,
                         customHeight: img.height,
-                        // scale property is removed as percentage mode is no longer used
-                        error: null, // Error state for individual image
+                        error: null,
                     });
                 };
                 img.onerror = () => {
@@ -105,7 +99,7 @@ const ImageResize = () => {
                     ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
                     let outputMimeType = format === 'original' ? imageFile.type : format;
-                    let outputQuality = 1; // Default for PNG
+                    let outputQuality = 1;
                     let fileExtension = outputMimeType.split('/')[1];
 
                     if (outputMimeType === 'image/jpeg') {
@@ -116,7 +110,6 @@ const ImageResize = () => {
                         fileExtension = 'png';
                     }
 
-                    // Fallback for unsupported original formats (like SVG, GIF to JPG/PNG/WebP)
                     if (!['image/jpeg', 'image/png', 'image/webp'].includes(outputMimeType)) {
                         outputMimeType = 'image/png';
                         fileExtension = 'png';
@@ -154,7 +147,6 @@ const ImageResize = () => {
         const targetWidth = parseInt(commonWidth);
         const targetHeight = parseInt(commonHeight);
 
-
         if (isNaN(targetWidth) || isNaN(targetHeight) || targetWidth <= 0 || targetHeight <= 0) {
             alert('Please enter valid positive numbers for common width and height.');
             return;
@@ -164,8 +156,6 @@ const ImageResize = () => {
         try {
             const resizedImagesPromises = images.map(async (img) => {
                 try {
-                    // With aspect lock on, fit each image inside the target box using its OWN
-                    // ratio so images that aren't the same shape as the box aren't stretched.
                     let w = targetWidth;
                     let h = targetHeight;
                     if (globalLockAspectRatio && img.aspectRatio) {
@@ -177,9 +167,9 @@ const ImageResize = () => {
                     if (img.resizedUrl) URL.revokeObjectURL(img.resizedUrl);
                     return {
                         ...img,
-                        width: w, // Update the displayed dimensions to new dimensions
+                        width: w,
                         height: h,
-                        customWidth: w, // Also update individual controls to reflect new size
+                        customWidth: w,
                         customHeight: h,
                         resized: resizedFile,
                         resizedUrl: URL.createObjectURL(resizedFile),
@@ -216,8 +206,8 @@ const ImageResize = () => {
             return;
         }
 
-        setResizing(true); // Indicate busy state
-        setImages(prev => prev.map((item, i) => i === index ? { ...item, error: null } : item)); // Clear previous error
+        setResizing(true);
+        setImages(prev => prev.map((item, i) => i === index ? { ...item, error: null } : item));
         try {
             const resizedImageFile = await resizeImage(img.original, targetWidth, targetHeight, outputFormat, qualityToUse);
             setImages(prev => prev.map((item, i) => {
@@ -227,7 +217,7 @@ const ImageResize = () => {
                     ...item,
                     width: targetWidth,
                     height: targetHeight,
-                    customWidth: targetWidth, // Update individual controls to reflect new size
+                    customWidth: targetWidth,
                     customHeight: targetHeight,
                     resized: resizedImageFile,
                     resizedUrl: URL.createObjectURL(resizedImageFile),
@@ -239,7 +229,7 @@ const ImageResize = () => {
             setImages(prev => prev.map((item, i) => i === index ? { ...item, resized: null, error: `Failed: ${error.message}` } : item));
             alert('There was an error resizing the image. Check console for details.');
         } finally {
-            setResizing(false); // Clear busy state
+            setResizing(false);
         }
     };
 
@@ -278,8 +268,6 @@ const ImageResize = () => {
             return img;
         }));
     };
-
-    // handleIndividualScaleChange is removed as percentage mode is no longer used
 
     const toggleIndividualLockAspectRatio = (index) => {
         setImages(prev => prev.map((img, i) => {
@@ -341,7 +329,6 @@ const ImageResize = () => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            // Delay revoke so the browser has started the download (Firefox/Safari).
             setTimeout(() => URL.revokeObjectURL(href), 10000);
         } else {
             const zip = new JSZip();
@@ -399,8 +386,6 @@ const ImageResize = () => {
         }
     };
 
-    // handleCommonScaleChange is removed as percentage mode is no longer used
-
     const toggleGlobalLockAspectRatio = () => {
         const newLockState = !globalLockAspectRatio;
         setGlobalLockAspectRatio(newLockState);
@@ -432,327 +417,275 @@ const ImageResize = () => {
         setImages([]);
         setCommonWidth('');
         setCommonHeight('');
-        // commonScale reset is removed
         setResizing(false);
     };
 
-    // applyPreset function is removed as presets are no longer used
-
     return (
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#08111f] via-[#0b1f2a] to-[#102f2e] text-white font-sans antialiased relative">
+        <div className="min-h-screen bg-[var(--color-bg)]">
             <SEO
                 title="Resize Image Online – Exact Width & Height in Pixels"
                 description="Resize images to custom dimensions or presets. JPG/PNG/WebP supported. Batch resize supported."
                 url="https://quicksidetool.com/image-tools/resize"
             />
-            {/* Background Animated Blobs */}
-            <div className="absolute inset-0 z-0 overflow-hidden">
-                <div className="absolute w-64 h-64 rounded-full bg-amber-300/10 blur-3xl animate-blob-fade top-1/4 left-[15%] animation-delay-0"></div>
-                <div className="absolute w-80 h-80 rounded-full bg-teal-500/20 blur-3xl animate-blob-fade top-[65%] left-[70%] animation-delay-2000"></div>
-                <div className="absolute w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl animate-blob-fade top-[10%] left-[60%] animation-delay-4000"></div>
-                <div className="absolute w-56 h-56 rounded-full bg-emerald-500/10 blur-3xl animate-blob-fade top-[80%] left-[20%] animation-delay-6000"></div>
-            </div>
-
-            <div className="container mx-auto p-4 md:p-8 relative z-10 flex flex-col min-h-screen">
-                {/* Header/Back Button */}
-                <div className="flex items-center justify-between mb-8">
+            <div className="container section">
+                <header className="mb-8 flex items-center justify-between">
                     <Link
                         to="/image-tools"
-                        className="inline-flex items-center px-4 py-1.5 bg-white/10 text-white rounded-lg
-                                  hover:bg-white/20 transition-all duration-300 backdrop-blur-md border border-white/20
-                                  hover:border-amber-200 transform hover:scale-105 shadow-md animate-fade-in-left text-sm"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
                     >
-                        <ArrowLeft className="mr-2 w-4 h-4" />
-                        Back To Image Tools
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Image Tools
                     </Link>
-                    <h1 className="text-2xl md:text-3xl font-extrabold text-center text-amber-100 drop-shadow-md animate-fade-in-down flex-grow px-4">
-                        Batch Image Resize
-                    </h1>
+                    <h1 className="h1 text-center">Batch Image Resize</h1>
                     <button
                         onClick={clearAllImages}
-                        className="inline-flex items-center px-3 py-1.5 bg-red-600/80 text-white rounded-lg
-                                  hover:bg-red-700 transition-colors duration-300 transform hover:scale-105 shadow-md text-sm
-                                  disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-red-500 hover:text-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={images.length === 0 || resizing}
                         title="Clear all loaded images"
                     >
-                        <X className="mr-2 w-4 h-4" /> Clear All
+                        <X className="h-4 w-4" /> Clear All
                     </button>
-                </div>
+                </header>
 
-                {/* Dropzone */}
-                <div
-                    {...getRootProps()}
-                    className={`
-                        border-3 border-dashed rounded-2xl p-10 text-center my-6
-                        transition-all duration-300 ease-in-out cursor-pointer
-                        ${isDragActive
-                            ? 'border-amber-200 bg-amber-200/10 scale-[1.01] shadow-lg'
-                            : 'border-white/30 hover:border-amber-200 hover:bg-amber-200/10'
-                        }
-                        ${resizing ? 'opacity-70 cursor-not-allowed pointer-events-none' : 'shadow-md'}
-                        animate-fade-in
-                    `}
-                >
-                    <input {...getInputProps()} disabled={resizing} />
-                    <Upload className="mx-auto mb-3 text-white w-10 h-10" />
-                    <p className="text-white text-opacity-90 text-base md:text-lg font-semibold">
-                        {isDragActive ? "Drop the images here!" : "Drag & drop images here, or click to select"}
-                    </p>
-                    <p className="text-white text-opacity-70 text-xs mt-1">
-                        (Supports PNG, JPG, JPEG, WebP formats)
-                    </p>
-                </div>
+                <div className="max-w-6xl mx-auto">
+                    <div {...getRootProps()} className="upload-zone p-10 text-center mb-8 cursor-pointer transition-colors border-2 border-dashed rounded-3xl">
+                        <input {...getInputProps()} disabled={resizing} />
+                        <Upload className="mx-auto mb-3 w-10 h-10 text-[var(--color-primary)]" />
+                        <p className="text-lg font-semibold text-[var(--color-text)] mb-2">
+                            {isDragActive ? "Drop the images here!" : "Drag & drop images here, or click to select"}
+                        </p>
+                        <p className="text-sm text-[var(--color-text-muted)]">(Supports PNG, JPG, JPEG, WebP formats)</p>
+                    </div>
 
-                {images.length > 0 && (
-                    <div className="flex flex-col flex-grow bg-white/5 backdrop-blur-lg rounded-2xl shadow-xl border border-white/10 p-6 animate-fade-in-up">
-                        <div className="mb-5 flex flex-col gap-2 rounded-xl border border-amber-200/20 bg-amber-200/10 p-4 md:flex-row md:items-center md:justify-between">
-                            <div>
-                                <p className="font-semibold text-amber-100">{images.length} image{images.length > 1 ? 's' : ''} ready</p>
-                                <p className="text-sm text-slate-300">Choose a preset or enter your own size, then resize all.</p>
-                            </div>
-                            <p className="text-sm text-slate-300">Aspect ratio is locked by default.</p>
-                        </div>
-
-                        {/* Common Size Controls & Output Settings - Simplified */}
-                        <div className="bg-white/10 rounded-xl p-4 mb-6 flex flex-col md:flex-row flex-wrap items-center justify-center lg:justify-start gap-4 shadow-inner"> {/* Adjusted for tablet responsiveness */}
-                            {/* Removed: <h2 className="text-white text-base font-semibold whitespace-nowrap mb-2 md:mb-0">Common Settings:</h2> */}
-
-                            {/* Removed: Presets */}
-                            {/* Removed: Resize Mode Toggle */}
-                            <div className="flex flex-wrap justify-center gap-2">
-                                {resizePresets.map((preset) => (
-                                    <button
-                                        key={preset.label}
-                                        type="button"
-                                        onClick={() => {
-                                            setGlobalLockAspectRatio(false);
-                                            setCommonWidth(preset.width);
-                                            setCommonHeight(preset.height);
-                                        }}
-                                        className="rounded-lg border border-white/10 bg-white/10 px-3 py-1.5 text-sm text-white transition hover:border-amber-200 hover:bg-amber-200/10"
-                                        disabled={resizing}
-                                    >
-                                        {preset.label}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Dimensions Input (Always pixels) */}
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="number"
-                                    value={commonWidth}
-                                    onChange={(e) => handleCommonWidthChange(e.target.value)}
-                                    placeholder="Width"
-                                    className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1.5 w-24 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
-                                    min="1"
-                                />
-                                <span className="text-white text-base">x</span>
-                                <input
-                                    type="number"
-                                    value={commonHeight}
-                                    onChange={(e) => handleCommonHeightChange(e.target.value)}
-                                    placeholder="Height"
-                                    className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1.5 w-24 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
-                                    min="1"
-                                />
-                            </div>
-
-                            <button
-                                onClick={toggleGlobalLockAspectRatio}
-                                className="bg-white/20 text-white p-1.5 rounded-lg hover:bg-white/30 transition-colors shadow-sm"
-                                title={globalLockAspectRatio ? "Unlock global aspect ratio" : "Lock global aspect ratio"}
-                            >
-                                {globalLockAspectRatio ? <Lock size={18} /> : <Unlock size={18} />}
-                            </button>
-
-                            {/* Output Format and Quality */}
-                            <div className="flex items-center gap-3">
-                                <select
-                                    value={outputFormat}
-                                    onChange={(e) => setOutputFormat(e.target.value)}
-                                    className="bg-gray-800 text-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
-                                >
-                                    <option value="original">Original Format</option>
-                                    <option value="image/jpeg">JPEG</option>
-                                    <option value="image/png">PNG</option>
-                                    <option value="image/webp">WebP</option>
-                                </select>
-
-                                {(outputFormat === 'image/jpeg' || outputFormat === 'image/webp') && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-white text-sm">Quality:</span>
-                                        <input
-                                            type="range"
-                                            min="1"
-                                            max="100"
-                                            value={outputFormat === 'image/jpeg' ? jpegQuality : webpQuality}
-                                            onChange={(e) => {
-                                                const val = parseInt(e.target.value);
-                                                if (outputFormat === 'image/jpeg') setJpegQuality(val);
-                                                else setWebpQuality(val);
-                                            }}
-                                            className="w-24 h-2 bg-white/30 rounded-lg appearance-none cursor-pointer range-sm"
-                                            title={`Quality: ${outputFormat === 'image/jpeg' ? jpegQuality : webpQuality}%`}
-                                        />
-                                        <span className="text-white text-sm w-8 text-right">
-                                            {outputFormat === 'image/jpeg' ? jpegQuality : webpQuality}%
-                                        </span>
+                    {images.length > 0 && (
+                        <div className="card p-6">
+                            <div className="mb-6 p-4 rounded-xl border border-[var(--color-primary)] bg-[var(--color-primary-light)]">
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div>
+                                        <p className="font-semibold text-[var(--color-text)]">{images.length} image{images.length > 1 ? 's' : ''} ready</p>
+                                        <p className="text-sm text-[var(--color-text-muted)]">Choose a preset or enter your own size, then resize all.</p>
                                     </div>
-                                )}
+                                    <p className="text-sm text-[var(--color-text-muted)]">Aspect ratio is locked by default.</p>
+                                </div>
                             </div>
 
-                            <button
-                                onClick={resizeAll}
-                                className="bg-amber-300 hover:bg-amber-200 text-slate-950 font-semibold py-2.5 px-6 rounded-lg text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
-                                disabled={resizing || (!commonWidth || !commonHeight)}
-                            >
-                                {resizing ? (
-                                    <> <Loader2 className="inline-block mr-2 w-4 h-4 animate-spin" /> Resizing... </>
-                                ) : (
-                                    'Resize All'
-                                )}
-                            </button>
-                            <button
-                                onClick={downloadAllImages}
-                                className="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-semibold py-2.5 px-6 rounded-lg text-base transition-all duration-300 shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
-                                disabled={resizing || images.length === 0 || !images.every(img => img.resized)}
-                            >
-                                <Download className="inline-block mr-2 w-4 h-4" />
-                                Download All
-                            </button>
-                        </div>
+                            <div className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-alt)]">
+                                <h2 className="text-sm font-semibold text-[var(--color-text)] mb-4">Common Settings</h2>
 
-                        {/* Image Cards with Individual Controls */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {images.map((img, index) => (
-                                <div key={index} className={`bg-white/10 rounded-xl p-5 shadow-lg border border-white/15 relative group animate-fade-in-up ${img.error ? 'border-red-500 ring-2 ring-red-500' : ''}`}>
-
-                                    {img.error && (
-                                        <div className="absolute inset-x-0 top-0 bg-red-600 text-white text-xs text-center py-1.5 z-20 rounded-t-xl">
-                                            Error: {img.error}
-                                        </div>
-                                    )}
-
-                                    <div className="absolute top-3 right-3 flex items-center space-x-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <div className="flex flex-wrap justify-center gap-2 mb-4">
+                                    {resizePresets.map((preset) => (
                                         <button
-                                            onClick={() => applyCommonSizeToIndividual(index)}
-                                            className="text-white/80 hover:text-blue-300 p-1 rounded-full bg-black/20 hover:bg-black/30 transition-colors"
-                                            title="Apply common size to this image"
-                                            disabled={resizing || (!commonWidth || !commonHeight)}
-                                        >
-                                            <Copy size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => removeImage(index)}
-                                            className="text-red-400 hover:text-red-500 p-1 rounded-full bg-black/20 hover:bg-black/30 transition-colors"
-                                            title="Remove image"
+                                            key={preset.label}
+                                            type="button"
+                                            onClick={() => {
+                                                setGlobalLockAspectRatio(false);
+                                                setCommonWidth(preset.width);
+                                                setCommonHeight(preset.height);
+                                            }}
+                                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)] transition-colors"
                                             disabled={resizing}
                                         >
-                                            <Trash2 size={18} />
+                                            {preset.label}
                                         </button>
+                                    ))}
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            value={commonWidth}
+                                            onChange={(e) => handleCommonWidthChange(e.target.value)}
+                                            placeholder="Width"
+                                            className="input w-24"
+                                            min="1"
+                                        />
+                                        <span className="text-[var(--color-text-muted)]">x</span>
+                                        <input
+                                            type="number"
+                                            value={commonHeight}
+                                            onChange={(e) => handleCommonHeightChange(e.target.value)}
+                                            placeholder="Height"
+                                            className="input w-24"
+                                            min="1"
+                                        />
                                     </div>
 
-                                    {/* Removed the Reset button */}
-                                    {/* <button
-                                        onClick={() => setImages(prev => prev.map((item, i) => i === index ? { ...item, customWidth: img.width, customHeight: img.height, scale: 100, lockAspectRatio: true } : item))}
-                                        className="absolute bottom-3 left-3 px-2 py-1 bg-white/20 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white/30"
-                                        title="Reset to original dimensions"
-                                        disabled={resizing}
+                                    <button
+                                        onClick={toggleGlobalLockAspectRatio}
+                                        className="p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-alt)] transition-colors"
+                                        title={globalLockAspectRatio ? "Unlock global aspect ratio" : "Lock global aspect ratio"}
                                     >
-                                        Reset
-                                    </button> */}
+                                        {globalLockAspectRatio ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                                    </button>
 
+                                    <div className="flex items-center gap-2">
+                                        <select
+                                            value={outputFormat}
+                                            onChange={(e) => setOutputFormat(e.target.value)}
+                                            className="input sm:w-36"
+                                        >
+                                            <option value="original">Original Format</option>
+                                            <option value="image/jpeg">JPEG</option>
+                                            <option value="image/png">PNG</option>
+                                            <option value="image/webp">WebP</option>
+                                        </select>
 
-                                    <h3 className="text-white font-semibold text-lg mb-3 truncate pr-16" title={img.original.name}>
-                                        {img.original.name}
-                                    </h3>
-
-                                    {/* Enhanced Preview Part: Added gap-4 and adjusted height for more prominent images */}
-                                    <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-white/80 text-sm mb-1">Original ({img.width}x{img.height})</p>
-                                            <div className="relative w-full h-48 bg-gray-800 rounded-lg overflow-hidden flex items-center justify-center border border-gray-700"> {/* Increased height to h-48 */}
-                                                <img
-                                                    src={img.originalUrl}
-                                                    alt="Original"
-                                                    className="object-contain max-w-full max-h-full"
+{(outputFormat === 'image/jpeg' || outputFormat === 'image/webp') ? (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm text-[var(--color-text-muted)]">Quality:</span>
+                                                <input
+                                                    type="range"
+                                                    min="1"
+                                                    max="100"
+                                                    value={outputFormat === 'image/jpeg' ? jpegQuality : webpQuality}
+                                                    onChange={(e) => {
+                                                        const val = parseInt(e.target.value);
+                                                        if (outputFormat === 'image/jpeg') setJpegQuality(val);
+                                                        else setWebpQuality(val);
+                                                    }}
+                                                    className="w-24 h-2 bg-[var(--color-border)] rounded-lg appearance-none cursor-pointer"
+                                                    title={`Quality: ${outputFormat === 'image/jpeg' ? jpegQuality : webpQuality}%`}
                                                 />
-                                                <span className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
-                                                    {(img.original.size / (1024 * 1024)).toFixed(2)} MB
+                                                <span className="text-sm text-[var(--color-text-muted)] w-8 text-right">
+                                                    {outputFormat === 'image/jpeg' ? jpegQuality : webpQuality}%
                                                 </span>
                                             </div>
-                                        </div>
-
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-white/80 text-sm mb-1">Resized (Preview)</p>
-                                            <div className="relative w-full h-48 bg-gray-800 rounded-lg overflow-hidden flex items-center justify-center border border-gray-700"> {/* Increased height to h-48 */}
-                                                {img.resized ? (
-                                                    <img
-                                                        src={img.resizedUrl}
-                                                        alt="Resized"
-                                                        className="object-contain max-w-full max-h-full"
-                                                    />
-                                                ) : (
-                                                    <div className="absolute inset-0 flex items-center justify-center">
-                                                        <ImageIcon size={48} className="text-gray-500/50" /> {/* Larger icon for empty preview */}
-                                                    </div>
-                                                )}
-                                                {img.resized && (
-                                                    <span className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
-                                                        {(img.resized.size / (1024 * 1024)).toFixed(2)} MB
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
+                                        ) : null}
                                     </div>
 
-                                    {/* Individual Control Inputs (only pixels) */}
-                                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-2">
-                                        <>
+                                    <button
+                                        onClick={resizeAll}
+                                        className="btn-primary w-full md:w-auto"
+                                        disabled={resizing || (!commonWidth || !commonHeight)}
+                                    >
+                                        {resizing ? (
+                                            <> <Loader2 className="h-4 w-4 animate-spin mr-2" /> Resizing... </>
+                                        ) : (
+                                            'Resize All'
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {images.map((img, index) => (
+                                    <div key={index} className={`card p-4 ${img.error ? 'border-red-500/50' : ''}`}>
+                                        <div className="flex items-start justify-between mb-3">
+                                            <h3 className="font-semibold text-[var(--color-text)] truncate pr-8" title={img.original.name}>
+                                                {img.original.name}
+                                            </h3>
+                                            <button
+                                                onClick={() => removeImage(index)}
+                                                disabled={resizing}
+                                                className="p-1 text-[var(--color-text-light)] hover:text-red-500 rounded-lg hover:bg-[var(--color-error)]/10 transition-colors disabled:opacity-50"
+                                                title="Remove image"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <p className="text-sm text-[var(--color-text-muted)] mb-1">Original ({img.width}x{img.height})</p>
+                                                <div className="relative aspect-square bg-[var(--color-bg-alt)] rounded-lg overflow-hidden flex items-center justify-center border border-[var(--color-border)]">
+                                                    <img
+                                                        src={img.originalUrl}
+                                                        alt="Original"
+                                                        className="object-contain max-w-full max-h-full h-32 w-full"
+                                                    />
+                                                    <span className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+                                                        {(img.original.size / (1024 * 1024)).toFixed(2)} MB
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-[var(--color-text-muted)] mb-1">Resized (Preview)</p>
+                                                <div className="relative aspect-square bg-[var(--color-bg-alt)] rounded-lg overflow-hidden flex items-center justify-center border border-[var(--color-border)]">
+                                                    {img.resized ? (
+                                                        <img
+                                                            src={img.resizedUrl}
+                                                            alt="Resized"
+                                                            className="object-contain max-w-full max-h-full h-32 w-full"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-32 flex items-center justify-center">
+                                                            <ImageIcon className="w-12 h-12 text-[var(--color-text-light)]" />
+                                                        </div>
+                                                    )}
+                                                    {img.resized && (
+                                                        <span className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+                                                            {(img.resized.size / (1024 * 1024)).toFixed(2)} MB
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {img.resized && (
+                                            <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                                                <p className="text-sm text-[var(--color-text-muted)]">Reduction</p>
+                                                <p className="text-lg font-semibold text-green-500">
+                                                    {((1 - img.resized.size / img.original.size) * 100).toFixed(0)}%
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        <div className="flex flex-wrap items-center justify-center gap-2">
                                             <input
                                                 type="number"
                                                 value={img.customWidth}
                                                 onChange={(e) => handleIndividualWidthChange(index, e.target.value)}
                                                 placeholder="Width"
-                                                className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1 w-20 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                                className="input w-20"
                                                 min="1"
                                                 disabled={resizing}
                                             />
-                                            <span className="text-white text-sm">x</span>
+                                            <span className="text-[var(--color-text-muted)]">x</span>
                                             <input
                                                 type="number"
                                                 value={img.customHeight}
                                                 onChange={(e) => handleIndividualHeightChange(index, e.target.value)}
                                                 placeholder="Height"
-                                                className="bg-white/20 text-white placeholder-gray-300 rounded-lg px-2 py-1 w-20 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                                className="input w-20"
                                                 min="1"
                                                 disabled={resizing}
                                             />
-                                        </>
 
-                                        <button
-                                            onClick={() => toggleIndividualLockAspectRatio(index)}
-                                            className="bg-white/20 text-white p-1.5 rounded-lg hover:bg-white/30 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                            title={img.lockAspectRatio ? "Unlock aspect ratio" : "Lock aspect ratio"}
-                                            disabled={resizing}
-                                        >
-                                            {img.lockAspectRatio ? <Lock size={16} /> : <Unlock size={16} />}
-                                        </button>
-                                        <button
-                                            onClick={() => resizeIndividual(index)}
-                                            className="bg-amber-300 hover:bg-amber-200 text-slate-950 font-semibold py-1.5 px-3 rounded-lg text-sm transition-all duration-300 shadow-md hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            disabled={resizing || (!img.customWidth || !img.customHeight)}
-                                        >
-                                            Resize
-                                        </button>
+                                            <button
+                                                onClick={() => toggleIndividualLockAspectRatio(index)}
+                                                className="p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-alt)] transition-colors disabled:opacity-50"
+                                                title={img.lockAspectRatio ? "Unlock aspect ratio" : "Lock aspect ratio"}
+                                                disabled={resizing}
+                                            >
+                                                {img.lockAspectRatio ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                                            </button>
+                                            <button
+                                                onClick={() => resizeIndividual(index)}
+                                                className="btn-primary text-sm py-2 px-3"
+                                                disabled={resizing || (!img.customWidth || !img.customHeight)}
+                                            >
+                                                Resize
+                                            </button>
+                                        </div>
                                     </div>
+                                ))}
+                            </div>
+
+                            {images.every(img => img.resized) && (
+                                <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
+                                    <button
+                                        onClick={downloadAllImages}
+                                        className="btn-primary"
+                                    >
+                                        <Download className="h-4 w-4 mr-2" />
+                                        Download All
+                                    </button>
                                 </div>
-                            ))}
+                            )}
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );

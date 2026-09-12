@@ -1,7 +1,7 @@
 import React from "react";
 import Layout from "../components/Layout";
 import ToolDirectory from "../components/ToolDirectory";
-import AdSlot from "../components/AdSlot";
+
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const Toolkit = () => {
@@ -26,9 +26,8 @@ const Toolkit = () => {
         </div>
 
         <div className="pt-8">
-          <AdSlot size="leaderboard" />
+          <SpeedInsights />
         </div>
-        <SpeedInsights />
       </main>
     </Layout>
   );

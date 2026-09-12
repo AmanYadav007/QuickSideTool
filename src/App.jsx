@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
-// import GoogleAds from "./components/GoogleAds";
 import GTMBody from "./components/GTMBody";
 import LandingPage from "./pages/LandingPage";
 import Toolkit from "./pages/Toolkit";

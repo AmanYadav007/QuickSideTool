@@ -798,9 +798,9 @@ const App = () => {
   ];
 
   return (
-    <div className="text-white font-sans antialiased relative">
-      <div className={`container mx-auto pt-16 pb-8 md:pt-24 md:pb-12 space-y-8 relative z-10 ${pages.length === 0 ? 'flex flex-col items-center' : ''}`}>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 drop-shadow-md animate-fade-in-down">
+    <div className="min-h-screen bg-white text-black font-sans relative">
+      <div className="container mx-auto pt-12 pb-8 md:pt-16 md:pb-12 relative z-10">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-6">
             PDF & Image Combiner
           </h1>
 
@@ -814,49 +814,53 @@ const App = () => {
           disabled={replaceLoading} // Disable file input during replacement
         />
 
-        <div
-          {...getRootProps()}
-          className={`
-            border-3 border-dashed rounded-2xl p-8 text-center
-            transition-all duration-300 ease-in-out cursor-pointer
-            ${
-              isDragActive
-                ? "border-teal-400 bg-teal-400/10 scale-[1.01] shadow-lg"
-                : "border-white/30 hover:border-blue-400 hover:bg-blue-400/10"
-            }
-            ${
-              isLoading || replaceLoading
-                ? "opacity-70 cursor-not-allowed pointer-events-none"
-                : "shadow-md"
-            }
-            animate-fade-in
-          `}
-        >
-          <input {...getInputProps()} />
-          <p className="text-white text-opacity-90 text-lg md:text-xl font-semibold">
-            {isDragActive
-              ? "Drop your files here!"
-              : "Drag & drop PDF files or images, or click to add files"}
-          </p>
-          <p className="text-white text-opacity-70 text-sm mt-1.5">
-            (Supports PDF, JPG, JPEG, PNG formats)
-          </p>
+        <div className="mb-12">
+          <div className="border-2 border-dashed rounded-3xl p-8 text-center border-blue-200 mb-6">
+            <div className="mb-4">
+              <Plus className="w-8 h-8 mx-auto text-blue-400" />
+            </div>
+            <p className="text-[14px] font-medium">
+              Drag & drop files here
+            </p>
+            <p className="text-[12px] text-gray-500">
+              PDF • JPG • PNG • JPEG
+            </p>
+          </div>
+
+          <div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="application/pdf,image/png,image/jpeg,image/jpg"
+              onChange={handleFileSelect}
+            />
+            <button
+              className="mt-4 w-full rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <svg
+                className="mr-2 h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1={5} y1={5} x2={19} y2={19} />
+                <line x1={19} y1={5} x2={5} y2={19} />
+              </svg>
+              Choose Files
+            </button>
+          </div>
         </div>
 
         {/* Feature List (Conditionally rendered) */}
         {pages.length === 0 && (
-        <div className="p-7 space-y-4 bg-white/5 backdrop-blur-lg rounded-2xl shadow-xl border border-white/10 animate-fade-in mb-8">
-            <h2 className="text-2xl font-bold mb-4 text-blue-300">
-              What you can do:
-            </h2>
-            <ul className="list-none p-0 space-y-2 max-w-lg mx-auto text-left">
-              {featuresList.map((feature, index) => (
-                <li key={index} className="text-white/80 leading-relaxed">
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <p className="text-center text-gray-500 text-sm">
+            <span className="font-medium">Merge</span> multiple files into one PDF. <span className="font-medium">Reorder</span> pages into the correct order. <span className="font-medium">Download</span> your combined PDF.
+          </p>
         )}
 
         {pages.length > 0 && (

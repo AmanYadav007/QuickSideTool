@@ -1,7 +1,7 @@
 import React from "react";
 import SEO from "../components/SEO";
 import Layout from "../components/Layout";
-import AdSlot from "../components/AdSlot";
+
 import { ToolCategory, categories } from "../components/ToolDirectory";
 import { CheckCircle, Image as ImageIcon } from "lucide-react";
 
@@ -60,9 +60,7 @@ const ImageTools = () => {
           <ToolCategory {...imageCategory} />
         </div>
 
-        <div className="pt-8">
-          <AdSlot size="leaderboard" />
-        </div>
+        <div className="pt-8"></div>
       </main>
     </Layout>
   );

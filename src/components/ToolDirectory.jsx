@@ -15,7 +15,6 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 
-// Every `to` below maps to a real route registered in src/App.jsx.
 export const categories = [
   {
     id: "pdf-tools",
@@ -56,21 +55,21 @@ export const categories = [
 const ToolCard = ({ title, description, to, icon: Icon }) => (
   <Link
     to={to}
-    className="group flex min-h-card flex-col items-start gap-2 rounded-lg border border-border bg-card p-4 text-left transition-all duration-200 hover:-translate-y-1 hover:border-primaryHover hover:shadow-glow focus:outline-none focus:ring-2 focus:ring-primary/40 md:p-5"
+    className="group flex min-h-[180px] flex-col items-start gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 text-left transition-all duration-200 hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/40 md:p-5"
   >
-    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
-      <Icon className="h-6 w-6 text-primaryHover" aria-hidden="true" />
+    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-primary-light)] transition-colors group-hover:bg-[var(--color-primary-light)]/80">
+      <Icon className="h-6 w-6 text-[var(--color-primary)]" aria-hidden="true" />
     </span>
-    <h3 className="mt-0.5 text-base font-bold leading-snug text-text md:text-lg">{title}</h3>
-    <p className="text-sm leading-snug text-secondary">{description}</p>
+    <h3 className="mt-0.5 text-base font-bold leading-snug text-[var(--color-text)] md:text-lg">{title}</h3>
+    <p className="text-sm leading-snug text-[var(--color-text-muted)]">{description}</p>
   </Link>
 );
 
 export const ToolCategory = ({ name, tagline, id, tools }) => (
-  <section id={id} className="scroll-mt-24 rounded-lg border border-border bg-card/40 p-4 md:p-6">
+  <section id={id} className="scroll-mt-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)]/50 p-4 md:p-6">
     <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-      <h2 className="text-xl font-bold text-text md:text-2xl">{name}</h2>
-      <p className="text-sm text-secondary">{tagline}</p>
+      <h2 className="text-xl font-bold text-[var(--color-text)] md:text-2xl">{name}</h2>
+      <p className="text-sm text-[var(--color-text-muted)]">{tagline}</p>
     </div>
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
       {tools.map((tool) => (

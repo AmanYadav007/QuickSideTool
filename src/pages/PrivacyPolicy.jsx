@@ -1,28 +1,33 @@
 import React from "react";
-import { CheckCircle, Cookie, Lock, Mail, Shield } from "lucide-react";
+import { CheckCircle, Cookie, Lock, Mail, Shield, Folder, Clock } from "lucide-react";
 import SEO from "../components/SEO";
 import Layout from "../components/Layout";
 
 const sections = [
   {
     icon: Shield,
-    title: "Privacy-first tools",
-    text: "QuickSideTool is designed to keep file work simple and private. Many tools process files in your browser, which means your files do not need to leave your device for those workflows.",
+    title: "Privacy-first design",
+    text: "QuickSideTool is designed to keep file work simple and private. Many tools process files entirely in your browser, which means your files never leave your device. For tools that require backend processing, files are handled only for the requested task and are not stored or used to create profiles.",
   },
   {
     icon: Lock,
-    title: "File handling",
-    text: "We do not use your files to create accounts, profiles, or personal records. Some tools may use backend processing where required, and those files are handled only for the requested task.",
+    title: "File handling and retention",
+    text: "We do not use your files to create accounts, profiles, or personal records. Some tools may use temporary backend processing where required, and those files are handled solely for the requested task. Files are not retained longer than necessary for task completion.",
   },
   {
     icon: Cookie,
     title: "Cookies and analytics",
-    text: "We may use essential cookies for website functionality and optional analytics or advertising cookies where applicable. You can manage cookie preferences through your browser or consent controls when available.",
+    text: "We may use essential cookies for website functionality, including remembering your tool preferences and session state. Optional analytics cookies help us understand how the site is used so we can improve the experience. You can manage cookie preferences through your browser settings.",
   },
   {
     icon: Mail,
     title: "Contact information",
-    text: "If you contact us, we use the information you provide only to respond to your message, support request, feature idea, or bug report.",
+    text: "If you contact us, we use the information you provide only to respond to your message, support request, feature idea, or bug report. We do not share your contact information with third parties for marketing purposes.",
+  },
+  {
+    icon: Folder,
+    title: "Third-party services",
+    text: "Some tools may integrate with third-party services for specific functionality (e.g., PDF processing, image conversion). Any data shared with these services is governed by their own privacy policies. We only share the minimum data necessary to perform the requested task.",
   },
 ];
 
@@ -35,37 +40,29 @@ const PrivacyPolicy = () => {
         keywords="privacy policy, QuickSideTool privacy, file privacy, cookies"
         canonical="/privacy"
       />
-
-      <Layout showAnimatedBackground={false}>
-        <div className="mx-auto w-full max-w-5xl px-4 pb-16 pt-8 md:px-8 md:pt-14">
-          <section className="rounded-lg border border-white/10 bg-[#0b1f2a]/85 p-6 md:p-10">
-            <p className="text-sm font-semibold uppercase tracking-wide text-amber-200">
-              Privacy Policy
-            </p>
-            <h1 className="mt-2 text-4xl font-bold text-white md:text-5xl">
-              Your files should stay yours.
-            </h1>
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">
-              This page explains how QuickSideTool approaches privacy and data
-              handling. Last updated: {new Date().toLocaleDateString()}.
+      <Layout>
+        <div className="container section max-w-4xl">
+          <section className="text-center mb-12">
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">Privacy Policy</p>
+            <h1 className="h1 mt-2">Your files should stay yours.</h1>
+            <p className="mt-4 max-w-2xl mx-auto text-gray-500 leading-relaxed">
+              This page explains how QuickSideTool approaches privacy and data handling.
+              Last updated: {new Date().toLocaleDateString()}.
             </p>
           </section>
 
-          <section className="mt-8 space-y-4">
+          <section className="space-y-6">
             {sections.map((section) => {
               const Icon = section.icon;
               return (
-                <article
-                  key={section.title}
-                  className="rounded-lg border border-white/10 bg-white/[0.05] p-6"
-                >
+                <article key={section.title} className="card p-6">
                   <div className="flex gap-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-300/10 text-amber-200">
-                      <Icon className="h-5 w-5" />
+                    <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <Icon className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold text-white">{section.title}</h2>
-                      <p className="mt-2 leading-7 text-slate-300">{section.text}</p>
+                      <h2 className="text-lg font-semibold text-gray-900 mb-1">{section.title}</h2>
+                      <p className="text-gray-500 leading-relaxed">{section.text}</p>
                     </div>
                   </div>
                 </article>
@@ -73,13 +70,23 @@ const PrivacyPolicy = () => {
             })}
           </section>
 
-          <section className="mt-8 rounded-lg border border-emerald-300/20 bg-emerald-300/10 p-6">
+          <section className="mt-10 card p-6 border-green-200 bg-green-50">
             <div className="flex gap-3">
-              <CheckCircle className="mt-1 h-5 w-5 shrink-0 text-emerald-200" />
+              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h2 className="font-semibold text-white">Questions</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-300">
-                  For privacy questions, contact support@quicksidetool.com.
+                <h2 className="font-semibold text-gray-900">Questions</h2>
+                <p className="mt-1 text-sm text-gray-600">For privacy questions, contact support@quicksidetool.com.</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-6 card p-6 border-amber-200 bg-amber-50">
+            <div className="flex gap-3">
+              <Clock className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="font-semibold text-gray-900">Effective date</h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  This privacy policy was last updated on {new Date().toLocaleDateString()}. We may update this policy from time to time. Changes will be effective when posted on this page.
                 </p>
               </div>
             </div>
