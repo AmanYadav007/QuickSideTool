@@ -29,7 +29,6 @@ const ImageFormatConverter = () => {
 
   const selectedFormat = outputFormats.find((format) => format.value === outputFormat) || outputFormats[0];
 
-  // Revoke any outstanding preview URLs when the component unmounts.
   const imagesRef = useRef(images);
   imagesRef.current = images;
   useEffect(
@@ -132,61 +131,52 @@ const ImageFormatConverter = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#08111f] via-[#0b1f2a] to-[#102f2e] text-white">
+    <div className="min-h-screen bg-[var(--color-bg)]">
       <SEO
         title="Free Image Format Converter - JPG, PNG, WebP"
         description="Convert images between JPG, PNG, and WebP in your browser. Batch conversion supported."
         url="https://quicksidetool.com/image-tools/convert"
       />
 
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-6 md:px-8">
-        <header className="mb-8 flex items-center justify-between gap-4">
+      <div className="container section">
+        <header className="mb-8 flex items-center justify-between">
           <Link
             to="/image-tools"
-            className="inline-flex items-center rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-sm text-white transition hover:border-amber-200 hover:bg-white/15"
+            className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            <ArrowLeft className="h-4 w-4" />
+            Back to Image Tools
           </Link>
-          <h1 className="text-center text-2xl font-bold text-amber-100 md:text-3xl">
-            Image Format Converter
-          </h1>
+          <h1 className="h1 text-center">Image Format Converter</h1>
           <button
             onClick={clearAll}
             disabled={images.length === 0 || isConverting}
-            className="inline-flex items-center rounded-lg bg-red-600/80 px-3 py-2 text-sm text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 text-sm font-medium text-red-500 hover:text-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <X className="mr-2 h-4 w-4" />
-            Clear
+            <X className="h-4 w-4" />
+            Clear All
           </button>
         </header>
 
-        <main className="flex-1">
-          <section
-            {...getRootProps()}
-            className={`cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition ${
-              isDragActive
-                ? "border-amber-200 bg-amber-200/10"
-                : "border-white/20 bg-white/[0.04] hover:border-amber-200 hover:bg-amber-200/10"
-            } ${isConverting ? "pointer-events-none opacity-70" : ""}`}
-          >
+        <div className="max-w-4xl mx-auto">
+          <div {...getRootProps()} className="upload-zone p-10 text-center mb-8 cursor-pointer transition-colors border-2 border-dashed rounded-3xl">
             <input {...getInputProps()} />
-            <Upload className="mx-auto mb-3 h-10 w-10 text-amber-100" />
-            <p className="text-lg font-semibold text-white">
+            <Upload className="mx-auto mb-3 h-10 w-10 text-[var(--color-primary)]" />
+            <p className="text-lg font-semibold text-[var(--color-text)]">
               {isDragActive ? "Drop images here" : "Drag images here, or click to select"}
             </p>
-            <p className="mt-1 text-sm text-slate-400">Supports JPG, PNG, WebP, and BMP.</p>
-          </section>
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">Supports JPG, PNG, WebP, and BMP.</p>
+          </div>
 
-          <section className="mt-6 rounded-lg border border-white/10 bg-[#0b1f2a]/85 p-5">
+          <div className="card p-6 mb-8">
             <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto_auto] md:items-end">
               <label className="block">
-                <span className="mb-2 block text-sm text-slate-300">Convert to</span>
+                <span className="mb-2 block text-sm font-medium text-[var(--color-text-muted)]">Convert to</span>
                 <select
                   value={outputFormat}
                   onChange={(event) => setOutputFormat(event.target.value)}
                   disabled={isConverting}
-                  className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-200"
+                  className="input"
                 >
                   {outputFormats.map((format) => (
                     <option key={format.value} value={format.value}>{format.label}</option>
@@ -195,7 +185,9 @@ const ImageFormatConverter = () => {
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm text-slate-300">Quality: {quality}%</span>
+                <span className="mb-2 block text-sm font-medium text-[var(--color-text-muted)]">
+                  Quality: {quality}% {selectedFormat.supportsQuality ? '' : '(PNG is lossless)'}
+                </span>
                 <input
                   type="range"
                   min="1"
@@ -210,56 +202,56 @@ const ImageFormatConverter = () => {
               <button
                 onClick={convertAll}
                 disabled={images.length === 0 || isConverting}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-300 px-5 py-2 font-semibold text-slate-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
+                className="btn-primary w-full md:w-auto"
               >
-                {isConverting ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                {isConverting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
                 Convert
               </button>
 
               <button
                 onClick={downloadAll}
                 disabled={images.length === 0 || !images.some((image) => image.converted)}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-400 px-5 py-2 font-semibold text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+                className="btn-primary w-full md:w-auto bg-green-600 hover:bg-green-700"
               >
-                <Download className="h-4 w-4" />
+                <Download className="h-4 w-4 mr-2" />
                 Download
               </button>
             </div>
-          </section>
+          </div>
 
           {images.length > 0 && (
-            <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {images.map((image, index) => (
-                <article key={`${image.original.name}-${index}`} className="rounded-lg border border-white/10 bg-white/[0.05] p-4">
+                <article key={`${image.original.name}-${index}`} className="card p-4">
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h2 className="truncate font-semibold text-white" title={image.original.name}>{image.original.name}</h2>
-                      <p className="mt-1 text-xs text-slate-400">{(image.original.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <h2 className="truncate font-semibold text-[var(--color-text)]" title={image.original.name}>{image.original.name}</h2>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{(image.original.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                     <button
                       onClick={() => removeImage(index)}
                       disabled={isConverting}
-                      className="text-red-300 transition hover:text-red-200 disabled:opacity-50"
+                      className="text-[var(--color-text-light)] hover:text-red-500 transition-colors disabled:opacity-50"
                       aria-label={`Remove ${image.original.name}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
 
-                  <div className="flex h-44 items-center justify-center rounded-lg border border-white/10 bg-slate-950/60">
-                    <img src={image.previewUrl} alt={image.original.name} className="max-h-full max-w-full object-contain" />
+                  <div className="aspect-square flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-alt)] mb-4">
+                    <img src={image.previewUrl} alt={image.original.name} className="max-h-full max-w-full object-contain p-2" />
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center justify-between gap-3">
                     {image.converted ? (
-                      <p className="inline-flex items-center gap-2 text-sm text-emerald-200">
+                      <p className="inline-flex items-center gap-2 text-sm text-green-500">
                         <CheckCircle className="h-4 w-4" />
                         Converted to {image.convertedLabel || selectedFormat.label}
                       </p>
                     ) : image.error ? (
-                      <p className="text-sm text-red-200">{image.error}</p>
+                      <p className="text-sm text-red-500">{image.error}</p>
                     ) : (
-                      <p className="inline-flex items-center gap-2 text-sm text-slate-400">
+                      <p className="inline-flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
                         <ImageIcon className="h-4 w-4" />
                         Waiting
                       </p>
@@ -268,16 +260,16 @@ const ImageFormatConverter = () => {
                     <button
                       onClick={() => downloadOne(image.converted)}
                       disabled={!image.converted}
-                      className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-white transition hover:border-amber-200 hover:bg-amber-200/10 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="btn-primary text-sm py-2 px-4"
                     >
                       Save
                     </button>
                   </div>
                 </article>
               ))}
-            </section>
+            </div>
           )}
-        </main>
+        </div>
       </div>
     </div>
   );
@@ -293,7 +285,6 @@ const convertImage = (file, outputFormat, quality) => {
       canvas.width = image.naturalWidth;
       canvas.height = image.naturalHeight;
       const context = canvas.getContext("2d");
-      // JPEG has no alpha channel; without a fill, transparent pixels turn black.
       if (outputFormat.value === "image/jpeg") {
         context.fillStyle = "#ffffff";
         context.fillRect(0, 0, canvas.width, canvas.height);
@@ -329,7 +320,6 @@ const convertImage = (file, outputFormat, quality) => {
   });
 };
 
-// Run `task` over `items` with at most `limit` promises in flight, preserving order.
 const mapWithConcurrency = async (items, limit, task) => {
   const results = new Array(items.length);
   let cursor = 0;

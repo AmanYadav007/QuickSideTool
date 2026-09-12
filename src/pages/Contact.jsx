@@ -1,8 +1,5 @@
 import React, { useState } from "react";
-import {
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
+import { CheckCircle, AlertCircle } from "lucide-react";
 import SEO from "../components/SEO";
 import Layout from "../components/Layout";
 
@@ -52,101 +49,82 @@ const Contact = () => {
         title="Contact QuickSideTool"
         description="Contact QuickSideTool for support, feedback, and questions."
       />
-
-      <Layout showAnimatedBackground={false}>
-        <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 md:px-8 md:pt-14">
-          <section className="text-center mb-8">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-400 dark:text-blue-300">
-              Contact
-            </p>
-            <h1 className="text-3xl font-bold text-gray-100 dark:text-gray-900 md:text-4xl">
-              Tell us what you need
-            </h1>
-            <p className="mt-4 text-gray-300 dark:text-gray-500 max-w-2xl mx-auto">
-              Found a bug, want a new tool, or need help with a workflow? Send
-              a short note and we'll use it to improve QuickSideTool.
+      <Layout>
+        <div className="container section max-w-2xl">
+          <section className="text-center mb-10">
+            <h1 className="h1">Tell us what you need</h1>
+            <p className="mt-4 text-gray-500 max-w-xl mx-auto leading-relaxed">
+              Found a bug, want a new tool, or need help with a workflow? Send a short note and we'll use it to improve QuickSideTool.
             </p>
           </section>
 
-          <section className="mt-8 max-w-2xl mx-auto">
-            <form onSubmit={handleSubmit} className="bg-gray-900/30 dark:bg-gray-900 p-6 rounded-lg">
-              <h2 className="text-2xl font-bold text-gray-100 mb-6">Send a message</h2>
+          <form onSubmit={handleSubmit} className="card p-6">
+            <h2 className="h3 mb-6">Send a message</h2>
 
-              {submitStatus === "success" && (
-                <div className="mt-4 p-4 bg-green-900/20 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                  <p className="ml-6 text-green-300">Thanks. We received your message.</p>
-                </div>
-              )}
-              {submitStatus === "error" && (
-                <div className="mt-4 p-4 bg-red-900/20 rounded-lg">
-                  <AlertCircle className="h-5 w-5 text-red-400" />
-                  <p className="ml-6 text-red-300">Please try again, or email support@quicksidetool.com.</p>
-                </div>
-              )}
-
-              <div className="grid gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 dark:text-gray-500 mb-1">
-                    Name
-                  </label>
-                  <input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full rounded-border border-gray-500/20 px-3 py-2 text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-900/20 dark:bg-gray-900/20"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 dark:text-gray-500 mb-1">
-                    Email
-                  </label>
-                  <input
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full rounded-border border-gray-500/20 px-3 py-2 text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-900/20 dark:bg-gray-900/20"
-                  />
-                </div>
+            {submitStatus === "success" && (
+              <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <p className="text-green-700">Thanks. We received your message.</p>
               </div>
+            )}
+            {submitStatus === "error" && (
+              <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-red-700">Please try again, or email support@quicksidetool.com.</p>
+              </div>
+            )}
 
+            <div className="grid gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-400 dark:text-gray-500 mb-1">
-                  Message
-                </label>
-                <textarea
-                  name="message"
-                  value={formData.message}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
                   required
-                  rows={4}
-                  className="w-full rounded-border border-gray-500/20 px-3 py-2 text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-900/20 dark:bg-gray-900/20 resize-none"
-                  placeholder="Write your message here"
+                  className="input"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="input"
+                />
+              </div>
+            </div>
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full rounded-border bg-blue-600 py-2 px-4 text-white font-medium text-sm transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
-              >
-                {isSubmitting ? "Sending..." : "Send message"}
-              </button>
-            </form>
-          </section>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <textarea
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                required
+                rows={4}
+                className="input resize-none"
+                placeholder="Write your message here"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-primary w-full"
+            >
+              {isSubmitting ? "Sending..." : "Send message"}
+            </button>
+          </form>
 
           <div className="mt-8 text-center">
-            <p className="text-gray-600">
-              <a href="mailto:support@quicksidetool.com" className="text-blue-600 hover:underline">
-                support@quicksidetool.com
-              </a>
+            <p className="text-gray-500">
+              <a href="mailto:support@quicksidetool.com" className="text-blue-600 hover:underline">support@quicksidetool.com</a>
             </p>
-            <p className="mt-2 text-gray-500 text-sm">
-              We reply within 2 business days.
-            </p>
+            <p className="mt-2 text-sm text-gray-400">We reply within 2 business days.</p>
           </div>
         </div>
       </Layout>

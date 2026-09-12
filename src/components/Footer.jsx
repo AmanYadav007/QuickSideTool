@@ -1,13 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Github } from 'lucide-react';
 
 const COLUMNS = [
   {
     heading: 'PDF',
     links: [
       { label: 'Compress PDF', to: '/pdf-compressor' },
-      { label: 'Organise & Merge', to: '/pdf-tool' },
+      { label: 'Combine PDFs', to: '/pdf-tool' },
       { label: 'Unlock PDF', to: '/unlock-pdf' },
       { label: 'PDF to Word', to: '/pdf-to-word' },
     ],
@@ -25,7 +24,7 @@ const COLUMNS = [
     links: [
       { label: 'QR Generator', to: '/qr-tool' },
       { label: 'OCR Scanner', to: '/ocr-processor' },
-      { label: 'All tools', to: '/toolkit' },
+      { label: 'All tools', to: '/home' },
     ],
   },
   {
@@ -40,32 +39,23 @@ const COLUMNS = [
 ];
 
 const Footer = () => (
-  <footer className="border-t border-border bg-card/30">
-    <div className="mx-auto w-full max-w-content px-4 py-10 md:px-6">
+  <footer className="border-t border-[var(--color-border)] bg-[var(--color-bg-alt)]">
+    <div className="mx-auto w-full max-w-7xl px-6 py-12">
       <div className="grid grid-cols-2 gap-6 md:grid-cols-5 md:gap-8">
         <div className="col-span-2 md:col-span-1">
-          <p className="text-lg font-extrabold tracking-tight text-text">QuickSideTool</p>
-          <p className="mt-1.5 text-sm text-secondary">Fast. Free. Secure.</p>
-          <a
-            href="https://github.com/AmanYadav007/QuickSideTool"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="QuickSideTool on GitHub"
-            className="mt-4 inline-flex text-secondary transition-colors hover:text-text"
-          >
-            <Github className="h-5 w-5" aria-hidden="true" />
-          </a>
+          <p className="text-[11px] font-extrabold tracking-widest uppercase text-blue-500">QuickSideTool</p>
+          <p className="mt-1.5 text-sm text-[var(--color-text-muted)]">Fast. Free. Secure.</p>
         </div>
 
         {COLUMNS.map((column) => (
           <nav key={column.heading} aria-label={column.heading}>
-            <h3 className="text-sm font-semibold text-text">{column.heading}</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-text)]">{column.heading}</h3>
             <ul className="mt-3 space-y-2">
               {column.links.map((link) => (
                 <li key={link.to}>
                   <Link
                     to={link.to}
-                    className="text-sm text-secondary transition-colors hover:text-text"
+                    className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -76,7 +66,7 @@ const Footer = () => (
         ))}
       </div>
 
-      <p className="mt-8 border-t border-border pt-5 text-sm text-secondary">
+      <p className="mt-10 border-t border-[var(--color-border)] pt-6 text-sm text-[var(--color-text-light)] text-center">
         &copy; {new Date().getFullYear()} QuickSideTool. All rights reserved.
       </p>
     </div>

@@ -3,8 +3,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
-  { label: 'PDF Tools', to: '/pdf-tool' },
-  { label: 'Image Tools', to: '/image-tools' },
+  { label: 'All Tools', to: '/home' },
+  { label: 'PDF', to: '/pdf-tool' },
+  { label: 'Image', to: '/image-tools' },
   { label: 'QR Code', to: '/qr-tool' },
   { label: 'Contact', to: '/contact' },
 ];
@@ -21,68 +22,61 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close the drawer whenever the route changes.
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
   return (
-    <nav
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        scrolled || menuOpen
-          ? 'border-b border-border bg-background/95 backdrop-blur-md'
-          : 'border-b border-transparent bg-background/40 backdrop-blur-sm'
-      }`}
-    >
-      <div className="mx-auto flex h-16 w-full max-w-content items-center justify-between gap-3 px-4 md:px-6">
-        <Link to="/" className="text-lg font-extrabold tracking-tight text-text md:text-xl">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-bg)]/90 backdrop-blur-md border-b border-[var(--color-border)]">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-6">
+        <Link to="/" className="text-[11px] font-extrabold tracking-widest uppercase text-blue-500">
           QuickSideTool
         </Link>
 
-        <div className="hidden items-center gap-7 md:flex">
+        <div className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="text-sm font-medium text-secondary transition-colors hover:text-text"
+              className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
             >
               {link.label}
             </Link>
           ))}
           <Link
-            to="/toolkit"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-primaryHover hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-primary/40"
+            to="/home"
+            className="rounded-full bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-colors"
           >
-            Get Started
+            Open App
           </Link>
         </div>
 
         <button
           type="button"
-          className="rounded-md p-2 text-text md:hidden"
+          className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-alt)] md:hidden"
           onClick={() => setMenuOpen((open) => !open)}
           aria-expanded={menuOpen}
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
         >
-          {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
       {menuOpen && (
-        <div className="border-t border-border bg-background md:hidden">
+        <div className="border-t border-[var(--color-border)] bg-[var(--color-bg)] md:hidden">
           <div className="flex flex-col px-4 py-3">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className="rounded-md px-2 py-3 text-base font-medium text-text transition-colors hover:bg-card"
+                className="px-2 py-3 text-base font-medium text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-bg-alt)] rounded-lg transition-colors"
               >
                 {link.label}
               </Link>
             ))}
             <Link
-              to="/toolkit"
-              className="mt-2 rounded-lg bg-primary px-4 py-3 text-center text-base font-semibold text-white transition hover:bg-primaryHover"
+              to="/home"
+              className="mt-2 rounded-full bg-[var(--color-primary)] px-4 py-3 text-center text-base font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-colors"
             >
-              Get Started
+              Open App
             </Link>
           </div>
         </div>
