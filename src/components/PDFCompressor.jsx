@@ -12,9 +12,7 @@ import {
   Star,
   Shield,
   Minus,
-  Info,
 } from "lucide-react";
-import Notification from "./Notification";
 
 const PDFCompressor = () => {
   const [file, setFile] = useState(null);
@@ -23,18 +21,8 @@ const PDFCompressor = () => {
   const [downloadBlob, setDownloadBlob] = useState(null);
   const [compressionLevel, setCompressionLevel] = useState("medium");
   const [compressionMode, setCompressionMode] = useState("advanced");
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState("");
-  const [notificationType, setNotificationType] = useState("info");
   const [originalSize, setOriginalSize] = useState(0);
   const [compressedSize, setCompressedSize] = useState(0);
-
-  const handleNotification = (message, type = "info") => {
-    setNotificationMessage(message);
-    setNotificationType(type);
-    setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 5000);
-  };
 
   const onDrop = useCallback((acceptedFiles) => {
     setMessage("");
@@ -131,23 +119,15 @@ const PDFCompressor = () => {
         }
 
         setMessage(successMessage);
-        handleNotification(
-          reductionPercent < 0
-            ? `PDF processed! File size increased by ${Math.abs(reductionPercent)}% (already optimized)`
-            : `Successfully compressed PDF! Size reduced by ${reductionPercent}%`,
-          reductionPercent < 0 ? "info" : "success"
-        );
       } else {
         const errorText = await response.text();
         setMessage(`Error: Compression failed. ${errorText || "Please try again."}`);
         setDownloadBlob(null);
-        handleNotification("Compression failed. Please try again.", "error");
       }
     } catch (error) {
       console.error("Network or processing error:", error);
       setMessage("Error: Failed to compress file. Check your connection or try again.");
       setDownloadBlob(null);
-      handleNotification("Network error. Please check your connection.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -355,21 +335,6 @@ const PDFCompressor = () => {
       </div>
     </div>
   );
-};
-
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-};
-
-const getCompressionSavings = (originalSize, compressedSize) => {
-  if (originalSize === 0 || compressedSize === 0) return null;
-  const savings = originalSize - compressedSize;
-  const percentage = ((savings / originalSize) * 100).toFixed(1);
-  return { savings, percentage };
 };
 
 export default PDFCompressor;

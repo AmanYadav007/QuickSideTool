@@ -778,7 +778,7 @@ const App = () => {
     }
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  useDropzone({
     onDrop,
     accept: {
       "application/pdf": [".pdf"],
@@ -786,16 +786,6 @@ const App = () => {
     },
     disabled: isLoading || replaceLoading, // Disable dropzone during any loading
   });
-
-  // Features to display when no files are loaded
-  const featuresList = [
-    "Combine multiple PDF documents into one.",
-    "Merge images (JPG, JPEG, PNG) with PDF files.",
-    "Reorder pages with simple drag & drop.",
-    "Replace individual pages within your document.",
-    "Download your combined document as a new PDF.",
-    // Removed "Compress PDF files for smaller file sizes."
-  ];
 
   return (
     <div className="min-h-screen bg-white text-black font-sans relative">
