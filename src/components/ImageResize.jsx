@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import SEO from './SEO';
 import { useDropzone } from 'react-dropzone';
-import { ArrowLeft, Upload, Download, Image as ImageIcon, Lock, Unlock, Trash2, Copy, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Upload, Download, Image as ImageIcon, Lock, Unlock, Trash2, X, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import JSZip from 'jszip';
 
@@ -287,28 +287,6 @@ const ImageResize = () => {
             }
             return img;
         }));
-    };
-
-    const applyCommonSizeToIndividual = (index) => {
-        if (!commonWidth || !commonHeight) {
-            alert('Please set common width and height first.');
-            return;
-        }
-        const parsedCommonWidth = parseInt(commonWidth);
-        const parsedCommonHeight = parseInt(commonHeight);
-        if (isNaN(parsedCommonWidth) || isNaN(parsedCommonHeight) || parsedCommonWidth <= 0 || parsedCommonHeight <= 0) {
-            alert('Common width and height must be valid positive numbers.');
-            return;
-        }
-
-        setImages(prev => prev.map((img, i) =>
-            i === index ? {
-                ...img,
-                customWidth: parsedCommonWidth,
-                customHeight: parsedCommonHeight,
-                lockAspectRatio: globalLockAspectRatio
-            } : img
-        ));
     };
 
     const downloadAllImages = () => {

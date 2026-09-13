@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import SEO from './SEO';
 import { useDropzone } from 'react-dropzone';
-import { ArrowLeft, Upload, Download, Image as ImageIcon, Trash2, X, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Upload, Download, Image as ImageIcon, Trash2, X, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import JSZip from 'jszip';
 

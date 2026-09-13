@@ -13,10 +13,8 @@ import {
   FileText,
   Image,
   Camera,
-  Search,
   Copy,
   ArrowLeft,
-  X
 } from 'lucide-react';
 import logger from '../utils/logger';
 
@@ -278,7 +276,7 @@ const OCRProcessor = () => {
             page = pdfDoc.addPage([pageWidth, pageHeight]);
             y = pageHeight - margin;
           };
-          const sanitize = (s) => (s || '').replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, '?');
+          const sanitize = (s) => (s || '').replace(/[^\u0020-\u007E\u00A0-\u00FF]/g, '?');
           const drawLine = (text, size = fontSize) => {
             if (y < margin + lineHeight) newPage();
             page.drawText(text, { x: margin, y, size, font, color: rgb(0, 0, 0) });
@@ -325,6 +323,10 @@ const OCRProcessor = () => {
         }
         return;
       }
+
+      default:
+        logger.error(`Unsupported OCR export format: ${format}`);
+        return;
     }
   };
 
