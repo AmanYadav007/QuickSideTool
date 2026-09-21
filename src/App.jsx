@@ -4,6 +4,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GTMBody from "./components/GTMBody";
+import ScrollToTop from "./components/ScrollToTop";
 import LandingPage from "./pages/LandingPage";
 import Toolkit from "./pages/Toolkit";
 import PDFTool from "./pages/PDFTool";
@@ -38,6 +39,7 @@ function App() {
       <ErrorBoundary>
         <AuthProvider>
     <Router>
+      <ScrollToTop />
       <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/home" element={<LandingPage />} />
