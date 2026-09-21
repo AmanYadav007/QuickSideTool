@@ -1,4 +1,11 @@
 import React, { useEffect, useRef } from 'react';
+import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+
+const VARIANTS = {
+  success: { Icon: CheckCircle2, color: 'var(--color-success)' },
+  error: { Icon: AlertCircle, color: 'var(--color-error)' },
+  info: { Icon: Info, color: 'var(--color-primary)' },
+};
 
 const Notification = ({ message, type, onClose }) => {
   const timeoutRef = useRef(null);
@@ -22,34 +29,21 @@ const Notification = ({ message, type, onClose }) => {
 
   if (!message) return null;
 
-  let bgColor = 'bg-blue-500';
-  let icon = 'ℹ️'; // Info icon
-
-  switch (type) {
-    case 'success':
-      bgColor = 'bg-green-500';
-      icon = '✅';
-      break;
-    case 'error':
-      bgColor = 'bg-red-600';
-      icon = '❌';
-      break;
-    case 'info':
-    default:
-      bgColor = 'bg-blue-500';
-      icon = 'ℹ️';
-      break;
-  }
+  const { Icon, color } = VARIANTS[type] || VARIANTS.info;
 
   return (
     <div
-      className={`fixed bottom-4 left-1/2 -translate-x-1/2 p-4 rounded-lg shadow-lg text-white text-center flex items-center space-x-3 z-50 transition-all duration-300 transform ${bgColor} animate-fade-in-up`}
+      className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] py-3 pl-4 pr-3 shadow-2xl animate-fade-in-up"
       role="alert"
     >
-      <span className="text-xl">{icon}</span>
-      <span className="font-semibold">{message}</span>
-      <button onClick={onClose} className="ml-2 text-white/80 hover:text-white transition-colors">
-        &times;
+      <Icon className="h-5 w-5 shrink-0" style={{ color }} aria-hidden="true" />
+      <span className="text-sm font-medium text-[var(--color-text)]">{message}</span>
+      <button
+        onClick={onClose}
+        aria-label="Dismiss notification"
+        className="rounded-md p-1 text-[var(--color-text-light)] transition-colors hover:bg-[var(--color-border)] hover:text-[var(--color-text)]"
+      >
+        <X className="h-4 w-4" />
       </button>
     </div>
   );

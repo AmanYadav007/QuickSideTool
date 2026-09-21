@@ -7,10 +7,10 @@ import {
   FileText,
   Download,
   Loader2,
+  Lock,
   Plus,
-  // RotateCw, // Removed RotateCw import as it was commented out anyway and not used for compression
+  UploadCloud,
 } from "lucide-react";
-// import { Link } from "react-router-dom";
 import Notification from "./Notification";
 import PageCard from "./PageCard";
 
@@ -33,38 +33,35 @@ const ProgressModal = ({
   totalPages,
   onCancel,
 }) => (
-  <div className="fixed inset-0 bg-gradient-to-br from-blue-700/20 to-teal-700/20 backdrop-blur-md flex items-center justify-center z-50 animate-fade-in">
-    <div className="bg-white/95 rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl border border-white/40 transform scale-95 animate-scale-in">
-      <h3 className="text-xl font-bold text-gray-800 mb-5 text-center">
-        Processing Files
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+    <div className="w-full max-w-md mx-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-2xl animate-scale-in">
+      <h3 className="mb-5 text-center text-lg font-bold text-[var(--color-text)]">
+        Processing files
       </h3>
 
       <div className="space-y-6">
         <div className="space-y-2">
-          <div className="flex justify-between text-sm font-semibold text-gray-700">
-            <span>Overall Progress</span>
-            <span>{Math.round(progress)}%</span>
+          <div className="flex justify-between text-sm font-semibold text-[var(--color-text-muted)]">
+            <span>Overall progress</span>
+            <span className="tabular-nums text-[var(--color-text)]">{Math.round(progress)}%</span>
           </div>
-          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-border)]">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-teal-500 rounded-full transition-all duration-300 ease-out"
+              className="h-full rounded-full bg-[var(--color-primary)] transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
         <div className="space-y-1 text-center">
-          <div className="text-sm font-medium text-gray-700">{status}</div>
-          <div className="text-sm font-bold text-gray-800">
+          <div className="text-sm text-[var(--color-text-muted)]">{status}</div>
+          <div className="text-sm font-semibold text-[var(--color-text)]">
             Page {currentPage} of {totalPages}
           </div>
         </div>
 
-        <button
-          className="w-full px-5 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors duration-300 transform hover:scale-105 shadow-md"
-          onClick={onCancel}
-        >
-          Cancel Process
+        <button className="btn-secondary w-full" onClick={onCancel}>
+          Cancel
         </button>
       </div>
     </div>
@@ -79,43 +76,28 @@ const ContextMenu = ({ x, y, onClose, onReplace, onInsertBefore, onInsertAfter }
 
   return (
     <div
-      className="context-menu fixed rounded-md py-1.5 z-50 border border-gray-300 bg-white shadow-xl animate-scale-in-fast"
+      className="context-menu fixed z-50 min-w-[170px] rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] py-1.5 shadow-2xl animate-scale-in"
       style={menuStyle}
       onClick={(e) => e.stopPropagation()} // Prevent closing on click inside menu
       onContextMenu={(e) => e.preventDefault()} // Prevent browser default context menu
     >
-      <button
-        className="w-full px-3 py-1.5 text-left text-gray-800 text-sm font-medium hover:bg-blue-100 flex items-center transition-colors duration-200"
-        onClick={(e) => {
-          onReplace();
-          onClose();
-        }}
-      >
-        <FileText className="w-4 h-4 mr-2 text-blue-600" />
-        <span className="text-gray-800">Replace Page</span>
-      </button>
-      <button
-        className="w-full px-3 py-1.5 text-left text-gray-800 text-sm font-medium hover:bg-teal-100 flex items-center transition-colors duration-200"
-        onClick={(e) => {
-          onInsertBefore();
-          onClose();
-        }}
-      >
-        <Plus className="w-4 h-4 mr-2 text-teal-600" />
-        <span className="text-gray-800">Insert Before</span>
-      </button>
-      <button
-        className="w-full px-3 py-1.5 text-left text-gray-800 text-sm font-medium hover:bg-emerald-100 flex items-center transition-colors duration-200"
-        onClick={(e) => {
-          onInsertAfter();
-          onClose();
-        }}
-      >
-        <Plus className="w-4 h-4 mr-2 text-emerald-600" />
-        <span className="text-gray-800">Insert After</span>
-      </button>
-      {/* Removed "Clear All Pages" button from ContextMenu as it was commented out */}
-      {/* Removed "Rotate 90° Clockwise" button from ContextMenu as it was commented out */}
+      {[
+        { icon: FileText, label: "Replace page", action: onReplace },
+        { icon: Plus, label: "Insert before", action: onInsertBefore },
+        { icon: Plus, label: "Insert after", action: onInsertAfter },
+      ].map(({ icon: Icon, label, action }) => (
+        <button
+          key={label}
+          className="flex w-full items-center px-3 py-2 text-left text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-primary-light)]"
+          onClick={() => {
+            action();
+            onClose();
+          }}
+        >
+          <Icon className="mr-2.5 h-4 w-4 text-[var(--color-primary)]" />
+          {label}
+        </button>
+      ))}
     </div>
   );
 };
@@ -124,11 +106,11 @@ const LoadingOverlay = ({ isLoading }) => {
   if (!isLoading) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-white p-5 rounded-xl shadow-2xl flex flex-col items-center space-y-3 animate-scale-in">
-        <Loader2 className="w-7 h-7 animate-spin text-blue-600" />
-        <span className="text-gray-800 text-base font-medium">
-          Replacing page...
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+      <div className="flex flex-col items-center space-y-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-2xl animate-scale-in">
+        <Loader2 className="h-7 w-7 animate-spin text-[var(--color-primary)]" />
+        <span className="text-base font-medium text-[var(--color-text)]">
+          Updating pages...
         </span>
       </div>
     </div>
@@ -140,14 +122,13 @@ const InsertSlot = ({ onClick }) => {
     <button
       type="button"
       onClick={onClick}
-      className="relative flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-teal-400 bg-gray-50 hover:bg-teal-50 transition-all duration-200 ease-in-out group aspect-[3/4] shadow-sm hover:shadow-md"
+      className="group flex aspect-[3/4] items-center justify-center rounded-xl border-2 border-dashed border-[var(--color-border)] bg-[var(--color-bg)]/40 transition-all duration-200 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]"
       title="Insert pages here"
       aria-label="Insert pages here"
     >
-      <div className="absolute inset-0 rounded-lg pointer-events-none bg-gradient-to-b from-transparent via-transparent to-black/15" />
-      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 group-hover:bg-blue-500 text-white shadow-lg">
-        <Plus className="w-5 h-5" />
-      </div>
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-primary)] text-white shadow-lg transition-transform group-hover:scale-110">
+        <Plus className="h-5 w-5" />
+      </span>
     </button>
   );
 };
@@ -797,138 +778,166 @@ const App = () => {
     disabled: isLoading || replaceLoading, // Disable dropzone during any loading
   });
 
+  const hasPages = pages.length > 0;
+  const busy = isLoading || replaceLoading;
+
+  const openFilePicker = () => {
+    if (!fileInputRef.current) return;
+    resetFileInput();
+    fileInputRef.current.click();
+  };
+
   return (
-    <div className="min-h-screen bg-white text-black font-sans relative">
-      <div className="container mx-auto pt-12 pb-8 md:pt-16 md:pb-12 relative z-10">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-6">
-            PDF & Image Combiner
-          </h1>
+    <div className="text-[var(--color-text)]">
+      {/* Hidden file input for add / replace / insert functionality */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        multiple
+        className="hidden"
+        accept="application/pdf,image/png,image/jpeg,image/jpg"
+        onChange={handleFileSelect}
+        disabled={busy}
+      />
 
-        {/* Hidden file input for add / replace / insert functionality */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          multiple
-          className="hidden"
-          accept="application/pdf,image/png,image/jpeg,image/jpg"
-          onChange={handleFileSelect}
-          disabled={isLoading || replaceLoading}
-        />
+      <header className="text-center">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-primary)]">
+          PDF tool
+        </p>
+        <h1 className="h2 mt-2">PDF &amp; Image Combiner</h1>
+        <p className="mx-auto mt-3 max-w-xl text-[var(--color-text-muted)]">
+          Drop in PDFs and images, drag them into the order you want, and
+          download the whole thing as a single PDF.
+        </p>
+      </header>
 
-        <div className="mb-12">
+      {/* Upload: a full panel while empty, a slim bar once pages exist */}
+      {!hasPages ? (
+        <div className="mx-auto mt-10 max-w-2xl">
           <div
             {...getRootProps({
-              className: `border-2 border-dashed rounded-3xl p-8 text-center mb-6 transition-colors ${
+              className: `rounded-2xl border-2 border-dashed p-10 text-center transition-colors ${
                 isDragActive
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-blue-200 hover:border-blue-400"
+                  ? "border-[var(--color-primary)] bg-[var(--color-primary-light)]"
+                  : "border-[var(--color-border-strong)] bg-[var(--color-bg-card)]/50 hover:border-[var(--color-primary)]"
               }`,
             })}
           >
             <input {...getInputProps()} />
-            <div className="mb-4">
-              <Plus className="w-8 h-8 mx-auto text-blue-400" />
-            </div>
-            <p className="text-[14px] font-medium">
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-primary-light)]">
+              <UploadCloud className="h-6 w-6 text-[var(--color-primary)]" />
+            </span>
+            <p className="mt-4 text-base font-semibold">
               {isDragActive ? "Drop your files here" : "Drag & drop files here"}
             </p>
-            <p className="text-[12px] text-gray-500">
-              PDF • JPG • PNG • JPEG
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+              PDF, JPG, PNG and JPEG - as many as you like
             </p>
-          </div>
-
-          <div>
             <button
               type="button"
-              disabled={isLoading || replaceLoading}
-              className={`mt-4 w-full rounded-lg px-6 py-3 text-sm font-medium text-white transition-colors flex items-center justify-center ${
-                isLoading || replaceLoading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
-              onClick={() => {
-                if (!fileInputRef.current) return;
-                resetFileInput();
-                fileInputRef.current.click();
-              }}
+              disabled={busy}
+              className="btn-primary mt-6"
+              onClick={openFilePicker}
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Choose Files
+              <Plus className="h-4 w-4" />
+              Choose files
             </button>
           </div>
-        </div>
 
-        {/* Feature List (Conditionally rendered) */}
-        {pages.length === 0 && (
-          <p className="text-center text-gray-500 text-sm">
-            <span className="font-medium">Merge</span> multiple files into one PDF. <span className="font-medium">Reorder</span> pages into the correct order. <span className="font-medium">Download</span> your combined PDF.
+          <ol className="mt-8 grid gap-4 sm:grid-cols-3">
+            {[
+              ["Add", "Pick PDFs and images in any mix."],
+              ["Arrange", "Drag pages until the order is right."],
+              ["Download", "Save it all as one clean PDF."],
+            ].map(([title, copy], i) => (
+              <li
+                key={title}
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)]/40 p-4 text-left"
+              >
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-primary-light)] text-xs font-bold text-[var(--color-primary)]">
+                  {i + 1}
+                </span>
+                <p className="mt-2.5 text-sm font-semibold">{title}</p>
+                <p className="mt-0.5 text-sm text-[var(--color-text-muted)]">{copy}</p>
+              </li>
+            ))}
+          </ol>
+
+          <p className="mt-6 flex items-center justify-center gap-2 text-xs text-[var(--color-text-muted)]">
+            <Lock className="h-3.5 w-3.5" />
+            Everything runs in your browser - files never leave this device.
           </p>
-        )}
+        </div>
+      ) : (
+        <div
+          {...getRootProps({
+            className: `mt-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed px-4 py-3 transition-colors ${
+              isDragActive
+                ? "border-[var(--color-primary)] bg-[var(--color-primary-light)]"
+                : "border-[var(--color-border-strong)] bg-[var(--color-bg-card)]/40"
+            }`,
+          })}
+        >
+          <input {...getInputProps()} />
+          <p className="text-sm text-[var(--color-text-muted)]">
+            {isDragActive
+              ? "Drop to add these files"
+              : "Drag more files here to add them to the end"}
+          </p>
+          <button
+            type="button"
+            disabled={busy}
+            className="btn-secondary py-2 text-sm"
+            onClick={openFilePicker}
+          >
+            <Plus className="h-4 w-4" />
+            Add files
+          </button>
+        </div>
+      )}
 
-        {pages.length > 0 && (
-          <div className="p-7 space-y-7 bg-gray-50 rounded-2xl shadow-xl border border-gray-200 animate-fade-in-up">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-                <h2 className="text-lg font-bold text-gray-900">
-                  Your Pages ({pages.length})
-                </h2>
-              <div className="flex gap-3">
-                {/* {pages.length > 0 && ( // Show clear all if there are pages
-                  <button
-                    onClick={handleClearAll}
-                    disabled={isLoading || pages.length === 0}
-                    className={`px-6 py-2.5 rounded-full flex items-center justify-center font-semibold text-base whitespace-nowrap
-                      transition-all duration-300 transform
-                      ${isLoading || pages.length === 0
-                        ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                        : 'bg-red-600 hover:bg-red-700 text-white shadow-md hover:scale-105'
-                      }
-                    `}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Clear All
-                  </button>
-                )} */}
-                  <button
-                  onClick={createFinalPDF}
-                    disabled={isLoading || pages.length === 0}
-                  className={`px-6 py-2.5 rounded-full flex items-center justify-center font-semibold text-base whitespace-nowrap
-                    transition-all duration-300 transform
-                    ${
-                      isLoading || pages.length === 0
-                        ? "bg-gray-600 text-gray-300 cursor-not-allowed"
-                        : "bg-gradient-to-r from-blue-500 to-teal-600 hover:from-blue-600 hover:to-teal-700 text-white shadow-md hover:scale-105"
-                    }
-                  `}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generating PDF...
-                    </>
+      {hasPages && (
+        <div className="mt-6 animate-fade-in-up">
+          <div className="flex flex-col gap-4 border-b border-[var(--color-border)] pb-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-lg font-bold">
+                {pages.length} page{pages.length === 1 ? "" : "s"} ready
+              </h2>
+              <p className="mt-0.5 text-sm text-[var(--color-text-muted)]">
+                Drag a page to reorder it - right-click for replace and insert.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setShowInlineInsert((v) => !v)}
+                disabled={busy}
+                className="btn-secondary"
+              >
+                {showInlineInsert ? "Done inserting" : "Insert pages"}
+              </button>
+              <button
+                onClick={createFinalPDF}
+                disabled={busy}
+                className="btn-primary"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating PDF...
+                  </>
                 ) : (
                   <>
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Combined PDF
+                    <Download className="h-4 w-4" />
+                    Download combined PDF
                   </>
                 )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowInlineInsert((v) => !v)}
-                    disabled={isLoading || replaceLoading || pages.length === 0}
-                    className={`px-6 py-2.5 rounded-full flex items-center justify-center font-semibold text-base whitespace-nowrap transition-all duration-300 transform ${
-                      isLoading || replaceLoading || pages.length === 0
-                        ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                        : (showInlineInsert ? 'bg-blue-800 text-white hover:bg-blue-700' : 'bg-blue-600 text-white hover:bg-blue-700')
-                    }`}
-                  >
-                    {showInlineInsert ? 'Hide Insert +' : 'Insert Pages +'}
-                  </button>
-                </div>
+              </button>
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-7 md:gap-6 lg:gap-7">
-              {showInlineInsert && (
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {showInlineInsert && (
                 <InsertSlot
                   key={`insert-start`}
                   onClick={() => {
@@ -973,28 +982,27 @@ const App = () => {
                   )}
                 </React.Fragment>
               ))}
-            </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {contextMenu && (
-          <ContextMenu
-            x={contextMenu.x}
-            y={contextMenu.y}
-            onClose={() => setContextMenu(null)}
-            onReplace={handleReplacePage}
-            onInsertBefore={handleInsertBefore}
-            onInsertAfter={handleInsertAfter}
-          />
-        )}
-        <LoadingOverlay isLoading={replaceLoading} />
-
-        <Notification
-          message={notification.message}
-          type={notification.type}
-          onClose={clearNotification}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+          onReplace={handleReplacePage}
+          onInsertBefore={handleInsertBefore}
+          onInsertAfter={handleInsertAfter}
         />
-      </div>
+      )}
+      <LoadingOverlay isLoading={replaceLoading} />
+
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={clearNotification}
+      />
     </div>
   );
 };

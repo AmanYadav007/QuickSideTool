@@ -28,25 +28,23 @@ const PageCard = memo(({
       onDragLeave={handleDragLeave} // Attach new handler
       onContextMenu={(e) => handleContextMenu(e, page, index)}
       className={`
-        relative group rounded-lg overflow-hidden bg-gray-100 border border-gray-200
-        transition-all duration-200 ease-in-out transform
-        hover:shadow-lg hover:scale-[1.02] hover:border-blue-400 cursor-grab
-        ${draggedItem === index ? 'opacity-50 scale-[0.98] shadow-xl' : ''}
+        relative group rounded-xl overflow-hidden bg-[var(--color-bg-card)] border border-[var(--color-border)]
+        transition-all duration-200 ease-in-out
+        hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-hover)] cursor-grab active:cursor-grabbing
+        ${draggedItem === index ? 'opacity-40' : ''}
         ${replaceLoading && contextMenu?.pageIndex === index ? 'opacity-50 animate-pulse' : ''}
-        ${dragOverIndex === index && draggedItem !== index ? 'border-4 border-blue-500 ring-4 ring-blue-500/50' : ''}
+        ${dragOverIndex === index && draggedItem !== index ? 'ring-2 ring-[var(--color-primary)]' : ''}
       `}
     >
-      <div className="relative w-full aspect-[3/4]">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/50 pointer-events-none z-10" />
-
-        <div className="absolute top-2 left-2 p-1.5 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity cursor-move z-20">
+      <div className="relative w-full aspect-[3/4] bg-[var(--color-bg)]">
+        <div className="absolute top-2 left-2 p-1.5 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity cursor-move z-20">
           <GripVertical className="w-4 h-4 text-white/90" />
         </div>
 
         <img
           src={page.preview}
           alt={`Page ${index + 1}`}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="absolute inset-0 w-full h-full object-contain"
         />
 
         {showInsertButtons && isFirst && (
@@ -78,14 +76,15 @@ const PageCard = memo(({
         )}
 
         <button
-          className="absolute top-2 right-2 w-8 h-8 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center shadow-sm hover:bg-red-700 z-20"
+          className="absolute top-2 right-2 w-8 h-8 bg-[var(--color-error)] text-white rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 flex items-center justify-center shadow-md hover:brightness-110 z-20"
           onClick={() => handleRemovePage(index)}
+          aria-label={`Remove page ${index + 1}`}
         >
           <Trash2 className="w-4 h-4" />
         </button>
 
-        <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/50 text-white text-xs font-medium text-center z-10">
-          Page {index + 1}
+        <div className="absolute bottom-0 left-0 right-0 py-1.5 bg-black/70 text-white text-xs font-semibold text-center z-10">
+          {index + 1}
         </div>
       </div>
     </div>
