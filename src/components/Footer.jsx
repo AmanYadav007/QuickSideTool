@@ -1,5 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Puzzle, ExternalLink } from 'lucide-react';
+import Logo from './Logo';
+import { CHROME_EXTENSION_URL } from '../constants/links';
 
 const COLUMNS = [
   {
@@ -43,8 +46,23 @@ const Footer = () => (
     <div className="mx-auto w-full max-w-7xl px-6 py-12">
       <div className="grid grid-cols-2 gap-6 md:grid-cols-5 md:gap-8">
         <div className="col-span-2 md:col-span-1">
-          <p className="text-[11px] font-extrabold tracking-widest uppercase text-blue-500">QuickSideTool</p>
-          <p className="mt-1.5 text-sm text-[var(--color-text-muted)]">Fast. Free. Secure.</p>
+          <Logo size={26} />
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">Fast. Free. Secure.</p>
+
+          <a
+            href={CHROME_EXTENSION_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex items-center gap-2 rounded-full border border-[var(--color-border-strong)] px-4 py-2 text-sm font-semibold text-[var(--color-text)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+          >
+            <Puzzle className="h-4 w-4" aria-hidden="true" />
+            Add to Chrome
+            <ExternalLink className="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
+          </a>
+          <p className="mt-2 max-w-[15rem] text-xs text-[var(--color-text-light)]">
+            Every tool in your browser's side panel, next to whatever you're
+            reading.
+          </p>
         </div>
 
         {COLUMNS.map((column) => (

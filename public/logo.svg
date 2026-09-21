@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="qstMark" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22D3EE"/>
+      <stop offset="0.55" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="20" height="20" rx="5.5" fill="url(#qstMark)"/>
+  <rect x="5" y="8.2" width="3.4" height="1.6" rx="0.8" fill="#fff" opacity="0.95"/>
+  <rect x="5" y="11.2" width="3.4" height="1.6" rx="0.8" fill="#fff" opacity="0.95"/>
+  <rect x="5" y="14.2" width="3.4" height="1.6" rx="0.8" fill="#fff" opacity="0.95"/>
+  <rect x="11.5" y="5.5" width="7.5" height="13" rx="1.6" fill="#fff" opacity="0.95"/>
+</svg>
