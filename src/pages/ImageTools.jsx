@@ -12,7 +12,7 @@ const HIGHLIGHTS = [
 ];
 
 const source = categories.find((category) => category.id === "image-tools");
-// Drop the "Image Toolkit" entry — on this page it would link back to itself.
+// Drop the "Image Toolkit" entry - on this page it would link back to itself.
 const imageCategory = {
   ...source,
   tools: source.tools.filter((tool) => tool.to !== "/image-tools"),

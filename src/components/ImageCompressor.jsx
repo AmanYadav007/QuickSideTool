@@ -269,7 +269,7 @@ const ImageCompressor = () => {
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                   <div>
                     <p className="font-semibold text-[var(--color-text)]">{images.length} image{images.length > 1 ? 's' : ''} ready to compress</p>
-                    <p className="text-sm text-[var(--color-text-muted)]">Compression runs in your browser — files stay private.</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">Compression runs in your browser - files stay private.</p>
                   </div>
                 </div>
               </div>

@@ -115,7 +115,7 @@ const UploadZone = () => {
             ))}
           </div>
           <p className="mt-3 text-xs text-secondary">
-            Your file stays on this device — re-select it on the tool page to start.
+            Your file stays on this device - re-select it on the tool page to start.
           </p>
         </div>
       )}

@@ -202,7 +202,7 @@ const PDFLinkRemover = () => {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    // A fresh FormData per request — a request that failed may have consumed the body.
+    // A fresh FormData per request - a request that failed may have consumed the body.
     const makeRequest = (endpoint) =>
       fetch(`${backendUrl}${endpoint}`, {
         method: 'POST',
@@ -257,7 +257,7 @@ const PDFLinkRemover = () => {
             const progress = Math.round((receivedLength / contentLength) * 50) + 25; // 25-75% range
             updateProcessingOverlay(`Downloading processed PDF... ${progress}%`, 3, 4, progress);
           } else {
-            // Chunked/gzipped responses have no Content-Length — show activity, not a stuck bar.
+            // Chunked/gzipped responses have no Content-Length - show activity, not a stuck bar.
             updateProcessingOverlay('Downloading processed PDF...', 3, 4, 60);
           }
         }
@@ -295,7 +295,7 @@ const PDFLinkRemover = () => {
       }
     } catch (error) {
       if (error.name === 'AbortError') {
-        // User cancelled — message + cleanup already handled by onCancel.
+        // User cancelled - message + cleanup already handled by onCancel.
         return;
       }
       console.error('Network or processing error:', error);
