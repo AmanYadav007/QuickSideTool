@@ -140,7 +140,7 @@ const InsertSlot = ({ onClick }) => {
     <button
       type="button"
       onClick={onClick}
-      className="relative flex items-center justify-center rounded-lg border-2 border-dashed border-white/15 hover:border-teal-400/70 bg-white/5 hover:bg-teal-500/5 transition-all duration-200 ease-in-out group aspect-[3/4] shadow-sm hover:shadow-md"
+      className="relative flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-teal-400 bg-gray-50 hover:bg-teal-50 transition-all duration-200 ease-in-out group aspect-[3/4] shadow-sm hover:shadow-md"
       title="Insert pages here"
       aria-label="Insert pages here"
     >
@@ -307,6 +307,7 @@ const App = () => {
   const handleReplacePage = useCallback(() => {
     if (fileInputRef.current && contextMenu !== null) {
       fileInputRef.current.value = "";
+      fileInputRef.current.multiple = false;
       fileInputRef.current.dataset.pageIndex = contextMenu.pageIndex;
       delete fileInputRef.current.dataset.insertMode;
       fileInputRef.current.click();
@@ -389,101 +390,6 @@ const App = () => {
     return newPagesData;
   };
 
-  const handleFileSelect = useCallback(
-    async (event) => {
-      const files = Array.from(event.target.files || []);
-      const targetIndex = parseInt(event.target.dataset.pageIndex);
-      const insertMode = event.target.dataset.insertMode;
-
-      if ((!files.length && insertMode) || isNaN(targetIndex)) {
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-          delete fileInputRef.current.dataset.pageIndex;
-          delete fileInputRef.current.dataset.insertMode;
-          fileInputRef.current.multiple = false;
-        }
-        return;
-      }
-
-      try {
-        setReplaceLoading(true);
-
-        if (!insertMode) {
-          // Replace mode (single file)
-          const file = files[0];
-          if (!file || !Object.values(FILE_TYPES).includes(file.type)) {
-            showNotification(
-              "Please select a valid PDF or image file (PDF, JPG, JPEG, PNG).",
-              "error"
-            );
-            return;
-          }
-          const replacementPages = await processFileIntoPageData(file);
-          setPages((prevPages) => {
-            const updatedPages = [...prevPages];
-            updatedPages.splice(targetIndex, 1, ...replacementPages);
-            return updatedPages;
-          });
-          showNotification("Page(s) replaced successfully!", "success");
-        } else {
-          // Insert mode (multiple files allowed)
-          const invalidFiles = files.filter(
-            (f) => !Object.values(FILE_TYPES).includes(f.type)
-          );
-          if (invalidFiles.length) {
-            showNotification(
-              `Unsupported files: ${invalidFiles
-                .map((f) => f.name)
-                .join(", ")}. Please use PDF, JPG, JPEG, or PNG.`,
-              "error"
-            );
-            return;
-          }
-
-          let newPagesToInsert = [];
-          for (const file of files) {
-            const pagesFromFile = await processFileIntoPageData(file);
-            newPagesToInsert.push(...pagesFromFile);
-          }
-
-          setPages((prevPages) => {
-            const updatedPages = [...prevPages];
-            const atIndex = insertMode === "before" ? targetIndex : targetIndex + 1;
-            updatedPages.splice(atIndex, 0, ...newPagesToInsert);
-            return updatedPages;
-          });
-          showNotification("Page(s) inserted successfully!", "success");
-        }
-      } catch (error) {
-        showNotification("Error processing file(s): " + error.message, "error");
-      } finally {
-        setReplaceLoading(false);
-        setContextMenu(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-          delete fileInputRef.current.dataset.pageIndex;
-          delete fileInputRef.current.dataset.insertMode;
-          fileInputRef.current.multiple = false;
-        }
-      }
-    },
-    [showNotification]
-  );
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        contextMenu &&
-        event.target &&
-        !event.target.closest(".context-menu")
-      ) {
-        setContextMenu(null);
-      }
-    };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [contextMenu]);
-
   const createRootForModal = () => {
     const progressDiv = document.createElement("div");
     document.body.appendChild(progressDiv);
@@ -544,7 +450,7 @@ const App = () => {
         }
 
         let cumulativePagesProcessed = 0;
-        
+
         for (let fileIndex = 0; fileIndex < acceptedFiles.length; fileIndex++) {
           if (cancelProcessingRef.current) break;
 
@@ -576,7 +482,7 @@ const App = () => {
           };
 
           const pagesFromFile = await processFileIntoPageData(
-                  file,
+            file,
             updateCurrentFileProgress
           );
           newOverallPages.push(...pagesFromFile);
@@ -609,6 +515,108 @@ const App = () => {
     },
     [showNotification]
   );
+
+  const resetFileInput = useCallback(() => {
+    if (!fileInputRef.current) return;
+    fileInputRef.current.value = "";
+    delete fileInputRef.current.dataset.pageIndex;
+    delete fileInputRef.current.dataset.insertMode;
+    fileInputRef.current.multiple = true;
+  }, []);
+
+  const handleFileSelect = useCallback(
+    async (event) => {
+      const files = Array.from(event.target.files || []);
+      const hasTarget = event.target.dataset.pageIndex !== undefined;
+      const targetIndex = parseInt(event.target.dataset.pageIndex, 10);
+      const insertMode = event.target.dataset.insertMode;
+
+      if (!files.length) {
+        resetFileInput();
+        return;
+      }
+
+      // "Choose Files" targets no existing page, so append through the same
+      // pipeline the dropzone uses instead of bailing out.
+      if (!hasTarget || isNaN(targetIndex)) {
+        resetFileInput();
+        await onDrop(files);
+        return;
+      }
+
+      try {
+        setReplaceLoading(true);
+
+        if (!insertMode) {
+          // Replace mode (single file)
+          const file = files[0];
+          if (!file || !Object.values(FILE_TYPES).includes(file.type)) {
+            showNotification(
+              "Please select a valid PDF or image file (PDF, JPG, JPEG, PNG).",
+              "error"
+            );
+            return;
+          }
+          const replacementPages = await processFileIntoPageData(file);
+          setPages((prevPages) => {
+            const updatedPages = [...prevPages];
+            updatedPages.splice(targetIndex, 1, ...replacementPages);
+            return updatedPages;
+          });
+          showNotification("Page(s) replaced successfully!", "success");
+        } else {
+          // Insert mode (multiple files allowed)
+          const invalidFiles = files.filter(
+            (f) => !Object.values(FILE_TYPES).includes(f.type)
+          );
+          if (invalidFiles.length) {
+            showNotification(
+              `Unsupported files: ${invalidFiles
+                .map((f) => f.name)
+                .join(", ")}. Please use PDF, JPG, JPEG, or PNG.`,
+              "error"
+            );
+            return;
+          }
+
+          let newPagesToInsert = [];
+          for (const file of files) {
+            const pagesFromFile = await processFileIntoPageData(file);
+            newPagesToInsert.push(...pagesFromFile);
+          }
+
+          setPages((prevPages) => {
+            const updatedPages = [...prevPages];
+            const atIndex = insertMode === "before" ? targetIndex : targetIndex + 1;
+            updatedPages.splice(atIndex, 0, ...newPagesToInsert);
+            return updatedPages;
+          });
+          showNotification("Page(s) inserted successfully!", "success");
+        }
+      } catch (error) {
+        showNotification("Error processing file(s): " + error.message, "error");
+      } finally {
+        setReplaceLoading(false);
+        setContextMenu(null);
+        resetFileInput();
+      }
+    },
+    [showNotification, onDrop, resetFileInput]
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        contextMenu &&
+        event.target &&
+        !event.target.closest(".context-menu")
+      ) {
+        setContextMenu(null);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [contextMenu]);
 
   const createFinalPDF = async () => {
     if (pages.length === 0) {
@@ -778,12 +786,14 @@ const App = () => {
     }
   };
 
-  useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       "application/pdf": [".pdf"],
-      "image/*": [".png", ".jpg", ".jpeg"],
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/png": [".png"],
     },
+    noClick: true, // The "Choose Files" button owns the click-to-browse flow
     disabled: isLoading || replaceLoading, // Disable dropzone during any loading
   });
 
@@ -794,23 +804,33 @@ const App = () => {
             PDF & Image Combiner
           </h1>
 
-        {/* Hidden file input for replacement/insert functionality */}
+        {/* Hidden file input for add / replace / insert functionality */}
         <input
           type="file"
           ref={fileInputRef}
+          multiple
           className="hidden"
           accept="application/pdf,image/png,image/jpeg,image/jpg"
           onChange={handleFileSelect}
-          disabled={replaceLoading} // Disable file input during replacement
+          disabled={isLoading || replaceLoading}
         />
 
         <div className="mb-12">
-          <div className="border-2 border-dashed rounded-3xl p-8 text-center border-blue-200 mb-6">
+          <div
+            {...getRootProps({
+              className: `border-2 border-dashed rounded-3xl p-8 text-center mb-6 transition-colors ${
+                isDragActive
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-blue-200 hover:border-blue-400"
+              }`,
+            })}
+          >
+            <input {...getInputProps()} />
             <div className="mb-4">
               <Plus className="w-8 h-8 mx-auto text-blue-400" />
             </div>
             <p className="text-[14px] font-medium">
-              Drag & drop files here
+              {isDragActive ? "Drop your files here" : "Drag & drop files here"}
             </p>
             <p className="text-[12px] text-gray-500">
               PDF • JPG • PNG • JPEG
@@ -818,29 +838,21 @@ const App = () => {
           </div>
 
           <div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept="application/pdf,image/png,image/jpeg,image/jpg"
-              onChange={handleFileSelect}
-            />
             <button
-              className="mt-4 w-full rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-              onClick={() => fileInputRef.current?.click()}
+              type="button"
+              disabled={isLoading || replaceLoading}
+              className={`mt-4 w-full rounded-lg px-6 py-3 text-sm font-medium text-white transition-colors flex items-center justify-center ${
+                isLoading || replaceLoading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+              onClick={() => {
+                if (!fileInputRef.current) return;
+                resetFileInput();
+                fileInputRef.current.click();
+              }}
             >
-              <svg
-                className="mr-2 h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1={5} y1={5} x2={19} y2={19} />
-                <line x1={19} y1={5} x2={5} y2={19} />
-              </svg>
+              <Plus className="mr-2 h-4 w-4" />
               Choose Files
             </button>
           </div>
@@ -854,9 +866,9 @@ const App = () => {
         )}
 
         {pages.length > 0 && (
-          <div className="p-7 space-y-7 bg-white/5 backdrop-blur-lg rounded-2xl shadow-xl border border-white/10 animate-fade-in-up">
+          <div className="p-7 space-y-7 bg-gray-50 rounded-2xl shadow-xl border border-gray-200 animate-fade-in-up">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-                <h2 className="text-1xl font-bold text-white">
+                <h2 className="text-lg font-bold text-gray-900">
                   Your Pages ({pages.length})
                 </h2>
               <div className="flex gap-3">

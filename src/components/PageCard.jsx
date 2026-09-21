@@ -28,7 +28,7 @@ const PageCard = memo(({
       onDragLeave={handleDragLeave} // Attach new handler
       onContextMenu={(e) => handleContextMenu(e, page, index)}
       className={`
-        relative group rounded-lg overflow-hidden bg-white/5 border border-white/10
+        relative group rounded-lg overflow-hidden bg-gray-100 border border-gray-200
         transition-all duration-200 ease-in-out transform
         hover:shadow-lg hover:scale-[1.02] hover:border-blue-400 cursor-grab
         ${draggedItem === index ? 'opacity-50 scale-[0.98] shadow-xl' : ''}
