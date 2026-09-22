@@ -63,6 +63,24 @@ const LandingPage = () => {
                 </li>
               ))}
             </ul>
+
+            {/* Scroll indicator */}
+            <div className="mt-10 animate-bounce-step" aria-hidden="true">
+              <svg
+                className="mx-auto h-6 w-6 text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-primary)]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+            </div>
           </div>
         </section>
 

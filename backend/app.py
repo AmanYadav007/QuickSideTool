@@ -57,14 +57,19 @@ def unlock_pdf():
         return jsonify({"error": "Invalid file type. Only PDF files are accepted."}), 400
 
     try:
+        # Read file into bytes first for reliable pikepdf handling
+        file_bytes = file.read()
+        if not file_bytes:
+            logging.error("Unlock PDF: Empty file received.")
+            return jsonify({"error": "Empty file received."}), 400
+
         pdf = None
-        file.stream.seek(0) # Ensure stream is at the beginning
 
         # Attempt to open the PDF. pikepdf.Pdf.open handles decryption directly.
         # It will raise an error if the password is incorrect or PDF is malformed.
         try:
             # Attempt to open using the provided password. If it's wrong, PasswordError is thrown.
-            pdf = pikepdf.Pdf.open(file.stream, password=password)
+            pdf = pikepdf.Pdf.open(io.BytesIO(file_bytes), password=password)
         except pikepdf.PasswordError:
             logging.warning(f"Unlock PDF: Incorrect password for '{file.filename}'.")
             return jsonify({"error": "Incorrect password for this PDF."}), 400
@@ -119,11 +124,16 @@ def lock_pdf():
         return jsonify({"error": "Invalid file type. Only PDF files are accepted."}), 400
 
     try:
-        file.stream.seek(0) # Ensure stream is at the beginning
-        pdf = pikepdf.Pdf.open(file.stream)
+        # Read file into bytes first for reliable pikepdf handling
+        file_bytes = file.read()
+        if not file_bytes:
+            logging.error("Lock PDF: Empty file received.")
+            return jsonify({"error": "Empty file received."}), 400
+
+        pdf = pikepdf.Pdf.open(io.BytesIO(file_bytes))
 
         output = io.BytesIO()
-        
+
         # Choose encryption strength
         # R mapping: 4 => AES-128, 6 => AES-256 (modern)
         revision = 4 if str(strength).lower() == 'fast' else 6
@@ -132,7 +142,7 @@ def lock_pdf():
             owner=password,  # Owner password same as user for simplicity
             R=revision
         )
-        
+
         pdf.save(output, encryption=encryption)
         output.seek(0)
 
