@@ -617,9 +617,36 @@ const App = () => {
       setIsLoading(true);
       cancelProcessingRef.current = false;
       const pdfDoc = await PDFDocument.create();
-      const pdfLibCache = new Map(); // Cache for PDFDocument.load instances
 
       const totalItemsToProcess = pages.length;
+
+      // Copy every page a source file contributes in ONE copyPages call. Calling it
+      // per page makes pdf-lib duplicate shared fonts/images for each page, which
+      // bloats the output enormously and made save() hang at 100% on real PDFs.
+      // Each file gets a queue of copies consumed in the user's page order.
+      const copiedPagesByFile = new Map();
+      const failedFiles = new Set();
+      const pageIndicesByFile = new Map();
+      pages.forEach((page) => {
+        if (page.type !== "pdf") return;
+        if (!pageIndicesByFile.has(page.file)) pageIndicesByFile.set(page.file, []);
+        pageIndicesByFile.get(page.file).push(page.pageIndex);
+      });
+      for (const [file, indices] of pageIndicesByFile) {
+        if (cancelProcessingRef.current) {
+          throw new Error("PDF creation cancelled by user.");
+        }
+        try {
+          const srcDoc = await PDFDocument.load(await file.arrayBuffer());
+          copiedPagesByFile.set(file, await pdfDoc.copyPages(srcDoc, indices));
+        } catch (error) {
+          failedFiles.add(file);
+          showNotification(
+            `Failed to read ${file.name}. Its pages will be skipped.`,
+            "error"
+          );
+        }
+      }
 
       for (let i = 0; i < totalItemsToProcess; i++) {
         if (cancelProcessingRef.current) {
@@ -627,7 +654,8 @@ const App = () => {
         }
 
         const page = pages[i];
-        const currentProgress = ((i + 1) / totalItemsToProcess) * 100;
+        // Reserve the last 10% for saving, so 100% only shows once the file is ready.
+        const currentProgress = ((i + 1) / totalItemsToProcess) * 90;
 
         modalRoot.render(
           <ProgressModal
@@ -643,16 +671,9 @@ const App = () => {
         );
 
         if (page.type === "pdf") {
+          if (failedFiles.has(page.file)) continue;
           try {
-            let srcDoc = pdfLibCache.get(page.file);
-            if (!srcDoc) {
-              const arrayBuffer = await page.file.arrayBuffer();
-              srcDoc = await PDFDocument.load(arrayBuffer);
-              pdfLibCache.set(page.file, srcDoc);
-            }
-            const [copiedPage] = await pdfDoc.copyPages(srcDoc, [
-              page.pageIndex,
-            ]);
+            const copiedPage = copiedPagesByFile.get(page.file).shift();
             // Preserve the source page's own rotation (scans/landscape slides often
             // carry 90°) and add any user-applied rotation on top of it.
             const sourceAngle = copiedPage.getRotation().angle || 0;
@@ -719,10 +740,14 @@ const App = () => {
         throw new Error("PDF creation cancelled by user.");
       }
 
+      if (pdfDoc.getPageCount() === 0) {
+        throw new Error("None of the pages could be added to the PDF.");
+      }
+
       modalRoot.render(
         <ProgressModal
-          progress={100}
-          status="Finalizing and downloading PDF..."
+          progress={95}
+          status="Finalizing PDF..."
           currentPage={totalItemsToProcess}
           totalPages={totalItemsToProcess}
           onCancel={() => {
@@ -731,8 +756,15 @@ const App = () => {
           }}
         />
       );
+      // Let the modal paint before the save starts.
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
-      const pdfBytes = await pdfDoc.save();
+      // objectsPerTick keeps the main thread (and the modal) responsive while saving.
+      const pdfBytes = await pdfDoc.save({ objectsPerTick: 50 });
+      if (cancelProcessingRef.current) {
+        throw new Error("PDF creation cancelled by user.");
+      }
+
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
 
@@ -743,9 +775,10 @@ const App = () => {
       link.click();
       document.body.removeChild(link);
 
-      URL.revokeObjectURL(url);
+      // Revoking synchronously after click() can abort the download in
+      // Safari/Firefox, so give the browser time to start it.
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
 
-      setTimeout(modalCleanup, 1500);
       showNotification("PDF created and downloaded successfully!", "success");
     } catch (error) {
       if (
