@@ -1,23 +1,37 @@
 from flask import Flask, request, send_file, jsonify
 import pikepdf # Use pikepdf for PDF operations
 from flask_cors import CORS
+import base64
 import io
+import json
 import logging
 import os
+import re
+import time
+import urllib.error
+import urllib.request
 from docx import Document
-from docx.shared import Inches, Pt
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-import fitz  # PyMuPDF for better text extraction
+import pymupdf as fitz  # PyMuPDF (the old `fitz` import name is deprecated)
+import mammoth  # Word -> HTML for Word to PDF
+from openpyxl import Workbook
+from openpyxl.styles import Font
+from openpyxl.utils import get_column_letter
+from pdf2docx import Converter  # layout-aware PDF -> Word
 from PIL import Image, ImageOps, ImageEnhance  # Add Pillow imports for image processing
 
 # Initialize Flask app
 app = Flask(__name__)
 
 # Configure CORS with specific settings for better compatibility
+# Reject uploads above 100 MB before they reach the handlers
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
+
 CORS(app, 
-     origins=['http://localhost:3000', 'http://localhost:3001', 'https://quicksidetool.com', 'https://www.quicksidetool.com'],
+     origins=['http://localhost:3000', 'http://localhost:3001', 'https://quicksidetool.com', 'https://www.quicksidetool.com',
+              'chrome-extension://ednlokciemgblchidkhbhhndphgjkoip'],  # the Chrome side-panel extension
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
      allow_headers=['Content-Type', 'Authorization', 'Access-Control-Allow-Credentials'],
+     expose_headers=['Content-Disposition'],  # lets the frontend read the download filename
      supports_credentials=True)
 
 # Configure logging
@@ -33,6 +47,57 @@ def home():
 @app.route('/health')
 def health():
     return jsonify({"status": "ok"})
+
+# Upload helpers shared by the conversion and compression endpoints
+def read_upload(extensions, label):
+    """
+    Validate the uploaded 'file' field and read it.
+    Returns (file, bytes, None) on success or (None, None, error_response).
+    """
+    if 'file' not in request.files:
+        logging.error(f"{label}: No file part in the request.")
+        return None, None, (jsonify({"error": "No file part in the request."}), 400)
+
+    file = request.files['file']
+    if file.filename == '':
+        logging.error(f"{label}: No selected file.")
+        return None, None, (jsonify({"error": "No selected file."}), 400)
+
+    if not file.filename.lower().endswith(extensions):
+        logging.error(f"{label}: Invalid file type uploaded: {file.filename}")
+        if file.filename.lower().endswith('.doc'):
+            message = "Old .doc files aren't supported. Open it in Word and save it as .docx first."
+        else:
+            message = f"Invalid file type. Accepted: {', '.join(extensions)}"
+        return None, None, (jsonify({"error": message}), 400)
+
+    file.stream.seek(0)
+    return file, file.read(), None
+
+
+def reject_locked_pdf(pdf_bytes):
+    """Return an error response if the PDF is unreadable or password-protected, else None."""
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    except Exception:
+        return jsonify({"error": "This file isn't a valid PDF or is damaged."}), 400
+    locked = doc.needs_pass
+    doc.close()
+    if locked:
+        return jsonify({"error": "This PDF is password-protected. Unlock it first, then try again."}), 400
+    return None
+
+
+def output_name(filename, extension, prefix=''):
+    """'report.pdf' -> 'report.docx' (or 'compressed_report.pdf' with a prefix)."""
+    return f"{prefix}{os.path.splitext(filename)[0]}{extension}"
+
+
+@app.errorhandler(413)
+def file_too_large(_error):
+    limit_mb = app.config['MAX_CONTENT_LENGTH'] // (1024 * 1024)
+    return jsonify({"error": f"File is too large. The limit is {limit_mb} MB."}), 413
+
 
 # Unlock PDF endpoint
 @app.route('/unlock-pdf', methods=['POST'])
@@ -537,101 +602,38 @@ def remove_pdf_links_advanced():
 # PDF TO DOCX CONVERSION ENDPOINT
 @app.route('/pdf-to-docx', methods=['POST'])
 def pdf_to_docx():
-    if 'file' not in request.files:
-        logging.error("PDF to DOCX: No file part in the request.")
-        return jsonify({"error": "No file part in the request."}), 400
+    """
+    Convert a PDF to an editable Word document with pdf2docx, which rebuilds
+    paragraphs, fonts, tables and images from the page layout.
+    """
+    file, pdf_bytes, error = read_upload(('.pdf',), 'PDF to DOCX')
+    if error:
+        return error
 
-    file = request.files['file']
-
-    if file.filename == '':
-        logging.error("PDF to DOCX: No selected file.")
-        return jsonify({"error": "No selected file."}), 400
-    if not file.filename.lower().endswith('.pdf'):
-        logging.error(f"PDF to DOCX: Invalid file type uploaded: {file.filename}")
-        return jsonify({"error": "Invalid file type. Only PDF files are accepted."}), 400
+    locked = reject_locked_pdf(pdf_bytes)
+    if locked:
+        return locked
 
     try:
-        file.stream.seek(0)
-        
-        # Open PDF with PyMuPDF for better text extraction
-        # PyMuPDF expects bytes for 'stream', not a file-like object
-        pdf_bytes = file.read()
-        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-        
-        # Create a new Word document
-        doc = Document()
-        
-        # Set document margins
-        sections = doc.sections
-        for section in sections:
-            section.top_margin = Inches(1)
-            section.bottom_margin = Inches(1)
-            section.left_margin = Inches(1)
-            section.right_margin = Inches(1)
-        
-        # Process each page
-        for page_num in range(len(pdf_document)):
-            page = pdf_document[page_num]
-            
-            # Extract text blocks with positioning information
-            text_blocks = page.get_text("dict")
-            
-            # Add page break if not first page
-            if page_num > 0:
-                doc.add_page_break()
-            
-            # Process text blocks
-            if "blocks" in text_blocks:
-                for block in text_blocks["blocks"]:
-                    if "lines" in block:
-                        for line in block["lines"]:
-                            if "spans" in line:
-                                # Create a paragraph for each line
-                                paragraph = doc.add_paragraph()
-                                
-                                for span in line["spans"]:
-                                    if "text" in span and span["text"].strip():
-                                        # Get font information
-                                        font_size = span.get("size", 12)
-                                        font_name = span.get("font", "Arial")
-                                        is_bold = "bold" in font_name.lower() or font_size > 14
-                                        
-                                        # Add text run with formatting
-                                        run = paragraph.add_run(span["text"])
-                                        run.font.name = font_name
-                                        run.font.size = Pt(font_size)
-                                        run.bold = is_bold
-                                
-                                # Add spacing after paragraph
-                                paragraph.space_after = Pt(6)
-        
-        # Close the PDF document
-        pdf_document.close()
-        
-        # Save the Word document to a bytes buffer
+        converter = Converter(stream=pdf_bytes)
         docx_buffer = io.BytesIO()
-        doc.save(docx_buffer)
+        try:
+            converter.convert(docx_buffer)
+        finally:
+            converter.close()
         docx_buffer.seek(0)
-        
-        # Generate output filename
-        output_filename = file.filename.replace('.pdf', '.docx')
-        if not output_filename.endswith('.docx'):
-            output_filename += '.docx'
-        
-        logging.info(f"PDF to DOCX: Successfully converted '{file.filename}' to DOCX.")
+
+        logging.info(f"PDF to DOCX: Converted '{file.filename}'.")
         return send_file(
             docx_buffer,
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             as_attachment=True,
-            download_name=output_filename
+            download_name=output_name(file.filename, '.docx')
         )
 
-    except fitz.FileDataError as e:
-        logging.error(f"PDF to DOCX: Invalid or corrupted PDF file '{file.filename}': {e}")
-        return jsonify({"error": f"Invalid PDF file: {str(e)}"}), 400
     except Exception as e:
         logging.error(f"PDF to DOCX: Error converting '{file.filename}': {e}", exc_info=True)
-        return jsonify({"error": f"Failed to convert PDF to DOCX: {str(e)}"}), 500
+        return jsonify({"error": "Could not convert this PDF to Word. The file may be damaged."}), 500
 
 # IMAGE COMPRESSION ENDPOINT
 @app.route('/compress-image', methods=['POST'])
@@ -852,689 +854,413 @@ def convert_pdf_to_word():
     """
     return pdf_to_docx()
 
+
+# Matches "1234", "-1,234.50", "0.5" - not "1.234,56" or codes like "007"
+NUMBER_PATTERN = re.compile(r'^-?(0|[1-9]\d{0,2}(,\d{3})+|[1-9]\d*)(\.\d+)?$')
+
+
+def spreadsheet_value(text):
+    """Turn numeric-looking cell text into a number so Excel can sum it."""
+    value = (text or '').strip()
+    is_percent = value.endswith('%')
+    number = value[:-1].strip() if is_percent else value
+    if NUMBER_PATTERN.match(number):
+        parsed = float(number.replace(',', ''))
+        if is_percent:
+            return parsed / 100, '0%' if parsed.is_integer() else '0.0%'
+        if parsed.is_integer() and '.' not in number:
+            return int(parsed), '#,##0' if ',' in number else None
+        return parsed, None
+    return value, None
+
+
+def write_sheet(workbook, title, rows, header=True):
+    """Add a worksheet with the given rows; bold + freeze the first row when it's a header."""
+    ws = workbook.create_sheet(title=title[:31])
+    widths = {}
+    for r, row in enumerate(rows, start=1):
+        for c, text in enumerate(row, start=1):
+            value, number_format = spreadsheet_value(text)
+            cell = ws.cell(row=r, column=c, value=value)
+            if number_format:
+                cell.number_format = number_format
+            if header and r == 1:
+                cell.font = Font(bold=True)
+            widths[c] = max(widths.get(c, 0), len(str(text or '')))
+    for c, width in widths.items():
+        ws.column_dimensions[get_column_letter(c)].width = min(width + 2, 60)
+    if header and len(rows) > 1:
+        ws.freeze_panes = 'A2'
+    return ws
+
+
+def excel_response(workbook, filename):
+    buffer = io.BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=output_name(filename, '.xlsx')
+    )
+
+
 @app.route('/convert/pdf-to-excel', methods=['POST'])
 def convert_pdf_to_excel():
     """
-    Convert PDF to Excel spreadsheet (.xlsx)
-    Extracts tables and text from PDF and creates Excel file
+    Convert PDF to Excel spreadsheet (.xlsx).
+    Every table PyMuPDF detects becomes its own sheet; PDFs without tables
+    fall back to one row per line of text.
     """
-    if 'file' not in request.files:
-        logging.error("PDF to Excel: No file part in the request.")
-        return jsonify({"error": "No file part in the request."}), 400
+    file, pdf_bytes, error = read_upload(('.pdf',), 'PDF to Excel')
+    if error:
+        return error
 
-    file = request.files['file']
-    if file.filename == '':
-        logging.error("PDF to Excel: No selected file.")
-        return jsonify({"error": "No selected file."}), 400
-    if not file.filename.lower().endswith('.pdf'):
-        logging.error(f"PDF to Excel: Invalid file type uploaded: {file.filename}")
-        return jsonify({"error": "Invalid file type. Only PDF files are accepted."}), 400
+    locked = reject_locked_pdf(pdf_bytes)
+    if locked:
+        return locked
 
     try:
-        file.stream.seek(0)
-        
-        # Open PDF with PyMuPDF for text and table extraction
-        pdf_bytes = file.read()
         pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-        
-        # Create Excel file using openpyxl
-        try:
-            from openpyxl import Workbook
-            from openpyxl.styles import Font, Alignment, Border, Side
-        except ImportError:
-            # Fallback to CSV if openpyxl is not available
-            import csv
-            csv_buffer = io.BytesIO()
-            csv_writer = csv.writer(csv_buffer)
-            
-            # Extract text from each page
-            for page_num in range(len(pdf_document)):
-                page = pdf_document[page_num]
-                text = page.get_text()
-                if text.strip():
-                    csv_writer.writerow([f"Page {page_num + 1}"])
-                    for line in text.split('\n'):
-                        if line.strip():
-                            csv_writer.writerow([line.strip()])
-                    csv_writer.writerow([])  # Empty row between pages
-            
-            csv_buffer.seek(0)
-            pdf_document.close()
-            
-            # Generate output filename
-            output_filename = file.filename.replace('.pdf', '.csv')
-            if not output_filename.endswith('.csv'):
-                output_filename += '.csv'
-            
-            logging.info(f"PDF to Excel: Successfully converted '{file.filename}' to CSV (fallback).")
-            return send_file(
-                csv_buffer,
-                mimetype='text/csv',
-                as_attachment=True,
-                download_name=output_filename
-            )
-        
-        # Use openpyxl for proper Excel creation
         wb = Workbook()
-        ws = wb.active
-        ws.title = "PDF Content"
-        
-        # Set up styles
-        header_font = Font(bold=True, size=14)
-        page_font = Font(bold=True, size=12, color="366092")
-        content_font = Font(size=11)
-        
-        # Extract content from each page
-        row = 1
-        for page_num in range(len(pdf_document)):
-            page = pdf_document[page_num]
-            
-            # Add page header
-            ws.cell(row=row, column=1, value=f"Page {page_num + 1}").font = page_font
-            row += 1
-            
-            # Extract text
-            text = page.get_text()
-            if text.strip():
-                # Split text into lines and add to Excel
-                lines = text.split('\n')
-                for line in lines:
-                    if line.strip():
-                        ws.cell(row=row, column=1, value=line.strip()).font = content_font
-                        row += 1
-            
-            # Try to extract tables
-            try:
-                tables = page.get_tables()
-                for table_idx, table in enumerate(tables):
-                    if table:
-                        # Add table header
-                        ws.cell(row=row, column=1, value=f"Table {table_idx + 1}").font = header_font
-                        row += 1
-                        
-                        # Add table data
-                        for table_row in table:
-                            for col_idx, cell_value in enumerate(table_row):
-                                if cell_value and str(cell_value).strip():
-                                    ws.cell(row=row, column=col_idx + 1, value=str(cell_value).strip()).font = content_font
-                            row += 1
-                        row += 1  # Space after table
-            except Exception as e:
-                logging.warning(f"Could not extract tables from page {page_num + 1}: {e}")
-            
-            row += 1  # Space between pages
-        
-        # Auto-adjust column widths
-        for column in ws.columns:
-            max_length = 0
-            column_letter = column[0].column_letter
-            for cell in column:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
-                except:
-                    pass
-            adjusted_width = min(max_length + 2, 50)  # Cap at 50 characters
-            ws.column_dimensions[column_letter].width = adjusted_width
-        
-        # Close the PDF document
-        pdf_document.close()
-        
-        # Save the Excel document to a bytes buffer
-        excel_buffer = io.BytesIO()
-        wb.save(excel_buffer)
-        excel_buffer.seek(0)
-        
-        # Generate output filename
-        output_filename = file.filename.replace('.pdf', '.xlsx')
-        if not output_filename.endswith('.xlsx'):
-            output_filename += '.xlsx'
-        
-        logging.info(f"PDF to Excel: Successfully converted '{file.filename}' to Excel.")
-        return send_file(
-            excel_buffer,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name=output_filename
-        )
+        wb.remove(wb.active)
 
-    except fitz.FileDataError as e:
-        logging.error(f"PDF to Excel: Invalid or corrupted PDF file '{file.filename}': {e}")
-        return jsonify({"error": f"Invalid PDF file: {str(e)}"}), 400
+        for page in pdf_document:
+            for index, table in enumerate(page.find_tables().tables, start=1):
+                rows = [[cell or '' for cell in row] for row in table.extract()]
+                if any(any(cell.strip() for cell in row) for row in rows):
+                    write_sheet(wb, f"Page {page.number + 1} Table {index}", rows)
+
+        if not wb.worksheets:
+            rows = []
+            for page in pdf_document:
+                lines = [line.strip() for line in page.get_text().splitlines() if line.strip()]
+                if lines:
+                    rows.append([f"Page {page.number + 1}"])
+                    rows.extend([line] for line in lines)
+                    rows.append([])
+            if not rows:
+                pdf_document.close()
+                return jsonify({"error": "No text found. This looks like a scanned PDF - run it through OCR first."}), 422
+            write_sheet(wb, "Text", rows, header=False)
+
+        pdf_document.close()
+        logging.info(f"PDF to Excel: Converted '{file.filename}' into {len(wb.worksheets)} sheet(s).")
+        return excel_response(wb, file.filename)
+
     except Exception as e:
         logging.error(f"PDF to Excel: Error converting '{file.filename}': {e}", exc_info=True)
-        return jsonify({"error": f"Failed to convert PDF to Excel: {str(e)}"}), 500
+        return jsonify({"error": "Could not convert this PDF to Excel. The file may be damaged."}), 500
 
-# PDF COMPRESSION ENDPOINT
-@app.route('/compress-pdf', methods=['POST'])
-def compress_pdf():
+
+@app.route('/convert/word-to-excel', methods=['POST'])
+def convert_word_to_excel():
     """
-    Compress PDF files using PyMuPDF with multiple compression levels
-    Supports different compression strategies for various use cases
+    Convert Word (.docx) to Excel (.xlsx): each table becomes a sheet.
+    Documents without tables fall back to one row per paragraph.
     """
-    if 'file' not in request.files:
-        logging.error("PDF compression: No file part in the request.")
-        return jsonify({"error": "No file part in the request."}), 400
+    file, docx_bytes, error = read_upload(('.docx',), 'Word to Excel')
+    if error:
+        return error
 
-    file = request.files['file']
-    if file.filename == '':
-        logging.error("PDF compression: No selected file.")
-        return jsonify({"error": "No selected file."}), 400
-    if not file.filename.lower().endswith('.pdf'):
-        logging.error(f"PDF compression: Invalid file type uploaded: {file.filename}")
-        return jsonify({"error": "Invalid file type. Only PDF files are accepted."}), 400
-
-    # Get compression parameters
-    compression_level = request.form.get('compression_level', 'medium')
-    
     try:
-        file.stream.seek(0)
-        
-        # Read PDF bytes for PyMuPDF
-        pdf_bytes = file.read()
-        
-        # Open PDF with PyMuPDF
-        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-        
-        # Prepare output buffer
-        output_buffer = io.BytesIO()
-        
-        # Apply compression based on level
-        if compression_level == 'low':
-            # Light compression - maintain quality, minimal size reduction
-            pdf_document.save(
-                output_buffer,
-                garbage=1,      # Remove unused objects
-                deflate=True,   # Compress streams
-                clean=True,     # Clean content streams
-                linear=True     # Optimize for web
-            )
-        elif compression_level == 'high':
-            # Aggressive compression - maximum size reduction
-            # Use the most aggressive settings that actually reduce size
-            pdf_document.save(
-                output_buffer,
-                garbage=4,      # Remove all unused objects
-                deflate=True,   # Compress streams
-                clean=True,     # Clean content streams
-                linear=True,    # Optimize for web
-                pretty=False,   # Remove formatting
-                ascii=False     # Use binary instead of ASCII
-            )
-            
-        else:  # medium (default)
-            # Balanced compression - good quality and size
-            pdf_document.save(
-                output_buffer,
-                garbage=3,      # Remove most unused objects
-                deflate=True,   # Compress streams
-                clean=True,     # Clean content streams
-                linear=True     # Optimize for web
-            )
-        
-        # Calculate initial compression ratio
-        original_size = len(pdf_bytes)
-        initial_compressed_size = len(output_buffer.getvalue())
-        initial_ratio = ((original_size - initial_compressed_size) / original_size) * 100
-        
-        logging.info(f"Initial compression: {initial_ratio:.1f}% reduction")
-        
-        # If compression didn't work well, try more aggressive approach
-        if initial_ratio < 0:  # File got bigger
-            logging.info(f"File size increased, trying aggressive compression for '{file.filename}'")
-            
-            # Try with maximum compression settings
-            aggressive_buffer = io.BytesIO()
-            pdf_document.save(
-                aggressive_buffer,
-                garbage=4,      # Remove all unused objects
-                deflate=True,   # Compress streams
-                clean=True,     # Clean content streams
-                linear=True,    # Optimize for web
-                pretty=False,   # Remove formatting
-                ascii=False     # Use binary instead of ASCII
-            )
-            
-            aggressive_size = len(aggressive_buffer.getvalue())
-            aggressive_ratio = ((original_size - aggressive_size) / original_size) * 100
-            
-            # Use the better result
-            if aggressive_ratio > initial_ratio:
-                output_buffer = aggressive_buffer
-                compressed_size = aggressive_size
-                compression_ratio = aggressive_ratio
-                logging.info(f"Aggressive method better: {aggressive_ratio:.1f}% reduction")
-            else:
-                compressed_size = initial_compressed_size
-                compression_ratio = initial_ratio
-        else:
-            compressed_size = initial_compressed_size
-            compression_ratio = initial_ratio
-        
-        # Close the PDF document
+        document = Document(io.BytesIO(docx_bytes))
+        wb = Workbook()
+        wb.remove(wb.active)
+
+        for index, table in enumerate(document.tables, start=1):
+            rows = []
+            for row in table.rows:
+                # Merged cells repeat the same underlying cell; keep one copy
+                cells, seen = [], set()
+                for cell in row.cells:
+                    if id(cell._tc) not in seen:
+                        seen.add(id(cell._tc))
+                        cells.append(cell.text.strip())
+                rows.append(cells)
+            if any(any(cells) for cells in rows):
+                write_sheet(wb, f"Table {index}", rows)
+
+        if not wb.worksheets:
+            rows = [[p.text.strip()] for p in document.paragraphs if p.text.strip()]
+            if not rows:
+                return jsonify({"error": "This document has no text or tables to convert."}), 422
+            write_sheet(wb, "Text", rows, header=False)
+
+        logging.info(f"Word to Excel: Converted '{file.filename}' into {len(wb.worksheets)} sheet(s).")
+        return excel_response(wb, file.filename)
+
+    except Exception as e:
+        logging.error(f"Word to Excel: Error converting '{file.filename}': {e}", exc_info=True)
+        return jsonify({"error": "Could not read this Word file. The file may be damaged."}), 500
+
+
+WORD_TO_PDF_CSS = """
+body { font-family: sans-serif; font-size: 11pt; line-height: 1.4; }
+h1.title { font-size: 26pt; }
+h1 { font-size: 20pt; margin: 0 0 8pt 0; }
+h2 { font-size: 15pt; margin: 14pt 0 6pt 0; }
+h3 { font-size: 13pt; margin: 12pt 0 4pt 0; }
+p { margin: 0 0 8pt 0; }
+ul, ol { margin: 0 0 8pt 18pt; }
+table { border-collapse: collapse; margin: 6pt 0 10pt 0; }
+td p, th p { margin: 0; }
+td, th { border: 1px solid #999; padding: 4pt 6pt; }
+img { max-width: 100%; }
+"""
+
+WORD_STYLE_MAP = """
+p[style-name='Title'] => h1.title:fresh
+p[style-name='Subtitle'] => h2:fresh
+"""
+
+
+@app.route('/convert/word-to-pdf', methods=['POST'])
+def convert_word_to_pdf():
+    """
+    Convert Word (.docx) to PDF: mammoth turns the document into semantic HTML
+    (headings, lists, tables, images) and PyMuPDF's Story engine lays it out
+    on the document's own page size and margins.
+    """
+    file, docx_bytes, error = read_upload(('.docx',), 'Word to PDF')
+    if error:
+        return error
+
+    try:
+        html = mammoth.convert_to_html(io.BytesIO(docx_bytes), style_map=WORD_STYLE_MAP).value
+        if not html.strip():
+            return jsonify({"error": "This document has no content to convert."}), 422
+
+        # Use the document's page size and margins (falls back to A4 with ~2cm margins)
+        section = Document(io.BytesIO(docx_bytes)).sections[0]
+        emu_per_pt = 12700
+        page = fitz.paper_rect("a4")
+        margins = (54, 54, 54, 54)
+        if section.page_width and section.page_height:
+            page = fitz.Rect(0, 0, section.page_width / emu_per_pt, section.page_height / emu_per_pt)
+            margins = tuple((685800 if m is None else m) / emu_per_pt for m in (
+                section.left_margin, section.top_margin, section.right_margin, section.bottom_margin))
+        content_area = page + (margins[0], margins[1], -margins[2], -margins[3])
+
+        story = fitz.Story(html=html, user_css=WORD_TO_PDF_CSS)
+        layout_buffer = io.BytesIO()
+        writer = fitz.DocumentWriter(layout_buffer)
+        more = True
+        while more:
+            device = writer.begin_page(page)
+            more, _ = story.place(content_area)
+            story.draw(device)
+            writer.end_page()
+        writer.close()
+
+        # The layout engine embeds whole fallback fonts (CJK alone is ~15 MB); keep only the glyphs used
+        pdf_document = fitz.open(stream=layout_buffer.getvalue(), filetype="pdf")
+        pdf_document.set_metadata({"title": os.path.splitext(file.filename)[0]})
+        pdf_document.subset_fonts()
+        pdf_bytes = pdf_document.tobytes(garbage=3, deflate=True, use_objstms=1)
         pdf_document.close()
-        
-        output_buffer.seek(0)
-        
-        # Calculate compression ratio
-        original_size = len(pdf_bytes)
-        compressed_size = len(output_buffer.getvalue())
-        compression_ratio = ((original_size - compressed_size) / original_size) * 100
-        
-        # Check if the PDF was already well-optimized
-        if compression_ratio < 5:  # Less than 5% reduction
-            if compression_ratio < 0:
-                logging.info(f"PDF '{file.filename}' appears to be already well-optimized or contains complex content that resists compression")
-            else:
-                logging.info(f"PDF '{file.filename}' achieved minimal compression - may already be optimized")
-        
-        # Special case for small PDFs
-        if original_size < 100000:  # Less than 100KB
-            logging.info(f"PDF '{file.filename}' is already small ({original_size/1024:.1f}KB) - compression may not provide significant benefits")
-        
-        logging.info(f"PDF compression: '{file.filename}' - Original: {original_size/1024:.1f}KB, Compressed: {compressed_size/1024:.1f}KB, Reduction: {compression_ratio:.1f}%")
-        
-        # If compression didn't work well, try alternative method
-        if compression_ratio < 5:  # Less than 5% reduction
-            logging.info(f"Low compression achieved, trying alternative method for '{file.filename}'")
-            # Try with more aggressive settings
-            pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-            alt_buffer = io.BytesIO()
-            pdf_document.save(alt_buffer, garbage=4, deflate=True, clean=True, linear=True, pretty=False, ascii=False)
-            pdf_document.close()
-            alt_buffer.seek(0)
-            
-            alt_size = len(alt_buffer.getvalue())
-            alt_ratio = ((original_size - alt_size) / original_size) * 100
-            
-            if alt_ratio > compression_ratio:
-                output_buffer = alt_buffer
-                compressed_size = alt_size
-                compression_ratio = alt_ratio
-                logging.info(f"Alternative method better: {alt_ratio:.1f}% reduction")
-        
-        logging.info(f"PDF compression: Successfully compressed '{file.filename}' with {compression_level} compression. Final reduction: {compression_ratio:.1f}%")
-        
-        # Generate output filename
-        base_name = os.path.splitext(file.filename)[0]
-        output_filename = f"compressed_{base_name}.pdf"
-        
+
+        logging.info(f"Word to PDF: Converted '{file.filename}'.")
         return send_file(
-            output_buffer,
+            io.BytesIO(pdf_bytes),
             mimetype='application/pdf',
             as_attachment=True,
-            download_name=output_filename
+            download_name=output_name(file.filename, '.pdf')
+        )
+
+    except Exception as e:
+        logging.error(f"Word to PDF: Error converting '{file.filename}': {e}", exc_info=True)
+        return jsonify({"error": "Could not convert this Word file. The file may be damaged."}), 500
+
+
+# AI TEXT EXTRACTION (OpenRouter)
+# Off until OPENROUTER_API_KEY is set. The key stays on the server; the browser
+# only ever talks to this endpoint.
+OPENROUTER_URL = os.environ.get('OPENROUTER_URL', 'https://openrouter.ai/api/v1/chat/completions')
+OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '').strip()
+# Free vision models, tried in order when one is busy or rate-limited
+OPENROUTER_MODELS = [m.strip() for m in os.environ.get(
+    'OPENROUTER_MODELS',
+    'qwen/qwen3.8-27b:free,google/gemma-4-31b-it:free,google/gemma-4-26b-a4b-it:free'
+).split(',') if m.strip()]
+# Per visitor, to keep one person from using up the free quota
+AI_REQUESTS_PER_HOUR = int(os.environ.get('AI_REQUESTS_PER_HOUR', '30'))
+AI_MODEL_TIMEOUT = 35     # seconds per model attempt
+AI_TOTAL_TIMEOUT = 100    # stay under gunicorn's 120s worker timeout
+
+AI_OCR_PROMPT = (
+    "Transcribe all of the text in this image exactly as written. "
+    "Keep the reading order, line breaks and paragraph breaks. "
+    "Write table rows on separate lines with cells separated by tabs. "
+    "Do not translate, summarise, correct or comment, and do not add headings or markdown. "
+    "If there is no text, reply with nothing."
+)
+
+_ai_usage = {}  # visitor IP -> timestamps of recent AI requests
+
+
+def _client_ip():
+    # Render sits behind a proxy; the first forwarded address is the visitor
+    forwarded = request.headers.get('X-Forwarded-For', '')
+    return forwarded.split(',')[0].strip() or request.remote_addr or 'unknown'
+
+
+def _ai_rate_limited():
+    now = time.time()
+    ip = _client_ip()
+    recent = [t for t in _ai_usage.get(ip, []) if now - t < 3600]
+    limited = len(recent) >= AI_REQUESTS_PER_HOUR
+    if not limited:
+        recent.append(now)
+    _ai_usage[ip] = recent
+    if len(_ai_usage) > 10000:  # drop visitors with nothing in the last hour
+        for key in [k for k, v in _ai_usage.items() if not v or now - v[-1] >= 3600]:
+            del _ai_usage[key]
+    return limited
+
+
+def _clean_ai_text(content):
+    if isinstance(content, list):  # some models return content parts
+        content = ''.join(part.get('text', '') for part in content if isinstance(part, dict))
+    text = re.sub(r'<think>.*?</think>', '', content or '', flags=re.S).strip()
+    fenced = re.match(r'^```[\w-]*\n(.*?)\n?```$', text, re.S)
+    return (fenced.group(1) if fenced else text).strip()
+
+
+@app.route('/ocr/ai/status')
+def ai_ocr_status():
+    return jsonify({"enabled": bool(OPENROUTER_API_KEY)})
+
+
+@app.route('/ocr/ai', methods=['POST'])
+def ai_ocr():
+    """Read the text in a scanned page with a free vision model on OpenRouter."""
+    if not OPENROUTER_API_KEY:
+        return jsonify({"error": "AI text extraction isn't set up on this server."}), 503
+
+    file, image_bytes, error = read_upload(('.jpg', '.jpeg', '.png', '.webp'), 'AI OCR')
+    if error:
+        return error
+    if len(image_bytes) > 8 * 1024 * 1024:
+        return jsonify({"error": "Image is too large for AI (8 MB max)."}), 413
+    if _ai_rate_limited():
+        return jsonify({"error": "You've reached the hourly AI limit. Try again later."}), 429
+
+    extension = os.path.splitext(file.filename)[1].lower()
+    mime = {'.png': 'image/png', '.webp': 'image/webp'}.get(extension, 'image/jpeg')
+    image_url = f"data:{mime};base64,{base64.b64encode(image_bytes).decode()}"
+    language = request.form.get('language', '').strip()[:40]
+    prompt = AI_OCR_PROMPT + (f" The text is probably in {language}." if language else "")
+
+    deadline = time.time() + AI_TOTAL_TIMEOUT
+    for model in OPENROUTER_MODELS:
+        remaining = deadline - time.time()
+        if remaining < 5:
+            break
+        payload = json.dumps({
+            "model": model,
+            "temperature": 0,
+            "messages": [{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": image_url}},
+                ],
+            }],
+        }).encode()
+        req = urllib.request.Request(OPENROUTER_URL, data=payload, method='POST', headers={
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://quicksidetool.com",
+            "X-Title": "QuickSideTool",
+        })
+        try:
+            with urllib.request.urlopen(req, timeout=min(AI_MODEL_TIMEOUT, remaining)) as response:
+                body = json.load(response)
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 402):  # bad key / no credits: no other model will work either
+                logging.error(f"AI OCR: OpenRouter rejected the request ({e.code}): {e.read()[:300]}")
+                return jsonify({"error": "AI text extraction is unavailable right now."}), 503
+            logging.warning(f"AI OCR: {model} failed with HTTP {e.code}, trying the next model")
+            continue
+        except (urllib.error.URLError, TimeoutError, OSError, ValueError) as e:
+            logging.warning(f"AI OCR: {model} failed ({e}), trying the next model")
+            continue
+
+        choices = body.get('choices') or []
+        message = choices[0].get('message') if choices else None
+        if not message or body.get('error'):
+            logging.warning(f"AI OCR: {model} returned no answer: {str(body.get('error'))[:200]}")
+            continue
+
+        logging.info(f"AI OCR: read '{file.filename}' with {model}")
+        return jsonify({"text": _clean_ai_text(message.get('content')), "model": model})
+
+    return jsonify({"error": "The free AI models are busy right now. Try again in a minute."}), 503
+
+
+# PDF COMPRESSION ENDPOINT
+COMPRESSION_LEVELS = {
+    # level: (images above this resolution are resampled down to it, JPEG quality)
+    'low': (200, 85),     # print quality
+    'medium': (150, 72),  # screen and email
+    'high': (100, 55),    # smallest file
+}
+
+
+@app.route('/compress-pdf', methods=['POST'])
+@app.route('/compress-pdf-advanced', methods=['POST'])  # kept for older extension builds
+def compress_pdf():
+    """
+    Compress a PDF by downsampling and re-encoding its images (where almost all
+    the weight in a PDF lives), subsetting embedded fonts, and rewriting the file
+    with compressed streams. Text and vector content are left untouched.
+    If nothing can be saved, the original file is returned unchanged.
+    """
+    file, pdf_bytes, error = read_upload(('.pdf',), 'PDF compression')
+    if error:
+        return error
+
+    locked = reject_locked_pdf(pdf_bytes)
+    if locked:
+        return locked
+
+    compression_level = request.form.get('compression_level', 'medium')
+    dpi, quality = COMPRESSION_LEVELS.get(compression_level, COMPRESSION_LEVELS['medium'])
+
+    try:
+        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
+        pdf_document.rewrite_images(dpi_threshold=dpi + 10, dpi_target=dpi, quality=quality)
+        try:
+            pdf_document.subset_fonts()
+        except Exception as e:
+            logging.warning(f"PDF compression: Font subsetting skipped for '{file.filename}': {e}")
+        compressed = pdf_document.tobytes(
+            garbage=3, deflate=True, deflate_images=True, deflate_fonts=True, use_objstms=1
+        )
+        pdf_document.close()
+
+        original_size = len(pdf_bytes)
+        if len(compressed) >= original_size:
+            compressed = pdf_bytes
+
+        reduction = (original_size - len(compressed)) / original_size * 100
+        logging.info(
+            f"PDF compression: '{file.filename}' ({compression_level}) "
+            f"{original_size / 1024:.0f}KB -> {len(compressed) / 1024:.0f}KB ({reduction:.0f}% smaller)"
+        )
+
+        return send_file(
+            io.BytesIO(compressed),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=output_name(file.filename, '.pdf', prefix='compressed_')
         )
 
     except Exception as e:
         logging.error(f"PDF compression: Error processing '{file.filename}': {e}", exc_info=True)
-        return jsonify({"error": f"Failed to compress PDF: {str(e)}"}), 500
-
-# ADVANCED PDF COMPRESSION ENDPOINT
-@app.route('/compress-pdf-advanced', methods=['POST'])
-def compress_pdf_advanced():
-    """
-    Advanced PDF compression using multiple free libraries and smart algorithms
-    Targets 50%+ compression for most PDFs
-    """
-    if 'file' not in request.files:
-        logging.error("Advanced PDF compression: No file part in the request.")
-        return jsonify({"error": "No file part in the request."}), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        logging.error("Advanced PDF compression: No selected file.")
-        return jsonify({"error": "No selected file."}), 400
-    if not file.filename.lower().endswith('.pdf'):
-        logging.error(f"Advanced PDF compression: Invalid file type uploaded: {file.filename}")
-        return jsonify({"error": "Invalid file type. Only PDF files are accepted."}), 400
-
-    # Get compression parameters
-    compression_level = request.form.get('compression_level', 'medium')
-    
-    try:
-        file.stream.seek(0)
-        pdf_bytes = file.read()
-        original_size = len(pdf_bytes)
-        
-        logging.info(f"Advanced compression starting for '{file.filename}' - Original: {original_size/1024:.1f}KB")
-        
-        # Stage 1: Basic PyMuPDF compression
-        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-        stage1_buffer = io.BytesIO()
-        
-        # Use aggressive settings for better compression
-        pdf_document.save(
-            stage1_buffer,
-            garbage=4,      # Remove all unused objects
-            deflate=True,   # Compress streams
-            clean=True,     # Clean content streams
-            linear=True,    # Optimize for web
-            pretty=False,   # Remove formatting
-            ascii=False     # Use binary instead of ASCII
-        )
-        
-        stage1_size = len(stage1_buffer.getvalue())
-        stage1_ratio = ((original_size - stage1_size) / original_size) * 100
-        logging.info(f"Stage 1 (PyMuPDF): {stage1_ratio:.1f}% reduction")
-        
-        # Stage 2: Image compression (if images exist)
-        stage2_buffer = io.BytesIO()
-        try:
-            # Check if PDF has images
-            has_images = False
-            for page_num in range(len(pdf_document)):
-                page = pdf_document[page_num]
-                if page.get_images():
-                    has_images = True
-                    break
-            
-            if has_images and compression_level in ['medium', 'high']:
-                logging.info("Stage 2: Compressing images within PDF")
-                
-                # Create a new PDF with compressed images
-                new_pdf = fitz.open()
-                
-                for page_num in range(len(pdf_document)):
-                    page = pdf_document[page_num]
-                    new_page = new_pdf.new_page(width=page.rect.width, height=page.rect.height)
-                    
-                    # Copy page content
-                    new_page.show_pdf_page(page.rect, pdf_document, page_num)
-                    
-                    # Compress images on this page
-                    image_list = page.get_images()
-                    for img_index, img in enumerate(image_list):
-                        try:
-                            xref = img[0]
-                            img_info = pdf_document.extract_image(xref)
-                            
-                            if img_info and "image" in img_info:
-                                # Get image size safely
-                                img_size = img_info.get("size", 0)
-                                if img_size > 50000:  # > 50KB
-                                    # Compress image using Pillow
-                                    from PIL import Image
-                                    img_data = img_info["image"]
-                                    img_pil = Image.open(io.BytesIO(img_data))
-                                    
-                                    # Determine compression quality based on level
-                                    if compression_level == 'high':
-                                        quality = 50  # More aggressive compression
-                                    else:
-                                        quality = 70  # Balanced compression
-                                    
-                                    # Convert to JPEG for better compression
-                                    if img_pil.mode in ['RGBA', 'LA']:
-                                        img_pil = img_pil.convert('RGB')
-                                    
-                                    # Resize large images for better compression
-                                    if img_pil.width > 1200 or img_pil.height > 1200:
-                                        img_pil.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
-                                    
-                                    # Compress image
-                                    compressed_img_buffer = io.BytesIO()
-                                    img_pil.save(compressed_img_buffer, 'JPEG', quality=quality, optimize=True, progressive=True)
-                                    compressed_img_buffer.seek(0)
-                                    
-                                    # Replace image in PDF
-                                    new_page.insert_image(page.rect, stream=compressed_img_buffer.getvalue())
-                                    
-                        except Exception as e:
-                            logging.warning(f"Could not compress image {img_index} on page {page_num}: {e}")
-                            continue
-                
-                # Save compressed PDF
-                new_pdf.save(stage2_buffer, garbage=4, deflate=True, clean=True, linear=True)
-                new_pdf.close()
-                
-                stage2_size = len(stage2_buffer.getvalue())
-                stage2_ratio = ((original_size - stage2_size) / original_size) * 100
-                logging.info(f"Stage 2 (Image compression): {stage2_ratio:.1f}% reduction")
-                
-                # Use stage 2 if it's better
-                if stage2_ratio > stage1_ratio:
-                    output_buffer = stage2_buffer
-                    final_ratio = stage2_ratio
-                    logging.info(f"Stage 2 selected: {stage2_ratio:.1f}% reduction")
-                else:
-                    output_buffer = stage1_buffer
-                    final_ratio = stage1_ratio
-                    logging.info(f"Stage 1 selected: {stage1_ratio:.1f}% reduction")
-            else:
-                output_buffer = stage1_buffer
-                final_ratio = stage1_ratio
-                logging.info(f"No images found, using Stage 1: {stage1_ratio:.1f}% reduction")
-                
-        except Exception as e:
-            logging.warning(f"Stage 2 (image compression) failed: {e}")
-            output_buffer = stage1_buffer
-            final_ratio = stage1_ratio
-        
-        # Stage 3: Advanced optimization for high compression
-        if compression_level == 'high' and final_ratio < 30:  # If we haven't achieved good compression
-            logging.info("Stage 3: Advanced optimization techniques")
-            
-            try:
-                # Try pikepdf for advanced compression
-                import pikepdf
-                
-                # Convert to pikepdf format
-                output_buffer.seek(0)
-                pdf_pike = pikepdf.open(output_buffer)
-                
-                # Advanced compression settings (using correct parameters)
-                stage3_buffer = io.BytesIO()
-                pdf_pike.save(stage3_buffer)
-                
-                stage3_size = len(stage3_buffer.getvalue())
-                stage3_ratio = ((original_size - stage3_size) / original_size) * 100
-                
-                # Only use stage 3 if it actually improves compression
-                if stage3_ratio > final_ratio:
-                    output_buffer = stage3_buffer
-                    final_ratio = stage3_ratio
-                    logging.info(f"Stage 3 (pikepdf): {stage3_ratio:.1f}% reduction - SELECTED")
-                else:
-                    logging.info(f"Stage 3 (pikepdf): {stage3_ratio:.1f}% reduction - REJECTED (worse than previous)")
-                
-            except ImportError:
-                logging.info("pikepdf not available, skipping Stage 3")
-            except Exception as e:
-                logging.warning(f"Stage 3 (pikepdf) failed: {e}")
-        
-        # Stage 4: Content analysis and aggressive optimization (only if previous stages didn't work well)
-        if compression_level == 'high' and final_ratio < 15:  # Only if we still have poor compression
-            logging.info("Stage 4: Content analysis and aggressive optimization")
-            
-            try:
-                # Analyze PDF content and apply aggressive techniques
-                pdf_document = fitz.open(stream=output_buffer.getvalue(), filetype="pdf")
-                
-                # Check if PDF is corrupted or has issues
-                if pdf_document.page_count == 0:
-                    logging.warning("Stage 4: PDF appears corrupted, skipping")
-                    pdf_document.close()
-                    return jsonify({"error": "PDF appears corrupted and cannot be compressed"}), 400
-                
-                # Create new PDF with aggressive settings
-                aggressive_pdf = fitz.open()
-                
-                for page_num in range(len(pdf_document)):
-                    try:
-                        page = pdf_document[page_num]
-                        
-                        # Get page content safely
-                        text_content = page.get_text()
-                        image_list = page.get_images()
-                        
-                        # Create new page
-                        new_page = aggressive_pdf.new_page(width=page.rect.width, height=page.rect.height)
-                        
-                        # If page has mostly text, optimize for text
-                        if len(text_content) > 100 and len(image_list) < 3:
-                            # Text-heavy page - use aggressive text optimization
-                            new_page.insert_text((50, 50), text_content, fontsize=10)
-                        else:
-                            # Image-heavy page - copy with aggressive compression
-                            new_page.show_pdf_page(page.rect, pdf_document, page_num)
-                    except Exception as e:
-                        logging.warning(f"Stage 4: Error processing page {page_num}: {e}")
-                        # Create empty page as fallback
-                        new_page = aggressive_pdf.new_page(width=page.rect.width, height=page.rect.height)
-                        continue
-                
-                # Save with maximum compression
-                aggressive_buffer = io.BytesIO()
-                aggressive_pdf.save(
-                    aggressive_buffer,
-                    garbage=4,
-                    deflate=True,
-                    clean=True,
-                    linear=True,
-                    pretty=False,
-                    ascii=False
-                )
-                
-                aggressive_pdf.close()
-                pdf_document.close()
-                
-                aggressive_size = len(aggressive_buffer.getvalue())
-                aggressive_ratio = ((original_size - aggressive_size) / original_size) * 100
-                
-                # Only use if it actually improves compression
-                if aggressive_ratio > final_ratio:
-                    output_buffer = aggressive_buffer
-                    final_ratio = aggressive_ratio
-                    logging.info(f"Stage 4 (content analysis): {aggressive_ratio:.1f}% reduction - SELECTED")
-                else:
-                    logging.info(f"Stage 4 (content analysis): {aggressive_ratio:.1f}% reduction - REJECTED (worse than previous)")
-                
-            except Exception as e:
-                logging.warning(f"Stage 4 (content analysis) failed: {e}")
-        
-        # Stage 5: Final optimization - only if we have good compression so far
-        if compression_level == 'high' and final_ratio > 10:  # Only if we're already achieving good compression
-            logging.info("Stage 5: Final optimization - metadata and font optimization")
-            
-            try:
-                # Try to remove metadata and optimize fonts
-                final_pdf = fitz.open(stream=output_buffer.getvalue(), filetype="pdf")
-                
-                # Final save with maximum compression
-                final_buffer = io.BytesIO()
-                final_pdf.save(
-                    final_buffer,
-                    garbage=4,
-                    deflate=True,
-                    clean=True,
-                    linear=True,
-                    pretty=False,
-                    ascii=False
-                )
-                
-                final_pdf.close()
-                
-                final_size = len(final_buffer.getvalue())
-                final_ratio = ((original_size - final_size) / original_size) * 100
-                
-                # Only use if it maintains or improves compression
-                if final_ratio >= final_ratio * 0.9:  # Allow 10% tolerance
-                    output_buffer = final_buffer
-                    logging.info(f"Stage 5 (final optimization): {final_ratio:.1f}% reduction - SELECTED")
-                else:
-                    logging.info(f"Stage 5 (final optimization): {final_ratio:.1f}% reduction - REJECTED (degraded too much)")
-                
-            except Exception as e:
-                logging.warning(f"Stage 5 (final optimization) failed: {e}")
-        
-        # Close the PDF document
-        pdf_document.close()
-        
-        # Smart fallback: If we haven't achieved good compression, try alternative strategies
-        if final_ratio < 10:  # Less than 10% compression achieved
-            logging.info("Smart fallback: Trying alternative compression strategies")
-            
-            try:
-                # Strategy 1: Try with different PyMuPDF settings
-                pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-                fallback1_buffer = io.BytesIO()
-                
-                pdf_document.save(
-                    fallback1_buffer,
-                    garbage=4,
-                    deflate=True,
-                    clean=True,
-                    linear=False,  # Try without linear optimization
-                    pretty=False,
-                    ascii=False
-                )
-                
-                fallback1_size = len(fallback1_buffer.getvalue())
-                fallback1_ratio = ((original_size - fallback1_size) / original_size) * 100
-                
-                if fallback1_ratio > final_ratio:
-                    output_buffer = fallback1_buffer
-                    final_ratio = fallback1_ratio
-                    logging.info(f"Fallback 1 (PyMuPDF alternative): {fallback1_ratio:.1f}% reduction - SELECTED")
-                
-                # Strategy 2: Try with minimal settings (sometimes less is more)
-                fallback2_buffer = io.BytesIO()
-                pdf_document.save(
-                    fallback2_buffer,
-                    garbage=1,      # Minimal garbage collection
-                    deflate=True,   # Keep compression
-                    clean=False,    # Don't clean (might preserve structure)
-                    linear=False,   # No linear optimization
-                    pretty=True,    # Keep formatting
-                    ascii=False
-                )
-                
-                fallback2_size = len(fallback2_buffer.getvalue())
-                fallback2_ratio = ((original_size - fallback2_size) / original_size) * 100
-                
-                if fallback2_ratio > final_ratio:
-                    output_buffer = fallback2_buffer
-                    final_ratio = fallback2_ratio
-                    logging.info(f"Fallback 2 (PyMuPDF minimal): {fallback2_ratio:.1f}% reduction - SELECTED")
-                
-                pdf_document.close()
-                
-            except Exception as e:
-                logging.warning(f"Smart fallback failed: {e}")
-        
-        # Final size calculation
-        output_buffer.seek(0)
-        final_size = len(output_buffer.getvalue())
-        final_ratio = ((original_size - final_size) / original_size) * 100
-        
-        # Check if the PDF was already well-optimized
-        if final_ratio < 5:  # Less than 5% reduction
-            if final_ratio < 0:
-                logging.info(f"PDF '{file.filename}' appears to be already well-optimized or contains complex content that resists compression")
-            else:
-                logging.info(f"PDF '{file.filename}' achieved minimal compression - may already be optimized")
-        
-        # Special case for small PDFs
-        if original_size < 100000:  # Less than 100KB
-            logging.info(f"PDF '{file.filename}' is already small ({original_size/1024:.1f}KB) - compression may not provide significant benefits")
-        
-        logging.info(f"Advanced PDF compression: '{file.filename}' - Original: {original_size/1024:.1f}KB, Final: {final_size/1024:.1f}KB, Total Reduction: {final_ratio:.1f}%")
-        
-        # Generate output filename
-        base_name = os.path.splitext(file.filename)[0]
-        output_filename = f"compressed_{base_name}.pdf"
-        
-        return send_file(
-            output_buffer,
-            mimetype='application/pdf',
-            as_attachment=True,
-            download_name=output_filename
-        )
-
-    except Exception as e:
-        logging.error(f"Advanced PDF compression: Error processing '{file.filename}': {e}", exc_info=True)
-        return jsonify({"error": f"Failed to compress PDF: {str(e)}"}), 500
+        return jsonify({"error": "Could not compress this PDF. The file may be damaged."}), 500
 
 # Main entry point
 if __name__ == '__main__':

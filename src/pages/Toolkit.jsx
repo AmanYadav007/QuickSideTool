@@ -12,7 +12,7 @@ const Toolkit = () => {
           <p className="text-sm font-semibold uppercase tracking-wide text-primaryHover">
             Toolkit
           </p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-text md:text-4xl">
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-text md:text-4xl">
             Choose a tool
           </h1>
           <p className="mt-3 text-base leading-relaxed text-secondary md:text-lg">

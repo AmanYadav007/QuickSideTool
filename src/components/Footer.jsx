@@ -11,7 +11,7 @@ const COLUMNS = [
       { label: 'Compress PDF', to: '/pdf-compressor' },
       { label: 'Combine PDFs', to: '/pdf-tool' },
       { label: 'Unlock PDF', to: '/unlock-pdf' },
-      { label: 'PDF to Word', to: '/pdf-to-word' },
+      { label: 'Convert Files', to: '/file-converter' },
     ],
   },
   {

@@ -1,564 +1,789 @@
-import React, { useState, useCallback } from 'react';
-import { Link } from "react-router-dom";
-import SEO from '../components/SEO';
-import { useDropzone } from 'react-dropzone';
-import * as pdfjsLib from 'pdfjs-dist';
-import Tesseract from 'tesseract.js';
-import { 
-  Eye, 
-  Download, 
-  Loader2, 
-  CheckCircle, 
-  Settings,
-  FileText,
-  Image,
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import {
   Camera,
+  Check,
   Copy,
-  ArrowLeft,
-} from 'lucide-react';
-import logger from '../utils/logger';
+  Crop,
+  Download,
+  Loader2,
+  Plus,
+  RotateCcw,
+  RotateCw,
+  ScanLine,
+  Sparkles,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import SEO from "./SEO";
+import BackButton from "./BackButton";
+import CameraCapture from "./scan/CameraCapture";
+import CropEditor from "./scan/CropEditor";
+import pdfjsLib from "../utils/pdfjs";
+import {
+  MAX_SIDE,
+  detectPage,
+  fileToCanvas,
+  renderScan,
+  rotateCanvas,
+  rotatePoint,
+} from "../utils/scan";
+import { OCR_LANGUAGES, recognize } from "../utils/ocr";
+import { buildDocx, buildSearchablePdf, buildText } from "../utils/scanExport";
+import { BACKEND_URL, downloadBlob, readBackendError } from "../constants/api";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+const FILTERS = [
+  { id: "scan", label: "Scan" },
+  { id: "original", label: "Original" },
+  { id: "bw", label: "B&W" },
+];
+
+const MAX_PDF_PAGES = 30;
+const LOW_CONFIDENCE = 0.6;
+
+const cameraSupported =
+  typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
+
+let nextId = 1;
+
+// Let React paint (spinners) before a burst of synchronous pixel work
+const nextFrame = () =>
+  new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+
+const canvasUrl = (canvas) =>
+  new Promise((resolve) =>
+    canvas.toBlob(
+      (blob) => resolve(URL.createObjectURL(blob)),
+      "image/jpeg",
+      0.8,
+    ),
+  );
+
+const isPdf = (file) =>
+  file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+/** Render each PDF page to a canvas at roughly 2000px on the long side. */
+const renderPdfPages = async (file, onPage) => {
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() })
+    .promise;
+  const count = Math.min(pdf.numPages, MAX_PDF_PAGES);
+  for (let n = 1; n <= count; n++) {
+    const page = await pdf.getPage(n);
+    const base = page.getViewport({ scale: 1 });
+    const scale = Math.min(MAX_SIDE, 2000) / Math.max(base.width, base.height);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    onPage(canvas, n);
+  }
+  return pdf.numPages;
+};
 
 const OCRProcessor = () => {
-  const [files, setFiles] = useState([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentFile, setCurrentFile] = useState('');
-  const [ocrResults, setOcrResults] = useState([]);
-  const [selectedLanguage, setSelectedLanguage] = useState('eng');
-  const [outputFormat, setOutputFormat] = useState('pdf');
+  const [pages, setPages] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [language, setLanguage] = useState("eng");
+  const [cropping, setCropping] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  const languages = [
-    { code: 'eng', name: 'English', flag: '🇺🇸' },
-    { code: 'spa', name: 'Spanish', flag: '🇪🇸' },
-    { code: 'fra', name: 'French', flag: '🇫🇷' },
-  ];
+  const uploadRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  // Latest values for async work started from older renders
+  const pagesRef = useRef(pages);
+  pagesRef.current = pages;
+  const languageRef = useRef(language);
+  languageRef.current = language;
+  // Latest edit per page: results from an older crop/filter/language are dropped
+  const versions = useRef({});
+  // Preview image URL per page, so replaced ones can be freed
+  const previews = useRef({});
 
-  const outputFormats = [
-    { value: 'pdf', label: 'Text PDF (.pdf)', icon: FileText },
-    { value: 'docx', label: 'Word Document (.docx)', icon: FileText },
-    { value: 'txt', label: 'Plain Text (.txt)', icon: FileText },
-  ];
+  const selected = pages.find((p) => p.id === selectedId) || pages[0] || null;
+  const busy = pages.some((p) => p.status !== "done" && p.status !== "error");
 
-  const onDrop = useCallback((acceptedFiles) => {
-    const supportedFiles = acceptedFiles.filter(file => 
-      file.type === 'application/pdf' || 
-      file.type.startsWith('image/')
+  const updatePage = useCallback((id, patch) => {
+    setPages((all) =>
+      all.map((p) =>
+        p.id === id
+          ? { ...p, ...(typeof patch === "function" ? patch(p) : patch) }
+          : p,
+      ),
     );
-    setFiles(supportedFiles);
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'application/pdf': ['.pdf'],
-      'image/*': ['.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif']
+  const newVersion = useCallback((id) => {
+    versions.current[id] = (versions.current[id] || 0) + 1;
+    return versions.current[id];
+  }, []);
+  const isLatest = useCallback(
+    (id, version) => versions.current[id] === version,
+    [],
+  );
+
+  // Read the text of a rendered page
+  const readText = useCallback(
+    async (id, output, version) => {
+      updatePage(id, { status: "reading", progress: 0, stage: "Reading text" });
+      let last = 0;
+      try {
+        const result = await recognize(
+          output,
+          languageRef.current,
+          (value, stage) => {
+            if (
+              !isLatest(id, version) ||
+              (Math.abs(value - last) < 0.03 && value !== 0)
+            )
+              return;
+            last = value;
+            updatePage(id, { progress: value, stage });
+          },
+        );
+        if (isLatest(id, version)) {
+          updatePage(id, {
+            ...result,
+            localText: result.text,
+            aiModel: null,
+            status: "done",
+          });
+        }
+      } catch {
+        if (isLatest(id, version)) {
+          updatePage(id, {
+            status: "error",
+            error:
+              "Couldn't read this page. Check your connection (the reader downloads once) and try again.",
+          });
+        }
+      }
     },
+    [updatePage, isLatest],
+  );
+
+  // Re-render a page after its source, crop or filter changed, then read it
+  const refresh = useCallback(
+    async (page) => {
+      const version = newVersion(page.id);
+      updatePage(page.id, { ...page, status: "processing" });
+      await nextFrame();
+      if (!isLatest(page.id, version)) return;
+      const output = renderScan(page.source, page.quad, page.filter);
+      const previewUrl = await canvasUrl(output);
+      if (!isLatest(page.id, version)) {
+        URL.revokeObjectURL(previewUrl);
+        return;
+      }
+      if (previews.current[page.id])
+        URL.revokeObjectURL(previews.current[page.id]);
+      previews.current[page.id] = previewUrl;
+      updatePage(page.id, { output, previewUrl });
+      readText(page.id, output, version);
+    },
+    [updatePage, readText, newVersion, isLatest],
+  );
+
+  const addCanvas = useCallback(
+    (canvas, name, origin) => {
+      // Photos get the page found and cleaned up; screenshots and PDF pages are already flat
+      const quad = origin === "pdf" ? null : detectPage(canvas);
+      const page = {
+        id: nextId++,
+        name,
+        source: canvas,
+        quad,
+        filter: origin === "camera" || quad ? "scan" : "original",
+        text: "",
+        localText: "",
+        status: "processing",
+      };
+      setPages((all) => [...all, page]);
+      setSelectedId(page.id);
+      refresh(page);
+    },
+    [refresh],
+  );
+
+  const addFiles = useCallback(
+    async (files) => {
+      setNotice("");
+      setCropping(false);
+      setOpening(true);
+      for (const file of files) {
+        try {
+          if (isPdf(file)) {
+            const total = await renderPdfPages(file, (canvas, n) =>
+              addCanvas(canvas, `${file.name} p${n}`, "pdf"),
+            );
+            if (total > MAX_PDF_PAGES)
+              setNotice(
+                `Only the first ${MAX_PDF_PAGES} pages of ${file.name} were added.`,
+              );
+          } else if (file.type.startsWith("image/")) {
+            addCanvas(await fileToCanvas(file), file.name, "image");
+          } else {
+            setNotice(`${file.name} isn't an image or PDF.`);
+          }
+        } catch (error) {
+          setNotice(
+            error?.name === "PasswordException"
+              ? `${file.name} is password-protected. Unlock it first.`
+              : `Couldn't open ${file.name}.`,
+          );
+        }
+      }
+      setOpening(false);
+    },
+    [addCanvas],
+  );
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: addFiles,
+    noClick: true,
+    noKeyboard: true,
     multiple: true,
-    disabled: isProcessing
+    accept: { "image/*": [], "application/pdf": [".pdf"] },
   });
 
-  const performOCR = async (file, pageIndex = 0, totalPages = 1) => {
-    try {
-      const startTime = Date.now();
-      
-      if (file.type.startsWith('image/')) {
-        const result = await Tesseract.recognize(
-          file,
-          selectedLanguage,
-          {
-            logger: m => {
-              if (m.status === 'recognizing text') {
-                setProgress((m.progress * 100) / totalPages);
-              }
-            }
-          }
-        );
-        
-        const processingTime = Date.now() - startTime;
-        
-        return {
-          text: result.data.text,
-          confidence: result.data.confidence / 100,
-          language: selectedLanguage,
-          pageIndex,
-          totalPages,
-          fileName: file.name,
-          fileType: file.type,
-          processingTime,
-          wordCount: result.data.text.split(' ').length,
-          characterCount: result.data.text.length
-        };
-      } else {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        const page = await pdf.getPage(pageIndex + 1);
-        
-        const viewport = page.getViewport({ scale: 2.0 });
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-        
-        const renderContext = {
-          canvasContext: context,
-          viewport: viewport
-        };
-        
-        await page.render(renderContext).promise;
-        
-        return new Promise((resolve) => {
-          canvas.toBlob(async (blob) => {
-            const result = await Tesseract.recognize(
-              blob,
-              selectedLanguage,
-              {
-                logger: m => {
-                  if (m.status === 'recognizing text') {
-                    setProgress((m.progress * 100) / totalPages);
-                  }
-                }
-              }
-            );
-            
-            const processingTime = Date.now() - startTime;
-            
-            resolve({
-              text: result.data.text,
-              confidence: result.data.confidence / 100,
-              language: selectedLanguage,
-              pageIndex,
-              totalPages,
-              fileName: file.name,
-              fileType: file.type,
-              processingTime,
-              wordCount: result.data.text.split(' ').length,
-              characterCount: result.data.text.length
-            });
-          }, 'image/png');
-        });
+  // Paste a screenshot straight from the clipboard
+  useEffect(() => {
+    const onPaste = (event) => {
+      if (event.target.closest?.("textarea, input")) return;
+      const files = [...(event.clipboardData?.files || [])].filter(
+        (f) => f.type.startsWith("image/") || isPdf(f),
+      );
+      if (files.length) {
+        event.preventDefault();
+        addFiles(files);
       }
-    } catch (error) {
-      logger.error('OCR processing error:', error);
-      throw new Error(`OCR failed for ${file.name}: ${error.message}`);
-    }
-  };
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [addFiles]);
 
-  const processFile = async (file) => {
-    try {
-      if (file.type === 'application/pdf') {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        const totalPages = pdf.numPages;
-        
-        const results = [];
-        for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-          setProgress((pageNum / totalPages) * 100);
-          setCurrentFile(`Processing page ${pageNum} of ${totalPages} in ${file.name}`);
-          
-          const result = await performOCR(file, pageNum - 1, totalPages);
-          results.push(result);
-        }
-        return results;
-      } else {
-        setCurrentFile(`Processing image: ${file.name}`);
-        const result = await performOCR(file, 0, 1);
-        return [result];
-      }
-    } catch (error) {
-      logger.error('Error processing file:', error);
-      throw new Error(`Failed to process ${file.name}: ${error.message}`);
-    }
-  };
+  // The AI option only shows when the backend has an OpenRouter key configured
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/ocr/ai/status`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setAiEnabled(!!data?.enabled))
+      .catch(() => {});
+  }, []);
 
-  const runOCR = async () => {
-    if (files.length === 0) return;
+  // Free preview images when leaving the page
+  useEffect(() => {
+    const urls = previews.current;
+    return () => Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+  }, []);
 
-    setIsProcessing(true);
-    setProgress(0);
-    setOcrResults([]);
-
-    try {
-      const allResults = [];
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        setCurrentFile(`Starting OCR on ${file.name}...`);
-        
-        const fileResults = await processFile(file);
-        allResults.push(...fileResults);
-        
-        setProgress(((i + 1) / files.length) * 100);
-      }
-      
-      setOcrResults(allResults);
-      setCurrentFile('OCR processing completed successfully!');
-      logger.success(`OCR completed for ${files.length} files`);
-    } catch (error) {
-      logger.error('OCR processing error:', error);
-      setCurrentFile(`Error: ${error.message}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const exportResults = async (format) => {
-    if (ocrResults.length === 0) return;
-
-    switch (format) {
-      case 'txt': {
-        const content = ocrResults.map(result => 
-          `=== ${result.fileName} - Page ${result.pageIndex + 1} ===\n${result.text}\n\n`
-        ).join('');
-        const mimeType = 'text/plain';
-        const extension = 'txt';
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `ocr_results.${extension}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        return;
-      }
-      
-      case 'docx': {
-        try {
-          const { Document, Packer, Paragraph, HeadingLevel, TextRun } = await import('docx');
-          const children = [];
-          ocrResults.forEach((result) => {
-            children.push(
-              new Paragraph({
-                heading: HeadingLevel.HEADING_2,
-                text: `${result.fileName} - Page ${result.pageIndex + 1}`,
-              })
-            );
-            (result.text || '').split('\n').forEach((line) => {
-              children.push(new Paragraph({ children: [new TextRun(line)] }));
-            });
-            children.push(new Paragraph({ text: '' }));
-          });
-          const doc = new Document({ sections: [{ children }] });
-          const blob = await Packer.toBlob(doc);
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `ocr_results.docx`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-        } catch (error) {
-          logger.error('DOCX export failed:', error);
-          setCurrentFile(`Export failed: ${error.message}`);
-        }
-        return;
-      }
-      
-      case 'pdf': {
-        try {
-          const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib');
-          const pdfDoc = await PDFDocument.create();
-          const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-          const fontSize = 11;
-          const margin = 50;
-          const pageWidth = 595;
-          const pageHeight = 842;
-          const maxWidth = pageWidth - margin * 2;
-          const lineHeight = fontSize * 1.4;
-
-          let page = pdfDoc.addPage([pageWidth, pageHeight]);
-          let y = pageHeight - margin;
-          const newPage = () => {
-            page = pdfDoc.addPage([pageWidth, pageHeight]);
-            y = pageHeight - margin;
-          };
-          const sanitize = (s) => (s || '').replace(/[^\u0020-\u007E\u00A0-\u00FF]/g, '?');
-          const drawLine = (text, size = fontSize) => {
-            if (y < margin + lineHeight) newPage();
-            page.drawText(text, { x: margin, y, size, font, color: rgb(0, 0, 0) });
-            y -= lineHeight;
-          };
-          const wrap = (text) => {
-            const words = sanitize(text).split(/\s+/);
-            let current = '';
-            const lines = [];
-            words.forEach((word) => {
-              const candidate = current ? `${current} ${word}` : word;
-              if (font.widthOfTextAtSize(candidate, fontSize) > maxWidth && current) {
-                lines.push(current);
-                current = word;
-              } else {
-                current = candidate;
-              }
-            });
-            if (current) lines.push(current);
-            return lines.length ? lines : [''];
-          };
-
-          ocrResults.forEach((result) => {
-            drawLine(sanitize(`${result.fileName} - Page ${result.pageIndex + 1}`), 13);
-            y -= lineHeight * 0.3;
-            (result.text || '').split('\n').forEach((rawLine) => {
-              wrap(rawLine).forEach((line) => drawLine(line));
-            });
-            y -= lineHeight;
-          });
-
-          const bytes = await pdfDoc.save();
-          const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `ocr_results.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-        } catch (error) {
-          logger.error('PDF export failed:', error);
-          setCurrentFile(`Export failed: ${error.message}`);
-        }
-        return;
-      }
-
-      default:
-        logger.error(`Unsupported OCR export format: ${format}`);
-        return;
-    }
-  };
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-      logger.success('Text copied to clipboard');
+  const changeLanguage = (code) => {
+    setLanguage(code);
+    languageRef.current = code;
+    pagesRef.current.forEach((p) => {
+      if (p.output) readText(p.id, p.output, newVersion(p.id));
     });
   };
 
-  const clearResults = () => {
-    setFiles([]);
-    setOcrResults([]);
-    setProgress(0);
-    setCurrentFile('');
+  const rotate = (page) => {
+    // Rotate the source (and the crop corners with it) a quarter turn clockwise
+    const source = rotateCanvas(page.source);
+    const quad =
+      page.quad &&
+      [page.quad[3], page.quad[0], page.quad[1], page.quad[2]].map((p) =>
+        rotatePoint(p, page.source.height),
+      );
+    refresh({ ...page, source, quad });
   };
 
-  const getConfidenceColor = (confidence) => {
-    if (confidence >= 0.9) return 'text-green-500';
-    if (confidence >= 0.8) return 'text-yellow-500';
-    return 'text-red-500';
+  const remove = (page) => {
+    newVersion(page.id); // drop any work still running for it
+    if (previews.current[page.id])
+      URL.revokeObjectURL(previews.current[page.id]);
+    delete previews.current[page.id];
+    const index = pages.findIndex((p) => p.id === page.id);
+    const rest = pages.filter((p) => p.id !== page.id);
+    setPages(rest);
+    setSelectedId(rest[Math.min(index, rest.length - 1)]?.id ?? null);
+    setCropping(false);
   };
+
+  const improveWithAi = async (page) => {
+    setNotice("");
+    updatePage(page.id, { status: "ai" });
+    try {
+      const blob = await new Promise((r) =>
+        page.output.toBlob(r, "image/jpeg", 0.85),
+      );
+      const form = new FormData();
+      form.append("file", blob, "page.jpg");
+      form.append(
+        "language",
+        OCR_LANGUAGES.find((l) => l.code === language)?.name || "",
+      );
+      const response = await fetch(`${BACKEND_URL}/ocr/ai`, {
+        method: "POST",
+        body: form,
+      });
+      if (!response.ok)
+        throw new Error(
+          await readBackendError(response, "AI is unavailable right now."),
+        );
+      const { text, model } = await response.json();
+      updatePage(page.id, { text, aiModel: model, status: "done" });
+    } catch (error) {
+      updatePage(page.id, { status: "done" });
+      setNotice(`${error.message} Your original text is still here.`);
+    }
+  };
+
+  const copyText = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setNotice("Couldn't copy - select the text and copy it manually.");
+    }
+  };
+
+  const download = async (kind) => {
+    const base = (pages[0]?.name || "scan")
+      .replace(/\.[^.]+$/, "")
+      .replace(/ p\d+$/, "");
+    if (kind === "txt") downloadBlob(buildText(pages), `${base}.txt`);
+    if (kind === "docx") downloadBlob(await buildDocx(pages), `${base}.docx`);
+    if (kind === "pdf")
+      downloadBlob(await buildSearchablePdf(pages), `${base}_scan.pdf`);
+  };
+
+  const openFilePicker = () => uploadRef.current?.click();
+  const openCamera = () =>
+    cameraSupported ? setCameraOpen(true) : cameraInputRef.current?.click();
+
+  const hiddenInputs = (
+    <>
+      <input {...getInputProps()} />
+      <input
+        ref={uploadRef}
+        type="file"
+        multiple
+        accept="image/*,application/pdf"
+        className="hidden"
+        onChange={(e) => {
+          addFiles([...e.target.files]);
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          setCameraOpen(false);
+          addFiles([...e.target.files]);
+          e.target.value = "";
+        }}
+      />
+    </>
+  );
+
+  const reading =
+    selected &&
+    (selected.status === "processing" || selected.status === "reading");
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <div className="min-h-screen bg-[var(--color-bg)]" {...getRootProps()}>
       <SEO
-        title="OCR PDF to Word/Text – Convert Scanned PDF to Editable"
-        description="Turn scans into editable DOCX or text using OCR. Multilingual, accurate, free."
+        title="Scan to Text - Extract Text from Photos, Screenshots and PDFs (OCR)"
+        description="Snap a document, paste a screenshot or drop a PDF and copy the text. Pages are straightened and cleaned up automatically. Free, runs in your browser."
         url="https://quicksidetool.com/ocr-processor"
       />
-      <div className="container section">
-        <header className="mb-8 flex items-center justify-between">
-          <Link
-            to="/home"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to All Tools
-          </Link>
-          <h1 className="h1 text-center">OCR Text Recognition</h1>
-        </header>
+      {hiddenInputs}
 
-        <div className="max-w-4xl mx-auto">
-          <div className="card p-6 mb-8">
-            <h2 className="h3 mb-4 flex items-center gap-2">
-              <Settings className="h-5 w-5 text-[var(--color-primary)]" />
-              OCR Settings
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">Document Language</label>
-                <select 
-                  value={selectedLanguage} 
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="input"
-                >
-                  {languages.map(lang => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.flag} {lang.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      {cameraOpen && (
+        <CameraCapture
+          onCapture={(canvas) =>
+            addCanvas(canvas, `Photo ${pagesRef.current.length + 1}`, "camera")
+          }
+          onClose={() => setCameraOpen(false)}
+          onFallback={() => cameraInputRef.current?.click()}
+        />
+      )}
 
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">Export Format</label>
-                <select 
-                  value={outputFormat} 
-                  onChange={(e) => setOutputFormat(e.target.value)}
-                  className="input"
-                >
-                  {outputFormats.map(format => (
-                    <option key={format.value} value={format.value}>
-                      {format.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+      {isDragActive && (
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-brand-caribbean-green/20 backdrop-blur-sm">
+          <p className="rounded-xl bg-[var(--color-bg)] px-6 py-4 text-lg font-semibold text-[var(--color-text)] shadow-lg">
+            Drop to scan
+          </p>
+        </div>
+      )}
 
-          <div className="card p-6 mb-8">
-            <div
-              {...getRootProps()}
-              className={`upload-zone p-8 text-center ${isDragActive ? 'drag-active' : ''} ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <input {...getInputProps()} />
-              <Camera className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary)]" />
-              <p className="text-lg font-semibold text-[var(--color-text)] mb-2">
-                {isDragActive ? 'Drop files here' : 'Drag & drop files here'}
+      <div className="container py-8 md:py-12">
+        <BackButton />
+
+        <div className="mx-auto mt-6 max-w-2xl">
+          <h1 className="h2 text-center">Scan to text</h1>
+          <p className="mt-2 text-center text-[var(--color-text-muted)]">
+            Snap a document, paste a screenshot or drop a PDF, then copy the
+            text.
+          </p>
+
+          {pages.length === 0 ? (
+            <div className="upload-zone mt-8 p-8 text-center">
+              <ScanLine className="mx-auto h-12 w-12 text-[var(--color-primary)]" />
+              <p className="mt-3 font-semibold text-[var(--color-text)]">
+                Drop images or a PDF here
               </p>
-              <p className="text-[var(--color-text-muted)] mb-4">
-                or click to select files (PDF, PNG, JPG, TIFF, BMP)
+              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                or paste a screenshot with{" "}
+                {/Mac/i.test(navigator.platform) ? "⌘" : "Ctrl"}+V
               </p>
-              <p className="text-sm text-[var(--color-text-light)]">Maximum file size: 50MB per file</p>
-            </div>
-
-            {files.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Selected Files ({files.length})</h3>
-                <div className="space-y-2">
-                  {files.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-alt)]">
-                      <div className="flex items-center gap-3">
-                        {file.type === 'application/pdf' ? 
-                          <FileText className="w-5 h-5 text-[var(--color-primary)]" /> : 
-                          <Image className="w-5 h-5 text-green-500" />
-                        }
-                        <div>
-                          <p className="text-sm font-medium text-[var(--color-text)]">{file.name}</p>
-                          <p className="text-xs text-[var(--color-text-muted)]">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setFiles(files.filter((_, i) => i !== index))}
-                        className="text-red-500 hover:text-red-700 text-sm font-medium"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {isProcessing && (
-            <div className="card p-6 mb-8">
-              <div className="flex items-center gap-4 mb-4">
-                <Loader2 className="w-6 h-6 animate-spin text-[var(--color-primary)]" />
-                <div>
-                  <p className="font-semibold text-[var(--color-text)]">{currentFile}</p>
-                  <p className="text-sm text-[var(--color-text-muted)]">Processing with OCR...</p>
-                </div>
-              </div>
-              <div className="w-full bg-[var(--color-bg-alt)] rounded-full h-2">
-                <div 
-                  className="bg-[var(--color-primary)] h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <p className="text-sm text-[var(--color-text-muted)] mt-2">{Math.round(progress)}% complete</p>
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-3 mb-8">
-            <button
-              onClick={runOCR}
-              disabled={files.length === 0 || isProcessing}
-              className="btn-primary"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processing OCR...
-                </>
-              ) : (
-                <>
-                  <Eye className="h-4 w-4" />
-                  Start OCR Processing
-                </>
-              )}
-            </button>
-
-            {ocrResults.length > 0 && (
-              <>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <button
-                  onClick={() => exportResults(outputFormat)}
+                  type="button"
+                  onClick={openCamera}
                   className="btn-primary"
                 >
-                  <Download className="h-4 w-4" />
-                  Export Results
+                  <Camera className="h-4 w-4" /> Take photo
                 </button>
-                
                 <button
-                  onClick={clearResults}
+                  type="button"
+                  onClick={openFilePicker}
                   className="btn-secondary"
                 >
-                  Clear All
+                  <Upload className="h-4 w-4" /> Upload
                 </button>
-              </>
-            )}
-          </div>
+              </div>
+              {opening && (
+                <p className="mt-4 flex items-center justify-center gap-2 text-sm text-[var(--color-text-muted)]">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Opening...
+                </p>
+              )}
+              <p className="mt-6 text-xs text-[var(--color-text-light)]">
+                Photos are straightened and cleaned up automatically. Everything
+                runs in your browser.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Page strip */}
+              <div
+                className="mt-6 flex gap-2 overflow-x-auto pb-2"
+                aria-label="Scanned pages"
+              >
+                {pages.map((page, index) => (
+                  <button
+                    key={page.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedId(page.id);
+                      setCropping(false);
+                    }}
+                    aria-label={`Page ${index + 1}`}
+                    aria-current={page.id === selected?.id}
+                    className={`relative h-20 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-[var(--color-bg-alt)] ${
+                      page.id === selected?.id
+                        ? "border-[var(--color-primary)]"
+                        : "border-[var(--color-border)]"
+                    }`}
+                  >
+                    {page.previewUrl && (
+                      <img
+                        src={page.previewUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                    <span className="absolute bottom-0 left-0 rounded-tr bg-black/60 px-1.5 text-xs text-white">
+                      {index + 1}
+                    </span>
+                    {page.status !== "done" && page.status !== "error" && (
+                      <Loader2 className="absolute right-1 top-1 h-3.5 w-3.5 animate-spin text-[var(--color-primary)]" />
+                    )}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={openCamera}
+                  aria-label="Scan another page with the camera"
+                  className="flex h-20 w-16 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-[var(--color-border)] text-xs text-[var(--color-text-muted)] hover:border-[var(--color-primary)]"
+                >
+                  <Camera className="h-5 w-5" /> Photo
+                </button>
+                <button
+                  type="button"
+                  onClick={openFilePicker}
+                  aria-label="Add more files"
+                  className="flex h-20 w-16 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-[var(--color-border)] text-xs text-[var(--color-text-muted)] hover:border-[var(--color-primary)]"
+                >
+                  <Plus className="h-5 w-5" /> Add
+                </button>
+              </div>
 
-          {ocrResults.length > 0 && (
-            <div className="card p-6">
-              <h2 className="h3 mb-6 flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                OCR Results ({ocrResults.length} pages processed)
-              </h2>
-              
-              <div className="space-y-6">
-                {ocrResults.map((result, index) => (
-                  <div key={index} className="border border-[var(--color-border)] rounded-lg p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-5 h-5 text-[var(--color-primary)]" />
-                        <div>
-                          <h4 className="font-semibold text-[var(--color-text)]">{result.fileName}</h4>
-                          <p className="text-sm text-[var(--color-text-muted)]">
-                            Page {result.pageIndex + 1} of {result.totalPages}
-                          </p>
+              {/* Selected page */}
+              {selected && (
+                <div className="card mt-3 p-4">
+                  {cropping ? (
+                    <CropEditor
+                      source={selected.source}
+                      quad={selected.quad}
+                      onCancel={() => setCropping(false)}
+                      onApply={(quad) => {
+                        setCropping(false);
+                        refresh({ ...selected, quad, filter: selected.filter });
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <div className="relative flex min-h-[8rem] justify-center rounded-lg bg-[var(--color-bg-alt)]">
+                        {selected.previewUrl && (
+                          <img
+                            src={selected.previewUrl}
+                            alt={`Scanned page ${pages.indexOf(selected) + 1}`}
+                            className="max-h-[45vh] max-w-full rounded object-contain"
+                          />
+                        )}
+                        {selected.status === "processing" && (
+                          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30">
+                            <Loader2 className="h-8 w-8 animate-spin text-white" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setCropping(true)}
+                            className="btn-secondary px-3 py-2"
+                            aria-label="Crop"
+                            title="Crop"
+                          >
+                            <Crop className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => rotate(selected)}
+                            className="btn-secondary px-3 py-2"
+                            aria-label="Rotate"
+                            title="Rotate"
+                          >
+                            <RotateCw className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => remove(selected)}
+                            className="btn-secondary px-3 py-2 text-[var(--color-error)]"
+                            aria-label="Remove page"
+                            title="Remove page"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div
+                          role="radiogroup"
+                          aria-label="Look"
+                          className="flex rounded-full border border-[var(--color-border)] p-0.5"
+                        >
+                          {FILTERS.map((f) => (
+                            <button
+                              key={f.id}
+                              type="button"
+                              role="radio"
+                              aria-checked={selected.filter === f.id}
+                              onClick={() =>
+                                selected.filter !== f.id &&
+                                refresh({ ...selected, filter: f.id })
+                              }
+                              className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                                selected.filter === f.id
+                                  ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]"
+                                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                              }`}
+                            >
+                              {f.label}
+                            </button>
+                          ))}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-medium ${getConfidenceColor(result.confidence)}`}>
-                          {(result.confidence * 100).toFixed(1)}% confidence
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Text */}
+              {selected && !cropping && (
+                <div className="card mt-4 p-4">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <h2 className="flex items-center gap-2 text-base font-semibold text-[var(--color-text)]">
+                      Text
+                      {selected.aiModel && (
+                        <span className="rounded-full bg-[var(--color-primary-light)] px-2 py-0.5 text-xs font-medium text-[var(--color-primary)]">
+                          AI
                         </span>
-                        <button
-                          onClick={() => copyToClipboard(result.text)}
-                          className="p-2 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-light)]/80 transition-colors"
-                          title="Copy to clipboard"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </button>
+                      )}
+                    </h2>
+                    <label className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
+                      Language
+                      <select
+                        value={language}
+                        onChange={(e) => changeLanguage(e.target.value)}
+                        className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-sm text-[var(--color-text)]"
+                      >
+                        {OCR_LANGUAGES.map((l) => (
+                          <option key={l.code} value={l.code}>
+                            {l.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  {reading || selected.status === "ai" ? (
+                    <div className="py-6" aria-live="polite">
+                      <p className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {selected.status === "ai"
+                          ? "Asking AI to read the page..."
+                          : selected.status === "processing"
+                            ? "Cleaning up the page..."
+                            : `${selected.stage || "Reading text"}...`}
+                      </p>
+                      {selected.status === "reading" && (
+                        <div className="mt-3 h-1.5 w-full rounded-full bg-[var(--color-bg-alt)]">
+                          <div
+                            className="h-1.5 rounded-full bg-[var(--color-primary)] transition-all"
+                            style={{
+                              width: `${Math.round((selected.progress || 0) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ) : selected.status === "error" ? (
+                    <div className="py-4" role="alert">
+                      <p className="text-sm text-[var(--color-error)]">{selected.error}</p>
+                      <button
+                        type="button"
+                        onClick={() => refresh(selected)}
+                        className="btn-secondary mt-3"
+                      >
+                        <RotateCcw className="h-4 w-4" /> Try again
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <textarea
+                        value={selected.text}
+                        onChange={(e) =>
+                          updatePage(selected.id, { text: e.target.value })
+                        }
+                        rows={10}
+                        placeholder="No text found on this page."
+                        aria-label="Extracted text"
+                        className="input font-mono text-sm leading-relaxed"
+                      />
+                      {selected.text &&
+                        selected.confidence < LOW_CONFIDENCE &&
+                        !selected.aiModel && (
+                          <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                            Some of this may be misread. Try cropping tighter,
+                            another look (Scan / B&amp;W)
+                            {aiEnabled ? ", or Improve with AI" : ""}.
+                          </p>
+                        )}
+                    </>
+                  )}
+
+                  {notice && (
+                    <p className="mt-3 text-sm text-[var(--color-text-muted)]">
+                      {notice}
+                    </p>
+                  )}
+
+                  {aiEnabled &&
+                    selected.output &&
+                    !reading &&
+                    selected.status !== "ai" && (
+                      <div className="mt-3 flex flex-wrap items-center gap-3">
+                        {selected.aiModel ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updatePage(selected.id, {
+                                text: selected.localText,
+                                aiModel: null,
+                              })
+                            }
+                            className="btn-secondary px-4 py-2"
+                          >
+                            <RotateCcw className="h-4 w-4" /> Use original text
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => improveWithAi(selected)}
+                            className="btn-secondary px-4 py-2"
+                          >
+                            <Sparkles className="h-4 w-4" /> Improve with AI
+                          </button>
+                        )}
+                        <span className="text-xs text-[var(--color-text-light)]">
+                          Sends this page to an AI model via OpenRouter.
+                        </span>
                       </div>
-                    </div>
-                    
-                    <div className="bg-[var(--color-bg-alt)] rounded-lg p-4 mb-4">
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap text-[var(--color-text)]">{result.text}</p>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-4 text-sm text-[var(--color-text-muted)]">
-                      <span>Language: {languages.find(l => l.code === result.language)?.name || result.language}</span>
-                      <span>Words: {result.wordCount}</span>
-                      <span>Characters: {result.characterCount}</span>
-                      <span>Processing time: {(result.processingTime / 1000).toFixed(1)}s</span>
+                    )}
+
+                  <div className="mt-4 space-y-3 border-t border-[var(--color-border)] pt-4">
+                    <button
+                      type="button"
+                      onClick={() => copyText(selected.text)}
+                      disabled={!selected.text}
+                      className="btn-primary w-full"
+                    >
+                      {copied ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                      {copied ? "Copied" : "Copy text"}
+                    </button>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <span className="flex items-center gap-1 text-sm text-[var(--color-text-muted)]">
+                        <Download className="h-4 w-4" aria-hidden="true" />
+                        {pages.length > 1
+                          ? `Save all ${pages.length} pages as`
+                          : "Save as"}
+                      </span>
+                      {[
+                        ["txt", "TXT"],
+                        ["docx", "Word"],
+                        ["pdf", "PDF"],
+                      ].map(([kind, label]) => (
+                        <button
+                          key={kind}
+                          type="button"
+                          onClick={() => download(kind)}
+                          disabled={busy}
+                          className="btn-secondary px-4 py-1.5"
+                        >
+                          {label}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

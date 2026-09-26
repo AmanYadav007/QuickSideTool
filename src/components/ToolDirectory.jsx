@@ -2,17 +2,14 @@ import React from "react";
 import { Link } from "react-router-dom";
 import {
   Minimize2,
-  FileText,
   Files,
   Unlock,
   Link2Off,
   ScanLine,
-  FileType,
-  Image as ImageIcon,
+  ArrowLeftRight,
   Repeat,
   Maximize2,
   QrCode,
-  FileSpreadsheet,
 } from "lucide-react";
 
 export const categories = [
@@ -24,10 +21,8 @@ export const categories = [
       { title: "Compress PDF", description: "Reduce file size instantly.", to: "/pdf-compressor", icon: Minimize2 },
       { title: "Organise & Merge", description: "Reorder, delete and combine pages.", to: "/pdf-tool", icon: Files },
       { title: "Unlock PDF", description: "Remove password protection.", to: "/unlock-pdf", icon: Unlock },
-      { title: "PDF to Word", description: "Keep formatting intact.", to: "/pdf-to-word", icon: FileText },
-      { title: "Word to PDF", description: "Turn .docx into a clean PDF.", to: "/word-to-pdf", icon: FileType },
+      { title: "Convert Files", description: "Word, PDF and Excel, either way.", to: "/file-converter", icon: ArrowLeftRight },
       { title: "Remove Links", description: "Strip hyperlinks from a PDF.", to: "/pdf-link-remove", icon: Link2Off },
-      { title: "PDF to Excel", description: "Extract tables into a spreadsheet.", to: "/file-converter", icon: FileSpreadsheet },
     ],
   },
   {
@@ -38,7 +33,6 @@ export const categories = [
       { title: "Resize Image", description: "Change dimensions exactly.", to: "/image-tools/resize", icon: Maximize2 },
       { title: "Compress Image", description: "Smaller files, same look.", to: "/image-tools/compress", icon: Minimize2 },
       { title: "Convert Image", description: "PNG, JPG, WebP and more.", to: "/image-tools/convert", icon: Repeat },
-      { title: "Image Toolkit", description: "All image tools in one place.", to: "/image-tools", icon: ImageIcon },
     ],
   },
   {
@@ -47,7 +41,7 @@ export const categories = [
     tagline: "Generate and extract",
     tools: [
       { title: "QR Code Generator", description: "Create QR codes instantly.", to: "/qr-tool", icon: QrCode },
-      { title: "OCR Scanner", description: "Pull text out of scans.", to: "/ocr-processor", icon: ScanLine },
+      { title: "OCR Scanner", description: "Snap or paste a page, copy the text.", to: "/ocr-processor", icon: ScanLine },
     ],
   },
 ];
@@ -55,20 +49,20 @@ export const categories = [
 const ToolCard = ({ title, description, to, icon: Icon }) => (
   <Link
     to={to}
-    className="group flex min-h-[180px] flex-col items-start gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 text-left transition-all duration-200 hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/40 md:p-5"
+    className="group flex min-h-[180px] flex-col items-start gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 text-left transition-all duration-200 hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-hover)] focus:outline-none focus:ring-2 focus:ring-brand-caribbean-green/40 md:p-5"
   >
-    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-primary-light)] transition-colors group-hover:bg-[var(--color-primary-light)]/80">
+    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-primary-light)] transition-colors group-hover:bg-brand-forest/80">
       <Icon className="h-6 w-6 text-[var(--color-primary)]" aria-hidden="true" />
     </span>
-    <h3 className="mt-0.5 text-base font-bold leading-snug text-[var(--color-text)] md:text-lg">{title}</h3>
+    <h3 className="mt-0.5 text-base font-semibold leading-snug text-[var(--color-text)] md:text-lg">{title}</h3>
     <p className="text-sm leading-snug text-[var(--color-text-muted)]">{description}</p>
   </Link>
 );
 
 export const ToolCategory = ({ name, tagline, id, tools }) => (
-  <section id={id} className="scroll-mt-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)]/50 p-4 md:p-6">
+  <section id={id} className="scroll-mt-24 rounded-xl border border-[var(--color-border)] bg-brand-pine/50 p-4 md:p-6">
     <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-      <h2 className="text-xl font-bold text-[var(--color-text)] md:text-2xl">{name}</h2>
+      <h2 className="text-xl font-semibold text-[var(--color-text)] md:text-2xl">{name}</h2>
       <p className="text-sm text-[var(--color-text-muted)]">{tagline}</p>
     </div>
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">

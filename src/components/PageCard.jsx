@@ -50,7 +50,7 @@ const PageCard = memo(({
         {showInsertButtons && isFirst && (
           <button
             type="button"
-            className="absolute left-[-14px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-md flex items-center justify-center z-30"
+            className="absolute left-[-14px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-on-primary)] shadow-md flex items-center justify-center z-30"
             onClick={(e) => {
               e.stopPropagation();
               onInsertBefore && onInsertBefore(index);
@@ -64,7 +64,7 @@ const PageCard = memo(({
         {showInsertButtons && (
           <button
             type="button"
-            className="absolute right-[-14px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-md flex items-center justify-center z-30"
+            className="absolute right-[-14px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-on-primary)] shadow-md flex items-center justify-center z-30"
             onClick={(e) => {
               e.stopPropagation();
               onInsertAfter && onInsertAfter(index);
@@ -76,7 +76,7 @@ const PageCard = memo(({
         )}
 
         <button
-          className="absolute top-2 right-2 w-8 h-8 bg-[var(--color-error)] text-white rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 flex items-center justify-center shadow-md hover:brightness-110 z-20"
+          className="absolute top-2 right-2 w-8 h-8 bg-[var(--color-error)] text-[var(--color-on-primary)] rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 flex items-center justify-center shadow-md hover:brightness-110 z-20"
           onClick={() => handleRemovePage(index)}
           aria-label={`Remove page ${index + 1}`}
         >

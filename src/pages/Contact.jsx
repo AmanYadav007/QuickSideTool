@@ -53,7 +53,7 @@ const Contact = () => {
         <div className="container section max-w-2xl">
           <section className="text-center mb-10">
             <h1 className="h1">Tell us what you need</h1>
-            <p className="mt-4 text-gray-500 max-w-xl mx-auto leading-relaxed">
+            <p className="mt-4 text-[var(--color-text-muted)] max-w-xl mx-auto leading-relaxed">
               Found a bug, want a new tool, or need help with a workflow? Send a short note and we'll use it to improve QuickSideTool.
             </p>
           </section>
@@ -62,21 +62,21 @@ const Contact = () => {
             <h2 className="h3 mb-6">Send a message</h2>
 
             {submitStatus === "success" && (
-              <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <p className="text-green-700">Thanks. We received your message.</p>
+              <div className="mb-6 p-4 rounded-lg bg-[var(--color-success-bg)] border border-[var(--color-primary-light)] flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-[var(--color-success)] flex-shrink-0 mt-0.5" />
+                <p className="text-[var(--color-success)]">Thanks. We received your message.</p>
               </div>
             )}
             {submitStatus === "error" && (
-              <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-red-700">Please try again, or email support@quicksidetool.com.</p>
+              <div className="mb-6 p-4 rounded-lg bg-[var(--color-error-bg)] border border-[var(--color-error)] flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-[var(--color-error)] flex-shrink-0 mt-0.5" />
+                <p className="text-[var(--color-error)]">Please try again, or email support@quicksidetool.com.</p>
               </div>
             )}
 
             <div className="grid gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Name</label>
                 <input
                   name="name"
                   value={formData.name}
@@ -86,7 +86,7 @@ const Contact = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Email</label>
                 <input
                   name="email"
                   type="email"
@@ -99,7 +99,7 @@ const Contact = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Message</label>
               <textarea
                 name="message"
                 value={formData.message}
@@ -121,10 +121,10 @@ const Contact = () => {
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-gray-500">
-              <a href="mailto:support@quicksidetool.com" className="text-blue-600 hover:underline">support@quicksidetool.com</a>
+            <p className="text-[var(--color-text-muted)]">
+              <a href="mailto:support@quicksidetool.com" className="text-[var(--color-primary)] hover:underline">support@quicksidetool.com</a>
             </p>
-            <p className="mt-2 text-sm text-gray-400">We reply within 2 business days.</p>
+            <p className="mt-2 text-sm text-[var(--color-text-light)]">We reply within 2 business days.</p>
           </div>
         </div>
       </Layout>

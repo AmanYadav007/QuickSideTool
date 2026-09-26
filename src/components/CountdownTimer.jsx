@@ -45,7 +45,7 @@ const CountdownTimer = () => {
         transition={{ duration: 0.3 }}
         className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg p-3 md:p-4 min-w-[60px] md:min-w-[80px] text-center shadow-lg"
       >
-        <span className="text-xl md:text-2xl font-bold text-white block">
+        <span className="text-xl md:text-2xl font-semibold text-white block">
           {value.toString().padStart(2, '0')}
         </span>
       </motion.div>
@@ -63,7 +63,7 @@ const CountdownTimer = () => {
       className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 border border-purple-400/30 rounded-2xl p-6 md:p-8 backdrop-blur-md"
     >
       <div className="text-center mb-6">
-        <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
+        <h3 className="text-xl md:text-2xl font-semibold text-white mb-2">
           🎉 Launch Celebration!
         </h3>
         <p className="text-gray-300 text-sm md:text-base">
@@ -85,7 +85,7 @@ const CountdownTimer = () => {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 text-sm md:text-base"
+          className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg transition-all duration-300 text-sm md:text-base"
         >
           Start Using Free Tools
         </motion.button>

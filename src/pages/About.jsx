@@ -33,7 +33,7 @@ const About = () => {
         <div className="container section">
           <section className="text-center mb-12">
             <h1 className="h1">Simple tools for everyday file work</h1>
-            <p className="mt-4 text-gray-500 max-w-2xl mx-auto leading-relaxed">
+            <p className="mt-4 text-[var(--color-text-muted)] max-w-2xl mx-auto leading-relaxed">
               QuickSideTool is built for people who need to resize images, compress files, make QR codes, convert documents, and get back to work without learning a complicated app.
             </p>
           </section>
@@ -44,12 +44,12 @@ const About = () => {
               return (
                 <article key={value.title} className="card p-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <Icon className="h-6 w-6 text-blue-600" />
+                    <div className="w-12 h-12 rounded-xl bg-[var(--color-primary-light)] flex items-center justify-center flex-shrink-0">
+                      <Icon className="h-6 w-6 text-[var(--color-primary)]" />
                     </div>
                     <div className="flex-1">
-                      <h2 className="text-lg font-semibold text-gray-900 mb-1">{value.title}</h2>
-                      <p className="text-gray-500">{value.text}</p>
+                      <h2 className="text-lg font-semibold text-[var(--color-text)] mb-1">{value.title}</h2>
+                      <p className="text-[var(--color-text-muted)]">{value.text}</p>
                     </div>
                   </div>
                 </article>

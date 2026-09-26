@@ -39,14 +39,14 @@ const Blog = () => {
 
       <Layout showAnimatedBackground={false}>
         <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 md:px-8 md:pt-14">
-          <section className="rounded-lg border border-white/10 bg-[#0b1f2a]/85 p-6 md:p-10">
-            <p className="text-sm font-semibold uppercase tracking-wide text-amber-200">
+          <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 md:p-10">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-primary)]">
               Guides
             </p>
-            <h1 className="mt-2 text-4xl font-bold text-white md:text-5xl">
+            <h1 className="mt-2 text-4xl font-semibold text-[var(--color-text)] md:text-5xl">
               Simple file workflow notes.
             </h1>
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">
+            <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--color-text-muted)]">
               Short, practical guides for using the tools without turning a
               quick task into a research project.
             </p>
@@ -59,17 +59,17 @@ const Blog = () => {
                 <Link
                   key={article.title}
                   to={article.to}
-                  className="group rounded-lg border border-white/10 bg-white/[0.05] p-6 transition hover:-translate-y-0.5 hover:border-amber-200/60 hover:bg-white/[0.08]"
+                  className="group rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-alt)] p-6 transition hover:-translate-y-0.5 hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-card)]"
                 >
-                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-amber-300/10 text-amber-200">
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--color-primary-light)] text-[var(--color-primary)]">
                     <Icon className="h-6 w-6" />
                   </div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                  <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-light)]">
                     {article.category}
                   </p>
-                  <h2 className="mt-2 text-xl font-semibold text-white">{article.title}</h2>
-                  <p className="mt-3 text-sm leading-6 text-slate-300">{article.description}</p>
-                  <span className="mt-5 inline-flex items-center gap-2 font-semibold text-amber-200">
+                  <h2 className="mt-2 text-xl font-semibold text-[var(--color-text)]">{article.title}</h2>
+                  <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">{article.description}</p>
+                  <span className="mt-5 inline-flex items-center gap-2 font-semibold text-[var(--color-primary)]">
                     Open tool <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
                   </span>
                 </Link>

@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import SEO from "../components/SEO";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Download, QrCode, Type } from "lucide-react";
+import BackButton from "./BackButton";
+import { Download, QrCode, Type } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 const qrTypes = [
@@ -96,15 +96,9 @@ const QRCodeGenerator = () => {
       />
 
       <div className="container section">
-        <header className="mb-8 flex items-center justify-between">
-          <Link
-            to="/home"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to All Tools
-          </Link>
-          <h1 className="h1 text-center">QR Code Generator</h1>
+        <header className="mb-8 flex items-start justify-between gap-3">
+          <BackButton />
+          <h1 className="h2 text-center">QR Code Generator</h1>
         </header>
 
         <div className="max-w-3xl mx-auto">
@@ -171,7 +165,7 @@ const QRCodeGenerator = () => {
                   <QRCodeSVG
                     value={valueForPreview}
                     size={effectiveSize}
-                    fgColor="#111827"
+                    fgColor="#021B1A"
                     bgColor="#ffffff"
                     className="h-auto max-h-[280px] w-auto max-w-full"
                     level="M"

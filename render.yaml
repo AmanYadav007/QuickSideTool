@@ -9,6 +9,9 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      # Turns on "Improve with AI" in the OCR scanner; Render asks for the value
+      - key: OPENROUTER_API_KEY
+        sync: false
     healthCheckPath: /health
     autoDeploy: true
 

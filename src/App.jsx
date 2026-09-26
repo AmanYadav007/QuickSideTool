@@ -8,18 +8,15 @@ import ScrollToTop from "./components/ScrollToTop";
 import LandingPage from "./pages/LandingPage";
 import Toolkit from "./pages/Toolkit";
 import PDFTool from "./pages/PDFTool";
-import ImageTools from "./pages/ImageTools";
 import ImageResize from "./components/ImageResize";
 import ImageCompressor from "./components/ImageCompressor";
 import ImageFormatConverter from "./components/ImageFormatConverter";
 import QrCodeGenerator from "./components/QrCodeGenerator";
 import PDFLinkRemover from "./components/PDFLinkRemover";
 import PDFUnlocker from "./components/PDFUnlocker";
-import PDFToWordConverter from "./components/PDFToWordConverter";
 import OCRProcessor from "./components/OCRProcessor";
 import PDFCompressor from "./components/PDFCompressor";
-import WordToPDFConverter from "./components/WordToPDFConverter";
-import FileConverterNew from "./components/FileConverterNew";
+import FileConverter from "./components/FileConverter";
 
 import DiamondQuestGame from "./components/DiamondQuestGame";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -51,7 +48,8 @@ function App() {
         <Route path="/pdf-tool" element={<PDFTool />} />
         {/* Keyword-friendly aliases */}
         <Route path="/pdf-editor" element={<PDFTool />} />
-        <Route path="/image-tools" element={<ImageTools />} />
+        {/* The image toolkit page was folded into the home page's Image Tools section */}
+        <Route path="/image-tools" element={<Navigate to="/home#image-tools" replace />} />
         <Route path="/image-tools/resize" element={<ImageResize />} />
         <Route path="/image-resizer" element={<ImageResize />} />
         <Route path="/image-tools/compress" element={<ImageCompressor />} />
@@ -64,15 +62,18 @@ function App() {
         <Route path="/remove-pdf-password" element={<PDFUnlocker />} />
         <Route path="/pdf-link-remove" element={<PDFLinkRemover />} />
         <Route path="/remove-links-from-pdf" element={<PDFLinkRemover />} />
-              <Route path="/pdf-to-word" element={<PDFToWordConverter />} />
-        <Route path="/pdf-to-docx" element={<PDFToWordConverter />} />
+        {/* One converter; each keyword URL opens it on its conversion */}
+        <Route path="/file-converter" element={<FileConverter />} />
+        <Route path="/pdf-to-word" element={<FileConverter key="pdf-to-word" initialMode="pdf-to-word" />} />
+        <Route path="/pdf-to-docx" element={<FileConverter key="pdf-to-word" initialMode="pdf-to-word" />} />
+        <Route path="/word-to-pdf" element={<FileConverter key="word-to-pdf" initialMode="word-to-pdf" />} />
+        <Route path="/docx-to-pdf" element={<FileConverter key="word-to-pdf" initialMode="word-to-pdf" />} />
+        <Route path="/word-to-excel" element={<FileConverter key="word-to-excel" initialMode="word-to-excel" />} />
+        <Route path="/pdf-to-excel" element={<FileConverter key="pdf-to-excel" initialMode="pdf-to-excel" />} />
               <Route path="/ocr-processor" element={<OCRProcessor />} />
         <Route path="/ocr-pdf-to-word" element={<OCRProcessor />} />
                               <Route path="/pdf-compressor" element={<PDFCompressor />} />
         <Route path="/compress-pdf" element={<PDFCompressor />} />
-                <Route path="/word-to-pdf" element={<WordToPDFConverter />} />
-        <Route path="/docx-to-pdf" element={<WordToPDFConverter />} />
-                <Route path="/file-converter" element={<FileConverterNew />} />
 
                 <Route path="/diamond-mines" element={<DiamondQuestGame />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />

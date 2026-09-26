@@ -7,6 +7,7 @@
     "@babel/plugin-transform-runtime": "^7.27.1",
     "@babel/preset-env": "^7.27.1",
     "@babel/preset-react": "^7.27.1",
+    "@fontsource/poppins": "^5.3.0",
     "@hello-pangea/dnd": "^17.0.0",
     "@tanstack/react-virtual": "^3.10.8",
     "@tsparticles/engine": "^3.8.1",
@@ -54,7 +55,9 @@
     "tsparticles": "^3.8.1"
   },
   "scripts": {
+    "prestart": "node scripts/copy-vendor.js",
     "start": "react-scripts start",
+    "prebuild": "node scripts/copy-vendor.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
