@@ -23,6 +23,14 @@ const files = [
     "node_modules/pdfjs-dist/build/pdf.worker.min.js",
     "public/vendor/pdfjs/pdf.worker.min.js",
   ],
+  // MuPDF (WebAssembly) for the PDF jobs that run on the device, see
+  // public/workers/pdf-worker.js
+  ["node_modules/mupdf/dist/mupdf.js", "public/vendor/mupdf/mupdf.js"],
+  ["node_modules/mupdf/dist/mupdf-wasm.js", "public/vendor/mupdf/mupdf-wasm.js"],
+  [
+    "node_modules/mupdf/dist/mupdf-wasm.wasm",
+    "public/vendor/mupdf/mupdf-wasm.wasm",
+  ],
 ];
 
 for (const [from, to] of files) {
