@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import SEO from "../components/SEO";
 import Layout from "../components/Layout";
+import { SUPPORT_EMAIL } from "../constants/links";
 
 const SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycby6IncKBU68LN7ZxWkBIEQJV_S_m18G1CSgPi1o4jUZ093FUSHTF-QS87BAOyepP1Vu/exec";
@@ -70,7 +71,9 @@ const Contact = () => {
             {submitStatus === "error" && (
               <div className="mb-6 p-4 rounded-lg bg-[var(--color-error-bg)] border border-[var(--color-error)] flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-[var(--color-error)] flex-shrink-0 mt-0.5" />
-                <p className="text-[var(--color-error)]">Please try again, or email support@quicksidetool.com.</p>
+                <p className="text-[var(--color-error)]">
+                  Couldn't send your message. Please try again in a moment{SUPPORT_EMAIL ? `, or email ${SUPPORT_EMAIL}` : ""}.
+                </p>
               </div>
             )}
 
@@ -121,9 +124,11 @@ const Contact = () => {
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-[var(--color-text-muted)]">
-              <a href="mailto:support@quicksidetool.com" className="text-[var(--color-primary)] hover:underline">support@quicksidetool.com</a>
-            </p>
+            {SUPPORT_EMAIL && (
+              <p className="text-[var(--color-text-muted)]">
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-[var(--color-primary)] hover:underline">{SUPPORT_EMAIL}</a>
+              </p>
+            )}
             <p className="mt-2 text-sm text-[var(--color-text-light)]">We reply within 2 business days.</p>
           </div>
         </div>

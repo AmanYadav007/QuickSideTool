@@ -121,7 +121,7 @@ const PDFCompressor = () => {
       <SEO
         title="Compress PDF Online - Reduce PDF Size Without Losing Quality"
         description="Shrink a PDF for email or upload in seconds. Text stays sharp; only oversized images are reduced. Free, no signup, no watermark."
-        url="https://quicksidetool.com/pdf-compressor"
+        url="/pdf-compressor"
       />
 
       <div className="container py-8 md:py-12">

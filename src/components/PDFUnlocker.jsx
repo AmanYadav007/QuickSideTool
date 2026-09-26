@@ -176,7 +176,7 @@ const PDFUnlocker = () => {
       <SEO
         title="Remove PDF Password Online – Unlock Protected PDF"
         description="Remove password from a PDF you own. Files are processed over an encrypted connection and deleted right after processing."
-        url="https://quicksidetool.com/unlock-pdf"
+        url="/unlock-pdf"
       />
       {showConfetti && <Confetti tweenDuration={1000} recycle={false} numberOfPieces={500} />}
 

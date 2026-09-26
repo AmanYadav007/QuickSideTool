@@ -22,17 +22,26 @@ from PIL import Image, ImageOps, ImageEnhance  # Add Pillow imports for image pr
 # Initialize Flask app
 app = Flask(__name__)
 
-# Configure CORS with specific settings for better compatibility
-# Reject uploads above 100 MB before they reach the handlers
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
+# Sites allowed to call this API from a browser. Extra origins can be added
+# without a code change: ALLOWED_ORIGINS="https://a.example,https://b.example"
+SITE_URL = 'https://www.ilovetools.website'
+ALLOWED_ORIGINS = [
+    SITE_URL,
+    'https://ilovetools.website',
+    'https://quick-side-tool.vercel.app',
+    # Vercel preview deployments of this project only
+    re.compile(r'^https://quick-side-tool-[a-z0-9-]+-amanyadav007s-projects\.vercel\.app$'),
+    'chrome-extension://ednlokciemgblchidkhbhhndphgjkoip',  # the Chrome side-panel extension
+    'http://localhost:3000',
+    'http://localhost:3001',
+] + [o.strip() for o in os.environ.get('ALLOWED_ORIGINS', '').split(',') if o.strip()]
 
-CORS(app, 
-     origins=['http://localhost:3000', 'http://localhost:3001', 'https://quicksidetool.com', 'https://www.quicksidetool.com',
-              'chrome-extension://ednlokciemgblchidkhbhhndphgjkoip'],  # the Chrome side-panel extension
-     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-     allow_headers=['Content-Type', 'Authorization', 'Access-Control-Allow-Credentials'],
+CORS(app,
+     origins=ALLOWED_ORIGINS,
+     methods=['GET', 'POST', 'OPTIONS'],
+     allow_headers=['Content-Type'],
      expose_headers=['Content-Disposition'],  # lets the frontend read the download filename
-     supports_credentials=True)
+     max_age=86400)  # browsers may cache the preflight for a day
 
 # Configure logging
 logging.basicConfig(level=logging.INFO) # Set to INFO for production, DEBUG for development
@@ -1172,7 +1181,7 @@ def ai_ocr():
         req = urllib.request.Request(OPENROUTER_URL, data=payload, method='POST', headers={
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://quicksidetool.com",
+            "HTTP-Referer": SITE_URL,
             "X-Title": "QuickSideTool",
         })
         try:

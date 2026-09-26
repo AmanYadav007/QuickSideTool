@@ -231,7 +231,7 @@ const ImageCompressor = () => {
       <SEO
         title="Compress Image Online – JPG/PNG/WebP to Smaller Size"
         description="Reduce image size without big quality loss. Drag & drop. Free and fast."
-        url="https://quicksidetool.com/image-tools/compress"
+        url="/image-tools/compress"
       />
       <div className="container section">
         <header className="mb-8 flex items-start justify-between gap-3">

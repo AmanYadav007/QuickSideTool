@@ -377,7 +377,7 @@ const PDFLinkRemover = () => {
       <SEO
         title="Remove Hyperlinks from PDF – Clean PDF Links Online"
         description="Strip all links/hyperlinks from PDF in one click. Privacy‑friendly, free tool."
-        url="https://quicksidetool.com/pdf-link-remove"
+        url="/pdf-link-remove"
       />
       <div className="container py-8 md:py-12">
         <BackButton />

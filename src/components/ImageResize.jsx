@@ -403,7 +403,7 @@ const ImageResize = () => {
             <SEO
                 title="Resize Image Online – Exact Width & Height in Pixels"
                 description="Resize images to custom dimensions or presets. JPG/PNG/WebP supported. Batch resize supported."
-                url="https://quicksidetool.com/image-tools/resize"
+                url="/image-tools/resize"
             />
             <div className="container section">
                 <header className="mb-8 flex items-start justify-between gap-3">

@@ -10,6 +10,7 @@ const PDFTool = () => {
       <SEO
         title="Free Online PDF Tools – Compress, Unlock, Convert"
         description="All your essential PDF utilities in one place. Fast, secure, no sign‑up."
+        url="/pdf-tool"
       />
       <div className="container pt-6 pb-12 md:pb-16">
         <BackButton />

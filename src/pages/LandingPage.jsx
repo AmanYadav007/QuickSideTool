@@ -30,6 +30,7 @@ const LandingPage = () => {
       <SEO
         title="QuickSideTool - Free PDF Tools, Image Tools, QR Generator"
         description="Compress PDFs, resize images, convert files and generate QR codes. Free, no signup, runs in your browser."
+        url="/"
       />
       <Layout>
         {/* Every tool, once */}

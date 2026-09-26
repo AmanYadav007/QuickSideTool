@@ -2,6 +2,8 @@ import React from "react";
 import { AlertTriangle, CheckCircle, FileText, Shield, Share, Users, Clock } from "lucide-react";
 import SEO from "../components/SEO";
 import Layout from "../components/Layout";
+import { Link } from "react-router-dom";
+import { SUPPORT_EMAIL } from "../constants/links";
 
 const terms = [
   {
@@ -43,7 +45,6 @@ const TermsOfService = () => {
         title="Terms of Service - QuickSideTool"
         description="Read QuickSideTool's terms for using the website, tools, and file workflows."
         keywords="terms of service, QuickSideTool terms, user agreement"
-        canonical="/terms"
       />
       <Layout>
         <div className="container section max-w-4xl">
@@ -80,7 +81,10 @@ const TermsOfService = () => {
               <CheckCircle className="h-5 w-5 text-[var(--color-success)] flex-shrink-0 mt-0.5" />
               <div>
                 <h2 className="font-semibold text-[var(--color-text)]">Contact</h2>
-                <p className="mt-1 text-sm text-[var(--color-text-muted)]">For terms questions, contact support@quicksidetool.com.</p>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">For terms questions, use the{" "}
+                  <Link to="/contact" className="link">contact form</Link>
+                  {SUPPORT_EMAIL ? ` or email ${SUPPORT_EMAIL}` : ""}.
+                </p>
               </div>
             </div>
           </section>

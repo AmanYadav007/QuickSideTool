@@ -405,7 +405,7 @@ const OCRProcessor = () => {
       <SEO
         title="Scan to Text - Extract Text from Photos, Screenshots and PDFs (OCR)"
         description="Snap a document, paste a screenshot or drop a PDF and copy the text. Pages are straightened and cleaned up automatically. Free, runs in your browser."
-        url="https://quicksidetool.com/ocr-processor"
+        url="/ocr-processor"
       />
       {hiddenInputs}
 

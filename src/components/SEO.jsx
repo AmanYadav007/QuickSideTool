@@ -1,15 +1,21 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
+import { SITE_URL } from '../constants/links';
 
 const SEO = ({ 
   title = "QuickSideTool - Free PDF Tools, Image Editor, QR Generator | Alternative to Adobe",
   description = "Free online PDF tools, image editor, and QR code generator. Merge, split, unlock PDFs. Resize, compress images. Create QR codes. No registration required. Better than Adobe Acrobat.",
   keywords = "PDF tools, PDF editor, PDF merger, PDF splitter, PDF unlocker, image editor, image compressor, image resizer, QR code generator, free PDF tools, Adobe alternative, online PDF editor, PDF to image, image to PDF, document tools, file converter",
-  image = "/og-image.png",
-  url = "https://quicksidetool.com",
+  image,
+  // Path of the page's main URL, e.g. "/pdf-compressor". Pages reachable
+  // under several paths pass it so search engines index one address.
+  url,
   type = "website"
 }) => {
+  const { pathname } = useLocation();
   const fullTitle = title.includes("QuickSideTool") ? title : `${title} | QuickSideTool`;
+  const canonical = `${SITE_URL}${url ?? pathname}`;
   
   return (
     <Helmet>
@@ -22,18 +28,18 @@ const SEO = ({
       
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
-      <meta property="og:url" content={url} />
+      <meta property="og:url" content={canonical} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
-      <meta property="og:image" content={image} />
+      {image && <meta property="og:image" content={`${SITE_URL}${image}`} />}
       <meta property="og:site_name" content="QuickSideTool" />
       
       {/* Twitter */}
       <meta property="twitter:card" content="summary_large_image" />
-      <meta property="twitter:url" content={url} />
+      <meta property="twitter:url" content={canonical} />
       <meta property="twitter:title" content={fullTitle} />
       <meta property="twitter:description" content={description} />
-      <meta property="twitter:image" content={image} />
+      {image && <meta property="twitter:image" content={`${SITE_URL}${image}`} />}
       
       {/* Additional SEO Meta Tags */}
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -41,7 +47,7 @@ const SEO = ({
       <meta name="msapplication-TileColor" content="#021B1A" />
       
       {/* Canonical URL */}
-      <link rel="canonical" href={url} />
+      <link rel="canonical" href={canonical} />
       
       {/* Favicon */}
       <link rel="icon" type="image/png" sizes="32x32" href="/icon32.png" />
@@ -59,7 +65,7 @@ const SEO = ({
           "@type": "WebApplication",
           "name": "QuickSideTool",
           "description": "Free online PDF tools, image editor, and QR code generator. Alternative to Adobe Acrobat.",
-          "url": "https://quicksidetool.com",
+          "url": SITE_URL,
           "applicationCategory": "ProductivityApplication",
           "operatingSystem": "Web Browser",
           "offers": {
@@ -79,13 +85,7 @@ const SEO = ({
             "Image Resizer",
             "Image Compressor",
             "QR Code Generator"
-          ],
-          "screenshot": "https://quicksidetool.com/screenshot.png",
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.8",
-            "ratingCount": "1250"
-          }
+          ]
         })}
       </script>
       

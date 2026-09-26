@@ -224,7 +224,7 @@ const FileConverter = ({ initialMode = "pdf-to-word" }) => {
       <SEO
         title={mode.seoTitle}
         description={mode.seoDescription}
-        url={`https://quicksidetool.com${mode.path}`}
+        url={mode.path}
       />
 
       <div className="container py-8 md:py-12">
