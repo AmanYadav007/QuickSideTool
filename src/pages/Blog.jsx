@@ -37,7 +37,7 @@ const Blog = () => {
         keywords="QuickSideTool blog, image tools guide, QR code guide, PDF workflow"
       />
 
-      <Layout showAnimatedBackground={false}>
+      <Layout>
         <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 md:px-8 md:pt-14">
           <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 md:p-10">
             <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-primary)]">

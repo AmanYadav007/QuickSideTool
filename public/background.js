@@ -1,26 +1,14 @@
-// Background script for browser extension
-chrome.runtime.onInstalled.addListener(() => {
-  // Extension installed or updated
-  chrome.storage.local.set({ 
-    installed: true, 
-    version: '1.0.0',
-    installDate: new Date().toISOString()
-  });
-});
+// Extension service worker (Manifest V3). There is no `window` here.
 
-// Handle extension errors gracefully
-chrome.runtime.onSuspend.addListener(() => {
-  // Extension is being suspended
-  chrome.storage.local.set({ 
-    lastActive: new Date().toISOString() 
-  });
-});
+// One click on the toolbar icon opens the tools in the side panel.
+chrome.sidePanel
+  .setPanelBehavior({ openPanelOnActionClick: true })
+  .catch(() => {});
 
-// Error handling for unhandled promise rejections
-window.addEventListener('unhandledrejection', (event) => {
-  // Log error but don't crash the extension
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('Background script: Unhandled promise rejection', event.reason);
-  }
-  event.preventDefault();
+chrome.runtime.onInstalled.addListener(({ reason }) => {
+  chrome.storage.local.set({
+    installed: true,
+    version: chrome.runtime.getManifest().version,
+    ...(reason === "install" && { installDate: new Date().toISOString() }),
+  });
 });

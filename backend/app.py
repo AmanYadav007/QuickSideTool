@@ -2,11 +2,13 @@ from flask import Flask, request, send_file, jsonify
 import pikepdf # Use pikepdf for PDF operations
 from flask_cors import CORS
 import base64
+import functools
 import io
 import json
 import logging
 import os
 import re
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -56,6 +58,26 @@ def home():
 @app.route('/health')
 def health():
     return jsonify({"status": "ok"})
+
+# Gunicorn runs each worker with several threads so uploads and AI calls
+# overlap, but PDF work is memory-hungry (~110 MB for a 22 MB scan) and
+# PyMuPDF holds the GIL, so two jobs in one process run no faster than one
+# after the other. One job per worker at a time; the rest wait with their
+# upload already received. Add workers (WEB_CONCURRENCY) for parallelism.
+_heavy_slots = threading.BoundedSemaphore(int(os.environ.get('HEAVY_JOBS', '1')))
+
+
+def heavy(view):
+    @functools.wraps(view)
+    def wrapper(*args, **kwargs):
+        request.files  # finish receiving the upload (spooled to disk) first
+        with _heavy_slots:
+            try:
+                return view(*args, **kwargs)
+            finally:
+                fitz.TOOLS.store_shrink(100)  # drop MuPDF's cached images/fonts
+    return wrapper
+
 
 # Upload helpers shared by the conversion and compression endpoints
 def read_upload(extensions, label):
@@ -110,6 +132,7 @@ def file_too_large(_error):
 
 # Unlock PDF endpoint
 @app.route('/unlock-pdf', methods=['POST'])
+@heavy
 def unlock_pdf():
     # Check for file and password in request
     if 'file' not in request.files:
@@ -175,6 +198,7 @@ def unlock_pdf():
 
 # Lock PDF endpoint
 @app.route('/lock-pdf', methods=['POST'])
+@heavy
 def lock_pdf():
     # Check for file and password in request
     if 'file' not in request.files:
@@ -237,6 +261,7 @@ def lock_pdf():
 
 # PDF LINK REMOVER ENDPOINT (enhanced for performance)
 @app.route('/remove-pdf-links', methods=['POST'])
+@heavy
 def remove_pdf_links():
     if 'file' not in request.files:
         logging.error("Remove Links: No file part in the request.")
@@ -373,6 +398,7 @@ def remove_pdf_links():
 
 # ADVANCED PDF LINK REMOVER ENDPOINT (ultra-fast processing)
 @app.route('/remove-pdf-links-advanced', methods=['POST', 'OPTIONS'])
+@heavy
 def remove_pdf_links_advanced():
     """
     Advanced PDF link removal with maximum performance optimizations:
@@ -610,6 +636,7 @@ def remove_pdf_links_advanced():
 
 # PDF TO DOCX CONVERSION ENDPOINT
 @app.route('/pdf-to-docx', methods=['POST'])
+@heavy
 def pdf_to_docx():
     """
     Convert a PDF to an editable Word document with pdf2docx, which rebuilds
@@ -646,6 +673,7 @@ def pdf_to_docx():
 
 # IMAGE COMPRESSION ENDPOINT
 @app.route('/compress-image', methods=['POST'])
+@heavy
 def compress_image():
     """
     Advanced server-side image compression with multiple options:
@@ -776,6 +804,7 @@ def compress_image():
 
 # BATCH IMAGE COMPRESSION ENDPOINT
 @app.route('/compress-images-batch', methods=['POST'])
+@heavy
 def compress_images_batch():
     """
     Batch compress multiple images with the same settings
@@ -916,6 +945,7 @@ def excel_response(workbook, filename):
 
 
 @app.route('/convert/pdf-to-excel', methods=['POST'])
+@heavy
 def convert_pdf_to_excel():
     """
     Convert PDF to Excel spreadsheet (.xlsx).
@@ -964,6 +994,7 @@ def convert_pdf_to_excel():
 
 
 @app.route('/convert/word-to-excel', methods=['POST'])
+@heavy
 def convert_word_to_excel():
     """
     Convert Word (.docx) to Excel (.xlsx): each table becomes a sheet.
@@ -1026,6 +1057,7 @@ p[style-name='Subtitle'] => h2:fresh
 
 
 @app.route('/convert/word-to-pdf', methods=['POST'])
+@heavy
 def convert_word_to_pdf():
     """
     Convert Word (.docx) to PDF: mammoth turns the document into semantic HTML
@@ -1107,6 +1139,7 @@ AI_OCR_PROMPT = (
 )
 
 _ai_usage = {}  # visitor IP -> timestamps of recent AI requests
+_ai_usage_lock = threading.Lock()
 
 
 def _client_ip():
@@ -1116,6 +1149,11 @@ def _client_ip():
 
 
 def _ai_rate_limited():
+    with _ai_usage_lock:
+        return _ai_rate_limited_locked()
+
+
+def _ai_rate_limited_locked():
     now = time.time()
     ip = _client_ip()
     recent = [t for t in _ai_usage.get(ip, []) if now - t < 3600]
@@ -1220,6 +1258,7 @@ COMPRESSION_LEVELS = {
 
 @app.route('/compress-pdf', methods=['POST'])
 @app.route('/compress-pdf-advanced', methods=['POST'])  # kept for older extension builds
+@heavy
 def compress_pdf():
     """
     Compress a PDF by downsampling and re-encoding its images (where almost all
