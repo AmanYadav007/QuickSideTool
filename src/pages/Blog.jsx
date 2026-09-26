@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import Link from "../components/PrefetchLink";
 import { ArrowRight, FileText, Image, QrCode } from "lucide-react";
 import SEO from "../components/SEO";
 import Layout from "../components/Layout";

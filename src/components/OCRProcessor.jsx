@@ -28,7 +28,7 @@ import {
   rotateCanvas,
   rotatePoint,
 } from "../utils/scan";
-import { OCR_LANGUAGES, recognize } from "../utils/ocr";
+import { OCR_LANGUAGES, recognize, warmUp } from "../utils/ocr";
 import { buildDocx, buildSearchablePdf, buildText } from "../utils/scanExport";
 import { BACKEND_URL, downloadBlob, readBackendError } from "../constants/api";
 
@@ -252,6 +252,14 @@ const OCRProcessor = () => {
     multiple: true,
     accept: { "image/*": [], "application/pdf": [".pdf"] },
   });
+
+  // Start the text reader while the user is still choosing a file. Skipped on
+  // data-saving connections: it downloads ~5 MB the first time, then caches.
+  useEffect(() => {
+    if (navigator.connection?.saveData) return;
+    const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 500));
+    idle(() => warmUp(languageRef.current));
+  }, []);
 
   // Paste a screenshot straight from the clipboard
   useEffect(() => {

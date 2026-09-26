@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import Layout from "../components/Layout";
 import SEO from "../components/SEO";
 import ToolDirectory from "../components/ToolDirectory";
+import { prefetchPopular } from "../pageLoaders";
 
 const faqs = [
   {
@@ -25,6 +26,8 @@ const faqs = [
 ];
 
 const LandingPage = () => {
+  useEffect(prefetchPopular, []);
+
   return (
     <>
       <SEO

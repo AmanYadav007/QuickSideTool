@@ -326,7 +326,8 @@ const ImageResize = () => {
                 zip.file(name, img.resized);
             });
 
-            zip.generateAsync({ type: 'blob', compression: "DEFLATE", compressionOptions: { level: 9 } }).then(content => {
+            // Images are already compressed; deflating them again costs time and saves ~0%
+            zip.generateAsync({ type: 'blob', compression: 'STORE' }).then(content => {
                 const link = document.createElement('a');
                 const href = URL.createObjectURL(content);
                 link.href = href;

@@ -49,18 +49,26 @@
       content="Free online PDF tools, image editor, and QR code generator. Alternative to Adobe Acrobat."
     />
 
-    <!-- Canonical URL -->
-    <!-- Google Tag Manager -->
+    <!-- Google Tag Manager: started after the page has loaded and gone idle,
+         so its ~115 KB doesn't compete with the app for bandwidth. Events
+         pushed to dataLayer before then are kept and sent when it starts. -->
     <script>
       (function (w, d, s, l, i) {
         w[l] = w[l] || [];
         w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
-        var f = d.getElementsByTagName(s)[0],
-          j = d.createElement(s),
-          dl = l != "dataLayer" ? "&l=" + l : "";
-        j.async = true;
-        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
-        f.parentNode.insertBefore(j, f);
+        function load() {
+          var f = d.getElementsByTagName(s)[0],
+            j = d.createElement(s),
+            dl = l != "dataLayer" ? "&l=" + l : "";
+          j.async = true;
+          j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+          f.parentNode.insertBefore(j, f);
+        }
+        function whenIdle() {
+          (w.requestIdleCallback || function (fn) { setTimeout(fn, 1); })(load, { timeout: 3000 });
+        }
+        if (d.readyState === "complete") whenIdle();
+        else w.addEventListener("load", whenIdle, { once: true });
       })(window, document, "script", "dataLayer", "GTM-TBVQNN72");
     </script>
     <!-- End Google Tag Manager -->

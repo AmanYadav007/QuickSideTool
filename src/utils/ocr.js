@@ -54,6 +54,14 @@ const getWorker = async (language) => {
 };
 
 /**
+ * Load the engine and a language ahead of time (e.g. when the scanner opens)
+ * so the first page is read without the start-up wait. Safe to call often.
+ */
+export const warmUp = (language) => {
+  queue = queue.then(() => getWorker(language)).catch(() => {});
+};
+
+/**
  * Read the text in a canvas. `progress` gets a 0-1 value and a stage label.
  * Resolves to { text, confidence (0-1), textLayerPdf } where textLayerPdf is
  * an invisible-text PDF page used to make exported scans searchable.

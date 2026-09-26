@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from './PrefetchLink';
 import { Puzzle, ExternalLink } from 'lucide-react';
 import Logo from './Logo';
 import { CHROME_EXTENSION_URL } from '../constants/links';
