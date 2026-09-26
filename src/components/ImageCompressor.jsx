@@ -372,8 +372,8 @@ const ImageCompressor = () => {
                       <input
                         id="target-kb"
                         type="number"
-                        min="5"
-                        step="5"
+                        min="1"
+                        step="any"
                         value={targetKb}
                         onChange={(e) => setTargetKb(e.target.value)}
                         aria-invalid={!targetValid}

@@ -42,7 +42,7 @@ CORS(app,
      origins=ALLOWED_ORIGINS,
      methods=['GET', 'POST', 'OPTIONS'],
      allow_headers=['Content-Type'],
-     expose_headers=['Content-Disposition', 'X-Links-Removed'],  # readable by the frontend
+     expose_headers=['Content-Disposition', 'X-Links-Removed', 'X-Target-Met', 'X-Compression-Level'],  # readable by the frontend
      max_age=86400)  # browsers may cache the preflight for a day
 
 # Configure logging
@@ -946,6 +946,28 @@ COMPRESSION_LEVELS = {
     'medium': (150, 72),  # screen and email
     'high': (100, 55),    # smallest file
 }
+# Tried in order when the user gives a size limit: the first that fits wins,
+# so the file keeps the best quality the limit allows. The last two go beyond
+# "Smallest" and are only used to reach a limit.
+TARGET_LADDER = [
+    ('low', 200, 85), ('medium', 150, 72), ('high', 100, 55),
+    ('tiny', 72, 45), ('minimum', 50, 35),
+]
+
+
+def _compress_bytes(pdf_bytes, dpi, quality, filename):
+    pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
+    try:
+        pdf_document.rewrite_images(dpi_threshold=dpi + 10, dpi_target=dpi, quality=quality)
+        try:
+            pdf_document.subset_fonts()
+        except Exception as e:
+            logging.warning(f"PDF compression: Font subsetting skipped for '{filename}': {e}")
+        return pdf_document.tobytes(
+            garbage=3, deflate=True, deflate_images=True, deflate_fonts=True, use_objstms=1
+        )
+    finally:
+        pdf_document.close()
 
 
 @app.route('/compress-pdf', methods=['POST'])
@@ -956,7 +978,10 @@ def compress_pdf():
     Compress a PDF by downsampling and re-encoding its images (where almost all
     the weight in a PDF lives), subsetting embedded fonts, and rewriting the file
     with compressed streams. Text and vector content are left untouched.
-    If nothing can be saved, the original file is returned unchanged.
+
+    compression_level picks a level; target_bytes instead picks the best-quality
+    level whose result fits (X-Target-Met says whether one did). If nothing can
+    be saved, the original file is returned unchanged.
     """
     file, pdf_bytes, error = read_upload(('.pdf',), 'PDF compression')
     if error:
@@ -966,37 +991,49 @@ def compress_pdf():
     if locked:
         return locked
 
-    compression_level = request.form.get('compression_level', 'medium')
-    dpi, quality = COMPRESSION_LEVELS.get(compression_level, COMPRESSION_LEVELS['medium'])
-
     try:
-        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-        pdf_document.rewrite_images(dpi_threshold=dpi + 10, dpi_target=dpi, quality=quality)
-        try:
-            pdf_document.subset_fonts()
-        except Exception as e:
-            logging.warning(f"PDF compression: Font subsetting skipped for '{file.filename}': {e}")
-        compressed = pdf_document.tobytes(
-            garbage=3, deflate=True, deflate_images=True, deflate_fonts=True, use_objstms=1
-        )
-        pdf_document.close()
+        target_bytes = int(request.form.get('target_bytes') or 0)
+    except ValueError:
+        return jsonify({"error": "The size limit must be a number of bytes."}), 400
 
-        original_size = len(pdf_bytes)
-        if len(compressed) >= original_size:
-            compressed = pdf_bytes
+    original_size = len(pdf_bytes)
+    headers = {}
+    try:
+        if target_bytes > 0:
+            compressed, used = None, None
+            for name, dpi, quality in TARGET_LADDER:
+                attempt = _compress_bytes(pdf_bytes, dpi, quality, file.filename)
+                if compressed is None or len(attempt) < len(compressed):
+                    compressed, used = attempt, name
+                if len(attempt) <= target_bytes:
+                    compressed, used = attempt, name
+                    break
+                fitz.TOOLS.store_shrink(100)
+            if original_size <= len(compressed):
+                compressed, used = pdf_bytes, 'original'
+            headers['X-Target-Met'] = 'yes' if len(compressed) <= target_bytes else 'no'
+        else:
+            used = request.form.get('compression_level', 'medium')
+            dpi, quality = COMPRESSION_LEVELS.get(used, COMPRESSION_LEVELS['medium'])
+            compressed = _compress_bytes(pdf_bytes, dpi, quality, file.filename)
+            if len(compressed) >= original_size:
+                compressed = pdf_bytes
+        headers['X-Compression-Level'] = used
 
         reduction = (original_size - len(compressed)) / original_size * 100
         logging.info(
-            f"PDF compression: '{file.filename}' ({compression_level}) "
+            f"PDF compression: '{file.filename}' ({used}{f', target {target_bytes // 1024}KB' if target_bytes else ''}) "
             f"{original_size / 1024:.0f}KB -> {len(compressed) / 1024:.0f}KB ({reduction:.0f}% smaller)"
         )
 
-        return send_file(
+        response = send_file(
             io.BytesIO(compressed),
             mimetype='application/pdf',
             as_attachment=True,
             download_name=output_name(file.filename, '.pdf', prefix='compressed_')
         )
+        response.headers.update(headers)
+        return response
 
     except Exception as e:
         logging.error(f"PDF compression: Error processing '{file.filename}': {e}", exc_info=True)
