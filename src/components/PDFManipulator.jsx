@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { useDropzone } from "react-dropzone";
 import { PDFDocument, degrees } from "pdf-lib"; // Import degrees for rotation
-import * as pdfjsLib from "pdfjs-dist";
+import pdfjsLib from "../utils/pdfjs";
 import {
   FileText,
   Download,
@@ -13,9 +13,6 @@ import {
 } from "lucide-react";
 import Notification from "./Notification";
 import PageCard from "./PageCard";
-
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const FILE_TYPES = {
   PDF: "application/pdf",
@@ -35,7 +32,7 @@ const ProgressModal = ({
 }) => (
   <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
     <div className="w-full max-w-md mx-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 shadow-2xl animate-scale-in">
-      <h3 className="mb-5 text-center text-lg font-bold text-[var(--color-text)]">
+      <h3 className="mb-5 text-center text-lg font-semibold text-[var(--color-text)]">
         Processing files
       </h3>
 
@@ -122,11 +119,11 @@ const InsertSlot = ({ onClick }) => {
     <button
       type="button"
       onClick={onClick}
-      className="group flex aspect-[3/4] items-center justify-center rounded-xl border-2 border-dashed border-[var(--color-border)] bg-[var(--color-bg)]/40 transition-all duration-200 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]"
+      className="group flex aspect-[3/4] items-center justify-center rounded-xl border-2 border-dashed border-[var(--color-border)] bg-brand-rich-black/40 transition-all duration-200 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]"
       title="Insert pages here"
       aria-label="Insert pages here"
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-primary)] text-white shadow-lg transition-transform group-hover:scale-110">
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-lg transition-transform group-hover:scale-110">
         <Plus className="h-5 w-5" />
       </span>
     </button>
@@ -852,7 +849,7 @@ const App = () => {
               className: `rounded-2xl border-2 border-dashed p-10 text-center transition-colors ${
                 isDragActive
                   ? "border-[var(--color-primary)] bg-[var(--color-primary-light)]"
-                  : "border-[var(--color-border-strong)] bg-[var(--color-bg-card)]/50 hover:border-[var(--color-primary)]"
+                  : "border-[var(--color-border-strong)] bg-brand-pine/50 hover:border-[var(--color-primary)]"
               }`,
             })}
           >
@@ -885,9 +882,9 @@ const App = () => {
             ].map(([title, copy], i) => (
               <li
                 key={title}
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)]/40 p-4 text-left"
+                className="rounded-xl border border-[var(--color-border)] bg-brand-pine/40 p-4 text-left"
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-primary-light)] text-xs font-bold text-[var(--color-primary)]">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-primary-light)] text-xs font-semibold text-[var(--color-primary)]">
                   {i + 1}
                 </span>
                 <p className="mt-2.5 text-sm font-semibold">{title}</p>
@@ -907,7 +904,7 @@ const App = () => {
             className: `mt-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed px-4 py-3 transition-colors ${
               isDragActive
                 ? "border-[var(--color-primary)] bg-[var(--color-primary-light)]"
-                : "border-[var(--color-border-strong)] bg-[var(--color-bg-card)]/40"
+                : "border-[var(--color-border-strong)] bg-brand-pine/40"
             }`,
           })}
         >
@@ -933,7 +930,7 @@ const App = () => {
         <div className="mt-6 animate-fade-in-up">
           <div className="flex flex-col gap-4 border-b border-[var(--color-border)] pb-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-bold">
+              <h2 className="text-lg font-semibold">
                 {pages.length} page{pages.length === 1 ? "" : "s"} ready
               </h2>
               <p className="mt-0.5 text-sm text-[var(--color-text-muted)]">

@@ -49,12 +49,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://quicksidetool.com/image-tools</loc>
-    <lastmod>2025-08-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://quicksidetool.com/image-tools/resize</loc>
     <lastmod>2025-08-10</lastmod>
     <changefreq>monthly</changefreq>
@@ -134,6 +128,18 @@
   </url>
   <url>
     <loc>https://quicksidetool.com/file-converter</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/pdf-to-excel</loc>
+    <lastmod>2025-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://quicksidetool.com/word-to-excel</loc>
     <lastmod>2025-08-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

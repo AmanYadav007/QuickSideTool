@@ -7,7 +7,7 @@ import { CHROME_EXTENSION_URL } from '../constants/links';
 const NAV_LINKS = [
   { label: 'All Tools', to: '/home' },
   { label: 'PDF', to: '/pdf-tool' },
-  { label: 'Image', to: '/image-tools' },
+  { label: 'Image', to: '/home#image-tools' },
   { label: 'QR Code', to: '/qr-tool' },
   { label: 'Contact', to: '/contact' },
 ];
@@ -19,7 +19,7 @@ const Navbar = () => {
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-bg)]/90 backdrop-blur-md border-b border-[var(--color-border)]">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-brand-rich-black/90 backdrop-blur-md border-b border-[var(--color-border)]">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-6">
         <Link to="/" aria-label="QuickSideTool home">
           <Logo size={28} />
@@ -47,7 +47,7 @@ const Navbar = () => {
           </a>
           <Link
             to="/home"
-            className="rounded-full bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-colors"
+            className="rounded-full bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors"
           >
             Open App
           </Link>
@@ -87,7 +87,7 @@ const Navbar = () => {
             </a>
             <Link
               to="/home"
-              className="mt-2 rounded-full bg-[var(--color-primary)] px-4 py-3 text-center text-base font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-colors"
+              className="mt-2 rounded-full bg-[var(--color-primary)] px-4 py-3 text-center text-base font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors"
             >
               Open App
             </Link>

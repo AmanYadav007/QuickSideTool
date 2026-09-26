@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import SEO from './SEO';
+import BackButton from './BackButton';
 import { useDropzone } from 'react-dropzone';
-import { ArrowLeft, Upload, Download, Image as ImageIcon, Lock, Unlock, Trash2, X, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Upload, Download, Image as ImageIcon, Lock, Unlock, Trash2, X, Loader2 } from 'lucide-react';
 import JSZip from 'jszip';
 
 const ImageResize = () => {
@@ -406,18 +406,12 @@ const ImageResize = () => {
                 url="https://quicksidetool.com/image-tools/resize"
             />
             <div className="container section">
-                <header className="mb-8 flex items-center justify-between">
-                    <Link
-                        to="/image-tools"
-                        className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Image Tools
-                    </Link>
-                    <h1 className="h1 text-center">Batch Image Resize</h1>
+                <header className="mb-8 flex items-start justify-between gap-3">
+                    <BackButton />
+                    <h1 className="h2 text-center">Batch Image Resize</h1>
                     <button
                         onClick={clearAllImages}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-red-500 hover:text-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-error)] hover:opacity-80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={images.length === 0 || resizing}
                         title="Clear all loaded images"
                     >
@@ -548,7 +542,7 @@ const ImageResize = () => {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {images.map((img, index) => (
-                                    <div key={index} className={`card p-4 ${img.error ? 'border-red-500/50' : ''}`}>
+                                    <div key={index} className={`card p-4 ${img.error ? 'border-[var(--color-error)]' : ''}`}>
                                         <div className="flex items-start justify-between mb-3">
                                             <h3 className="font-semibold text-[var(--color-text)] truncate pr-8" title={img.original.name}>
                                                 {img.original.name}
@@ -556,7 +550,7 @@ const ImageResize = () => {
                                             <button
                                                 onClick={() => removeImage(index)}
                                                 disabled={resizing}
-                                                className="p-1 text-[var(--color-text-light)] hover:text-red-500 rounded-lg hover:bg-[var(--color-error)]/10 transition-colors disabled:opacity-50"
+                                                className="p-1 text-[var(--color-text-light)] hover:text-[var(--color-error)] rounded-lg hover:bg-[var(--color-error-bg)] transition-colors disabled:opacity-50"
                                                 title="Remove image"
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -601,9 +595,9 @@ const ImageResize = () => {
                                         </div>
 
                                         {img.resized && (
-                                            <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                                            <div className="mb-4 p-3 rounded-lg bg-[var(--color-success-bg)] border border-[var(--color-primary-light)]">
                                                 <p className="text-sm text-[var(--color-text-muted)]">Reduction</p>
-                                                <p className="text-lg font-semibold text-green-500">
+                                                <p className="text-lg font-semibold text-[var(--color-success)]">
                                                     {((1 - img.resized.size / img.original.size) * 100).toFixed(0)}%
                                                 </p>
                                             </div>

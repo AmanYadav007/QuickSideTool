@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import SEO from "./SEO";
-import { Link } from "react-router-dom";
+import BackButton from "./BackButton";
 import { useDropzone } from "react-dropzone";
 import JSZip from "jszip";
 import {
-  ArrowLeft,
   CheckCircle,
   Download,
   Image as ImageIcon,
@@ -139,19 +138,13 @@ const ImageFormatConverter = () => {
       />
 
       <div className="container section">
-        <header className="mb-8 flex items-center justify-between">
-          <Link
-            to="/image-tools"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Image Tools
-          </Link>
-          <h1 className="h1 text-center">Image Format Converter</h1>
+        <header className="mb-8 flex items-start justify-between gap-3">
+          <BackButton />
+          <h1 className="h2 text-center">Image Format Converter</h1>
           <button
             onClick={clearAll}
             disabled={images.length === 0 || isConverting}
-            className="inline-flex items-center gap-2 text-sm font-medium text-red-500 hover:text-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-error)] hover:opacity-80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <X className="h-4 w-4" />
             Clear All
@@ -211,7 +204,7 @@ const ImageFormatConverter = () => {
               <button
                 onClick={downloadAll}
                 disabled={images.length === 0 || !images.some((image) => image.converted)}
-                className="btn-primary w-full md:w-auto bg-green-600 hover:bg-green-700"
+                className="btn-primary w-full md:w-auto"
               >
                 <Download className="h-4 w-4 mr-2" />
                 Download
@@ -231,7 +224,7 @@ const ImageFormatConverter = () => {
                     <button
                       onClick={() => removeImage(index)}
                       disabled={isConverting}
-                      className="text-[var(--color-text-light)] hover:text-red-500 transition-colors disabled:opacity-50"
+                      className="text-[var(--color-text-light)] hover:text-[var(--color-error)] transition-colors disabled:opacity-50"
                       aria-label={`Remove ${image.original.name}`}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -244,12 +237,12 @@ const ImageFormatConverter = () => {
 
                   <div className="flex items-center justify-between gap-3">
                     {image.converted ? (
-                      <p className="inline-flex items-center gap-2 text-sm text-green-500">
+                      <p className="inline-flex items-center gap-2 text-sm text-[var(--color-success)]">
                         <CheckCircle className="h-4 w-4" />
                         Converted to {image.convertedLabel || selectedFormat.label}
                       </p>
                     ) : image.error ? (
-                      <p className="text-sm text-red-500">{image.error}</p>
+                      <p className="text-sm text-[var(--color-error)]">{image.error}</p>
                     ) : (
                       <p className="inline-flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
                         <ImageIcon className="h-4 w-4" />

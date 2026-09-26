@@ -53,29 +53,29 @@ const Help = () => {
 
       <Layout showAnimatedBackground={false}>
         <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 md:px-8 md:pt-14">
-          <section className="rounded-lg border border-white/10 bg-[#0b1f2a]/85 p-6 md:p-10">
-            <p className="text-sm font-semibold uppercase tracking-wide text-amber-200">
+          <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 md:p-10">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-primary)]">
               Help
             </p>
-            <h1 className="mt-2 text-4xl font-bold text-white md:text-5xl">
+            <h1 className="mt-2 text-4xl font-semibold text-[var(--color-text)] md:text-5xl">
               Quick answers.
             </h1>
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">
+            <p className="mt-4 max-w-3xl text-lg leading-8 text-[var(--color-text-muted)]">
               Pick a tool, upload your file, choose options, and download the
               result. These notes cover the most common questions.
             </p>
           </section>
 
           <section className="mt-8 grid gap-6 lg:grid-cols-[260px_1fr]">
-            <aside className="rounded-lg border border-white/10 bg-white/[0.05] p-5">
-              <h2 className="font-semibold text-white">Need help?</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
+            <aside className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-alt)] p-5">
+              <h2 className="font-semibold text-[var(--color-text)]">Need help?</h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
                 If something feels unclear or broken, send a short message and
                 include the tool name.
               </p>
               <Link
                 to="/contact"
-                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-amber-300 px-4 py-2 font-semibold text-slate-950 transition hover:bg-amber-200"
+                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 font-semibold text-[var(--color-on-primary)] transition hover:bg-[var(--color-primary-hover)]"
               >
                 <MessageSquare className="h-4 w-4" />
                 Contact support
@@ -88,28 +88,28 @@ const Help = () => {
                 return (
                   <article
                     key={section.title}
-                    className="rounded-lg border border-white/10 bg-[#0b1f2a]/85 p-5"
+                    className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5"
                   >
                     <div className="mb-4 flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-300/10 text-amber-200">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-primary-light)] text-[var(--color-primary)]">
                         <Icon className="h-5 w-5" />
                       </span>
-                      <h2 className="text-xl font-semibold text-white">{section.title}</h2>
+                      <h2 className="text-xl font-semibold text-[var(--color-text)]">{section.title}</h2>
                     </div>
                     <div className="space-y-3">
                       {section.items.map(([question, answer], index) => {
                         const id = `${section.title}-${index}`;
                         const open = openItem === id;
                         return (
-                          <div key={question} className="rounded-lg border border-white/10 bg-white/[0.04]">
+                          <div key={question} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-alt)]">
                             <button
                               onClick={() => setOpenItem(open ? "" : id)}
                               className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left"
                             >
-                              <span className="font-semibold text-white">{question}</span>
-                              {open ? <ChevronDown className="h-4 w-4 text-slate-400" /> : <ChevronRight className="h-4 w-4 text-slate-400" />}
+                              <span className="font-semibold text-[var(--color-text)]">{question}</span>
+                              {open ? <ChevronDown className="h-4 w-4 text-[var(--color-text-light)]" /> : <ChevronRight className="h-4 w-4 text-[var(--color-text-light)]" />}
                             </button>
-                            {open && <p className="px-4 pb-4 text-sm leading-6 text-slate-300">{answer}</p>}
+                            {open && <p className="px-4 pb-4 text-sm leading-6 text-[var(--color-text-muted)]">{answer}</p>}
                           </div>
                         );
                       })}

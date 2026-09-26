@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SEO from './SEO';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Lock, Unlock, Eye, EyeOff, Loader2, Upload, X } from 'lucide-react';
+import BackButton from './BackButton';
+import { Lock, Unlock, Eye, EyeOff, Loader2, Upload, X } from 'lucide-react';
 import Confetti from 'react-confetti';
 
 const PDFUnlocker = () => {
@@ -181,15 +181,9 @@ const PDFUnlocker = () => {
       {showConfetti && <Confetti tweenDuration={1000} recycle={false} numberOfPieces={500} />}
 
       <div className="container section">
-        <header className="mb-8 flex items-center justify-between">
-          <Link
-            to="/home"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to All Tools
-          </Link>
-          <h1 className="h1 text-center">PDF Unlocker & Locker</h1>
+        <header className="mb-8 flex items-start justify-between gap-3">
+          <BackButton />
+          <h1 className="h2 text-center">PDF Unlocker & Locker</h1>
         </header>
 
         <div className="max-w-xl mx-auto">
@@ -205,13 +199,13 @@ const PDFUnlocker = () => {
               <div className="inline-flex rounded-full bg-[var(--color-bg-alt)] p-1">
                 <button
                   onClick={() => setAction('unlock')}
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${action === 'unlock' ? 'bg-[var(--color-primary)] text-white shadow' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-alt)]'}`}
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${action === 'unlock' ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-alt)]'}`}
                 >
                   Unlock
                 </button>
                 <button
                   onClick={() => setAction('lock')}
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${action === 'lock' ? 'bg-[var(--color-primary)] text-white shadow' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-alt)]'}`}
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${action === 'lock' ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-alt)]'}`}
                 >
                   Lock
                 </button>
@@ -235,7 +229,7 @@ const PDFUnlocker = () => {
                   </>
                 )}
                 {isDragging && isInvalidDrag && (
-                  <p className="text-red-500 text-sm mt-2 font-semibold">Only PDF files are allowed!</p>
+                  <p className="text-[var(--color-error)] text-sm mt-2 font-semibold">Only PDF files are allowed!</p>
                 )}
               </div>
             </div>
@@ -283,7 +277,7 @@ const PDFUnlocker = () => {
                 )}
               </button>
               {message && (
-                <p className={`mt-4 text-sm text-center ${message.includes('Success') ? 'text-green-500' : 'text-red-500'}`}>
+                <p className={`mt-4 text-sm text-center ${message.includes('Success') ? 'text-[var(--color-success)]' : 'text-[var(--color-error)]'}`}>
                   {message}
                 </p>
               )}

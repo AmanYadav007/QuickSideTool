@@ -48,9 +48,9 @@ const TermsOfService = () => {
       <Layout>
         <div className="container section max-w-4xl">
           <section className="text-center mb-12">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">Terms of Service</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-primary)]">Terms of Service</p>
             <h1 className="h1 mt-2">Clear terms for simple tools.</h1>
-            <p className="mt-4 max-w-2xl mx-auto text-gray-500 leading-relaxed">
+            <p className="mt-4 max-w-2xl mx-auto text-[var(--color-text-muted)] leading-relaxed">
               By using QuickSideTool, you agree to use the tools responsibly.
               Last updated: {new Date().toLocaleDateString()}.
             </p>
@@ -62,12 +62,12 @@ const TermsOfService = () => {
               return (
                 <article key={item.title} className="card p-6">
                   <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <Icon className="h-6 w-6 text-blue-600" />
+                    <div className="w-12 h-12 rounded-xl bg-[var(--color-primary-light)] flex items-center justify-center flex-shrink-0">
+                      <Icon className="h-6 w-6 text-[var(--color-primary)]" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-semibold text-gray-900 mb-1">{item.title}</h2>
-                      <p className="text-gray-500 leading-relaxed">{item.text}</p>
+                      <h2 className="text-lg font-semibold text-[var(--color-text)] mb-1">{item.title}</h2>
+                      <p className="text-[var(--color-text-muted)] leading-relaxed">{item.text}</p>
                     </div>
                   </div>
                 </article>
@@ -75,22 +75,22 @@ const TermsOfService = () => {
             })}
           </section>
 
-          <section className="mt-10 card p-6 border-green-200 bg-green-50">
+          <section className="mt-10 card p-6 border-[var(--color-primary-light)] bg-[var(--color-success-bg)]">
             <div className="flex gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <CheckCircle className="h-5 w-5 text-[var(--color-success)] flex-shrink-0 mt-0.5" />
               <div>
-                <h2 className="font-semibold text-gray-900">Contact</h2>
-                <p className="mt-1 text-sm text-gray-600">For terms questions, contact support@quicksidetool.com.</p>
+                <h2 className="font-semibold text-[var(--color-text)]">Contact</h2>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">For terms questions, contact support@quicksidetool.com.</p>
               </div>
             </div>
           </section>
 
-          <section className="mt-6 card p-6 border-amber-200 bg-amber-50">
+          <section className="mt-6 card p-6 border-[var(--color-border)] bg-[var(--color-warning-bg)]">
             <div className="flex gap-3">
-              <Clock className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <Clock className="h-5 w-5 text-[var(--color-warning)] flex-shrink-0 mt-0.5" />
               <div>
-                <h2 className="font-semibold text-gray-900">Effective date</h2>
-                <p className="mt-1 text-sm text-gray-600">
+                <h2 className="font-semibold text-[var(--color-text)]">Effective date</h2>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                   These terms of service were last updated on {new Date().toLocaleDateString()}. We may modify the terms at any time. Changes will be effective when posted on this page.
                 </p>
               </div>

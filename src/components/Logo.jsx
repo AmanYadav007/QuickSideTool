@@ -2,8 +2,8 @@ import React from "react";
 
 /**
  * The mark is the product itself: a browser side panel - a narrow rail of
- * controls beside a sheet of content. Same idea as the Chrome extension icon,
- * drawn in the site's blue instead of the old purple.
+ * controls beside a sheet of content. Brand colours: Rich Black details on a
+ * Caribbean Green panel, the same pairing as the brand's Semi Bold swatch.
  */
 export const LogoMark = ({ size = 28, className = "" }) => (
   <svg
@@ -15,24 +15,16 @@ export const LogoMark = ({ size = 28, className = "" }) => (
     aria-hidden="true"
     focusable="false"
   >
-    <defs>
-      <linearGradient id="qstMark" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#22D3EE" />
-        <stop offset="0.55" stopColor="#3B82F6" />
-        <stop offset="1" stopColor="#2563EB" />
-      </linearGradient>
-    </defs>
-
     {/* panel */}
-    <rect x="2" y="2" width="20" height="20" rx="5.5" fill="url(#qstMark)" />
+    <rect x="2" y="2" width="20" height="20" rx="5.5" fill="#00DF81" />
 
     {/* side rail: the tool buttons */}
-    <rect x="5" y="8.2" width="3.4" height="1.6" rx="0.8" fill="#fff" opacity="0.95" />
-    <rect x="5" y="11.2" width="3.4" height="1.6" rx="0.8" fill="#fff" opacity="0.95" />
-    <rect x="5" y="14.2" width="3.4" height="1.6" rx="0.8" fill="#fff" opacity="0.95" />
+    <rect x="5" y="8.2" width="3.4" height="1.6" rx="0.8" fill="#021B1A" />
+    <rect x="5" y="11.2" width="3.4" height="1.6" rx="0.8" fill="#021B1A" />
+    <rect x="5" y="14.2" width="3.4" height="1.6" rx="0.8" fill="#021B1A" />
 
     {/* the document being worked on */}
-    <rect x="11.5" y="5.5" width="7.5" height="13" rx="1.6" fill="#fff" opacity="0.95" />
+    <rect x="11.5" y="5.5" width="7.5" height="13" rx="1.6" fill="#021B1A" />
   </svg>
 );
 
@@ -42,7 +34,7 @@ const Logo = ({ size = 28, compact = false, className = "" }) => (
     <LogoMark size={size} />
     {!compact && (
       <span
-        className="font-extrabold tracking-tight text-[var(--color-text)]"
+        className="font-semibold tracking-tight text-[var(--color-text)]"
         style={{ fontSize: Math.round(size * 0.58) }}
       >
         Quick<span className="text-[var(--color-primary)]">Side</span>Tool

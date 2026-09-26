@@ -7,11 +7,11 @@ const BOMB = "bomb";
 const DIAMOND_EMOJI = "💎";
 const CELEBRATE_EMOJIS = ["💎", "🎉", "✨", "💎", "🎉", "✨"];
 const BOMB_EMOJI = "💣";
-const DIAMOND_COLOR = "#22c55e";
+const DIAMOND_COLOR = "#00DF81"; // Caribbean Green
 const BOMB_COLOR = "#ef4444";
-const BG_COLOR = "#0f172a";
-const BUTTON_COLOR = "#4ade80";
-const FONT_FAMILY = "'Orbitron', 'Roboto Mono', monospace";
+const BG_COLOR = "#021B1A"; // Rich Black
+const BUTTON_COLOR = "#00DF81";
+const FONT_FAMILY = "var(--font-sans)";
 const BOMB_OPTIONS = [3, 5, 10];
 
 function generateGrid(bombCount) {
@@ -122,7 +122,7 @@ const DiamondQuestGame = () => {
             position: 'absolute',
             left: 0,
             top: 0,
-            filter: 'drop-shadow(0 0 8px #22c55e)'
+            filter: 'drop-shadow(0 0 8px #00DF81)'
           }}
         >{emoji}</span>
       ))}
@@ -153,28 +153,28 @@ const DiamondQuestGame = () => {
   return (
     <div style={{ minHeight: "100vh", background: BG_COLOR, fontFamily: FONT_FAMILY, position: 'relative' }} className="flex flex-col items-center justify-center p-2">
       {showCelebrate && <EmojiBurst />}
-      <div className="max-w-md w-full bg-[#162032]/80 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-[#26324a] shadow-2xl flex flex-col items-center relative" style={{ boxShadow: '0 8px 32px 0 rgba(34,197,94,0.15)' }}>
+      <div className="max-w-md w-full bg-brand-pine/80 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-[#0B453A] shadow-2xl flex flex-col items-center relative" style={{ boxShadow: '0 8px 32px 0 rgba(0,223,129,0.15)' }}>
         <div className="w-full flex justify-between items-center mb-3">
-          <Link to="/toolkit" className="px-3 py-1.5 rounded-lg font-bold text-base bg-[#0f172a] text-emerald-300 border border-emerald-400 shadow hover:bg-emerald-700/20 hover:text-emerald-200 transition-all duration-200" style={{ textShadow: '0 0 6px #22c55e' }}>← Dashboard</Link>
+          <Link to="/toolkit" className="px-3 py-1.5 rounded-lg font-semibold text-base bg-[var(--color-bg)] text-[var(--color-primary)] border border-[var(--color-primary)] shadow hover:bg-[var(--color-primary-light)] transition-all duration-200" style={{ textShadow: '0 0 6px #00DF81' }}>← Dashboard</Link>
           <span></span>
         </div>
-        <h1 className="text-3xl font-extrabold text-center mb-2" style={{ color: DIAMOND_COLOR, fontFamily: FONT_FAMILY, letterSpacing: 1, textShadow: '0 0 8px #22c55e' }}>Diamond Quest</h1>
-        <div className="text-gray-300 text-center mb-3 text-base" style={{ fontFamily: FONT_FAMILY }}>Collect as many <span style={{ color: DIAMOND_COLOR }}>{DIAMOND_EMOJI}</span> as you can. Avoid the <span style={{ color: BOMB_COLOR }}>{BOMB_EMOJI}</span>!</div>
+        <h1 className="text-3xl font-semibold text-center mb-2" style={{ color: DIAMOND_COLOR, fontFamily: FONT_FAMILY, letterSpacing: 1, textShadow: '0 0 8px #00DF81' }}>Diamond Quest</h1>
+        <div className="text-[var(--color-text-muted)] text-center mb-3 text-base" style={{ fontFamily: FONT_FAMILY }}>Collect as many <span style={{ color: DIAMOND_COLOR }}>{DIAMOND_EMOJI}</span> as you can. Avoid the <span style={{ color: BOMB_COLOR }}>{BOMB_EMOJI}</span>!</div>
         <div className="flex flex-wrap gap-3 mb-3 w-full justify-center items-center text-lg">
-          <div className="text-lg" style={{ color: DIAMOND_COLOR, textShadow: '0 0 6px #22c55e' }}>Stardust: <span className="font-bold">{score}</span></div>
-          <div className={`text-lg text-yellow-300 font-bold transition-all duration-300 ${newHighScore ? 'animate-glow' : ''}`}>High Score: <span>{highScore}</span> {newHighScore && <span className="animate-pulse text-emerald-400 ml-2">New!</span>}</div>
+          <div className="text-lg" style={{ color: DIAMOND_COLOR, textShadow: '0 0 6px #00DF81' }}>Stardust: <span className="font-semibold">{score}</span></div>
+          <div className={`text-lg text-yellow-300 font-semibold transition-all duration-300 ${newHighScore ? 'animate-glow' : ''}`}>High Score: <span>{highScore}</span> {newHighScore && <span className="animate-pulse text-[var(--color-primary)] ml-2">New!</span>}</div>
         </div>
         <div className="flex gap-3 mb-3 items-center text-sm">
-          <div className="text-cyan-300">Bombs left: <span className="font-bold">{remainingBombs}</span></div>
-          <div className="text-emerald-300">Diamonds left: <span className="font-bold">{remainingDiamonds}</span></div>
+          <div className="text-[var(--color-text-muted)]">Bombs left: <span className="font-semibold">{remainingBombs}</span></div>
+          <div className="text-[var(--color-primary-hover)]">Diamonds left: <span className="font-semibold">{remainingDiamonds}</span></div>
         </div>
         <div className="flex gap-2 mb-3 items-center text-base">
-          <label className="text-gray-400" htmlFor="bombs">Bombs:</label>
+          <label className="text-[var(--color-text-light)]" htmlFor="bombs">Bombs:</label>
           <select
             id="bombs"
             value={bombCount}
             onChange={e => setBombCount(Number(e.target.value))}
-            className="bg-[#1e293b] text-white rounded px-2 py-1.5 focus:outline-none border border-[#26324a]"
+            className="bg-[var(--color-bg-alt)] text-[var(--color-text)] rounded px-2 py-1.5 focus:outline-none border border-[#0B453A]"
             style={{ fontFamily: FONT_FAMILY }}
             disabled={gameOver === false && diamondsFound > 0}
           >
@@ -188,8 +188,8 @@ const DiamondQuestGame = () => {
             {grid.map((cell, idx) => (
               <button
                 key={idx}
-                className={`w-16 h-16 flex items-center justify-center border border-[#26324a] rounded-lg shadow-lg text-2xl md:text-3xl transition-all duration-300 select-none focus:outline-none font-bold
-                  ${cell.revealed ? (cell.type === BOMB ? "bg-red-500/90" : "bg-emerald-500/90") : "bg-[#1e293b] hover:shadow-[0_0_12px_4px_#22c55e] hover:scale-105"}
+                className={`w-16 h-16 flex items-center justify-center border border-[#0B453A] rounded-lg shadow-lg text-2xl md:text-3xl transition-all duration-300 select-none focus:outline-none font-semibold
+                  ${cell.revealed ? (cell.type === BOMB ? "bg-red-500/90" : "bg-brand-caribbean-green/90") : "bg-[var(--color-bg-alt)] hover:shadow-[0_0_12px_4px_#00DF81] hover:scale-105"}
                   ${cell.animating ? "animate-flip" : ""}
                   ${cell.justRevealed && cell.type === DIAMOND ? "animate-sparkle" : ""}
                   ${cell.justRevealed && cell.type === BOMB ? "animate-shake" : ""}
@@ -215,12 +215,12 @@ const DiamondQuestGame = () => {
             ))}
           </div>
         </div>
-        <div className="mt-6 text-center text-green-400 font-mono">
+        <div className="mt-6 text-center text-[var(--color-success)] font-mono">
           Find the diamonds, avoid the bombs!
         </div>
         <button
-          className="px-6 py-2 rounded font-bold text-base shadow-md mt-1"
-          style={{ background: BUTTON_COLOR, color: "#0f172a", fontFamily: FONT_FAMILY, boxShadow: "0 0 8px 2px #4ade80" }}
+          className="px-6 py-2 rounded font-semibold text-base shadow-md mt-1"
+          style={{ background: BUTTON_COLOR, color: "#021B1A", fontFamily: FONT_FAMILY, boxShadow: "0 0 8px 2px #00DF81" }}
           onClick={resetGame}
         >
           Restart
@@ -230,9 +230,9 @@ const DiamondQuestGame = () => {
             animation: glow-pulse 1.2s 2;
           }
           @keyframes glow-pulse {
-            0% { text-shadow: 0 0 0 #22c55e; }
-            50% { text-shadow: 0 0 20px #22c55e, 0 0 10px #facc15; }
-            100% { text-shadow: 0 0 0 #22c55e; }
+            0% { text-shadow: 0 0 0 #00DF81; }
+            50% { text-shadow: 0 0 20px #00DF81, 0 0 10px #facc15; }
+            100% { text-shadow: 0 0 0 #00DF81; }
           }
           @keyframes flip {
             0% { transform: rotateY(0deg); }
@@ -242,9 +242,9 @@ const DiamondQuestGame = () => {
             animation: flip 0.4s cubic-bezier(.68,-0.55,.27,1.55);
           }
           @keyframes sparkle {
-            0% { box-shadow: 0 0 0 0 #22c55e; }
-            50% { box-shadow: 0 0 24px 8px #22c55e; }
-            100% { box-shadow: 0 0 0 0 #22c55e; }
+            0% { box-shadow: 0 0 0 0 #00DF81; }
+            50% { box-shadow: 0 0 24px 8px #00DF81; }
+            100% { box-shadow: 0 0 0 0 #00DF81; }
           }
           .animate-sparkle {
             animation: sparkle 0.6s linear;
