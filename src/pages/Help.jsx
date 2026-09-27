@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "../components/PrefetchLink";
 import {
   ChevronDown,
   ChevronRight,
@@ -51,7 +51,7 @@ const Help = () => {
         keywords="QuickSideTool help, PDF tools help, image tools help, QR code help"
       />
 
-      <Layout showAnimatedBackground={false}>
+      <Layout>
         <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 md:px-8 md:pt-14">
           <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 md:p-10">
             <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-primary)]">
@@ -70,11 +70,11 @@ const Help = () => {
             <aside className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-alt)] p-5">
               <h2 className="font-semibold text-[var(--color-text)]">Need help?</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-                If something feels unclear or broken, send a short message and
-                include the tool name.
+                If something feels unclear or broken, tell us which tool and
+                what happened.
               </p>
               <Link
-                to="/contact"
+                to="/support"
                 className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 font-semibold text-[var(--color-on-primary)] transition hover:bg-[var(--color-primary-hover)]"
               >
                 <MessageSquare className="h-4 w-4" />

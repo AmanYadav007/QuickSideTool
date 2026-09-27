@@ -13,3 +13,16 @@ root.render(
     <App />
   </React.StrictMode>
 );
+// Offline cache (src/service-worker.js): production website only. The
+// extension serves its files locally and can't register one.
+if (
+  process.env.NODE_ENV === "production" &&
+  "serviceWorker" in navigator &&
+  /^https?:$/.test(window.location.protocol)
+) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register(`${process.env.PUBLIC_URL}/service-worker.js`)
+      .catch(() => {});
+  });
+}

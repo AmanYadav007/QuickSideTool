@@ -19,16 +19,15 @@ import SEO from "./SEO";
 import BackButton from "./BackButton";
 import CameraCapture from "./scan/CameraCapture";
 import CropEditor from "./scan/CropEditor";
-import pdfjsLib from "../utils/pdfjs";
+import { MAX_PDF_PAGES, renderPdfPages } from "../utils/pdfPages";
 import {
-  MAX_SIDE,
   detectPage,
   fileToCanvas,
   renderScan,
   rotateCanvas,
   rotatePoint,
 } from "../utils/scan";
-import { OCR_LANGUAGES, recognize } from "../utils/ocr";
+import { OCR_LANGUAGES, recognize, warmUp } from "../utils/ocr";
 import { buildDocx, buildSearchablePdf, buildText } from "../utils/scanExport";
 import { BACKEND_URL, downloadBlob, readBackendError } from "../constants/api";
 
@@ -38,7 +37,6 @@ const FILTERS = [
   { id: "bw", label: "B&W" },
 ];
 
-const MAX_PDF_PAGES = 30;
 const LOW_CONFIDENCE = 0.6;
 
 const cameraSupported =
@@ -63,26 +61,6 @@ const isPdf = (file) =>
   file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
 
 /** Render each PDF page to a canvas at roughly 2000px on the long side. */
-const renderPdfPages = async (file, onPage) => {
-  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() })
-    .promise;
-  const count = Math.min(pdf.numPages, MAX_PDF_PAGES);
-  for (let n = 1; n <= count; n++) {
-    const page = await pdf.getPage(n);
-    const base = page.getViewport({ scale: 1 });
-    const scale = Math.min(MAX_SIDE, 2000) / Math.max(base.width, base.height);
-    const viewport = page.getViewport({ scale });
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(viewport.width);
-    canvas.height = Math.round(viewport.height);
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    onPage(canvas, n);
-  }
-  return pdf.numPages;
-};
 
 const OCRProcessor = () => {
   const [pages, setPages] = useState([]);
@@ -253,6 +231,14 @@ const OCRProcessor = () => {
     accept: { "image/*": [], "application/pdf": [".pdf"] },
   });
 
+  // Start the text reader while the user is still choosing a file. Skipped on
+  // data-saving connections: it downloads ~5 MB the first time, then caches.
+  useEffect(() => {
+    if (navigator.connection?.saveData) return;
+    const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 500));
+    idle(() => warmUp(languageRef.current));
+  }, []);
+
   // Paste a screenshot straight from the clipboard
   useEffect(() => {
     const onPaste = (event) => {
@@ -405,7 +391,7 @@ const OCRProcessor = () => {
       <SEO
         title="Scan to Text - Extract Text from Photos, Screenshots and PDFs (OCR)"
         description="Snap a document, paste a screenshot or drop a PDF and copy the text. Pages are straightened and cleaned up automatically. Free, runs in your browser."
-        url="https://quicksidetool.com/ocr-processor"
+        url="/ocr-processor"
       />
       {hiddenInputs}
 

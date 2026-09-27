@@ -5,10 +5,13 @@ services:
     plan: starter
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120
+    startCommand: gunicorn -c gunicorn.conf.py app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      # Stops glibc keeping a separate memory pool per gunicorn thread
+      - key: MALLOC_ARENA_MAX
+        value: "2"
       # Turns on "Improve with AI" in the OCR scanner; Render asks for the value
       - key: OPENROUTER_API_KEY
         sync: false

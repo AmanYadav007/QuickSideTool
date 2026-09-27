@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import Layout from "../components/Layout";
 import SEO from "../components/SEO";
 import ToolDirectory from "../components/ToolDirectory";
+import { prefetchPopular } from "../pageLoaders";
 
 const faqs = [
   {
@@ -12,11 +13,11 @@ const faqs = [
   },
   {
     q: "Do my files get uploaded to a server?",
-    a: "Image tools, merging, QR codes and OCR run entirely in your browser. Compressing, unlocking, converting and removing links from PDFs happen on our server: files are processed in memory and never stored.",
+    a: "Image tools, merging, unlocking, removing links, QR codes and OCR run entirely in your browser, so those files never leave your device. Compressing and converting PDFs happen on our server: files are processed in memory and never stored.",
   },
   {
     q: "What file sizes can I use?",
-    a: "Up to 100 MB for the tools that use our server (compress, unlock, convert, remove links). Browser-only tools handle anything your device has memory for.",
+    a: "Up to 100 MB for the tools that use our server (compress and convert). Browser-only tools handle anything your device has memory for.",
   },
   {
     q: "Which formats are supported?",
@@ -25,11 +26,14 @@ const faqs = [
 ];
 
 const LandingPage = () => {
+  useEffect(prefetchPopular, []);
+
   return (
     <>
       <SEO
         title="QuickSideTool - Free PDF Tools, Image Tools, QR Generator"
         description="Compress PDFs, resize images, convert files and generate QR codes. Free, no signup, runs in your browser."
+        url="/"
       />
       <Layout>
         {/* Every tool, once */}
@@ -67,8 +71,8 @@ const LandingPage = () => {
             </div>
             <p className="mt-10 text-center text-sm text-[var(--color-text-muted)]">
               Still stuck?{" "}
-              <Link to="/contact" className="link font-semibold">
-                Get in touch
+              <Link to="/support" className="link font-semibold">
+                Get support
               </Link>
               .
             </p>

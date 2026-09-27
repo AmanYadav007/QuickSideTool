@@ -2,6 +2,8 @@ import React from "react";
 import { CheckCircle, Cookie, Lock, Mail, Shield, Folder, Clock } from "lucide-react";
 import SEO from "../components/SEO";
 import Layout from "../components/Layout";
+import { Link } from "react-router-dom";
+import { SUPPORT_EMAIL } from "../constants/links";
 
 const sections = [
   {
@@ -38,7 +40,6 @@ const PrivacyPolicy = () => {
         title="Privacy Policy - QuickSideTool"
         description="Learn how QuickSideTool handles privacy, file processing, cookies, and contact information."
         keywords="privacy policy, QuickSideTool privacy, file privacy, cookies"
-        canonical="/privacy"
       />
       <Layout>
         <div className="container section max-w-4xl">
@@ -75,7 +76,10 @@ const PrivacyPolicy = () => {
               <CheckCircle className="h-5 w-5 text-[var(--color-success)] flex-shrink-0 mt-0.5" />
               <div>
                 <h2 className="font-semibold text-[var(--color-text)]">Questions</h2>
-                <p className="mt-1 text-sm text-[var(--color-text-muted)]">For privacy questions, contact support@quicksidetool.com.</p>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">For privacy questions, use the{" "}
+                  <Link to="/contact" className="link">contact form</Link>
+                  {SUPPORT_EMAIL ? ` or email ${SUPPORT_EMAIL}` : ""}.
+                </p>
               </div>
             </div>
           </section>

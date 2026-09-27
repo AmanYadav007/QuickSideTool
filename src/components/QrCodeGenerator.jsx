@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import SEO from "../components/SEO";
+import { SITE_URL } from "../constants/links";
 import BackButton from "./BackButton";
 import { Download, QrCode, Type } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
@@ -33,7 +34,7 @@ const QRCodeGenerator = () => {
   }, [form, qrType]);
 
   const effectiveSize = 256;
-  const valueForPreview = qrValue || "https://quicksidetool.com";
+  const valueForPreview = qrValue || SITE_URL;
 
   const downloadQRCode = () => {
     if (!qrRef.current) {
@@ -92,7 +93,7 @@ const QRCodeGenerator = () => {
       <SEO
         title="Free QR Code Generator - URL & Text"
         description="Make QR codes for links and text. Export as PNG, JPG, or SVG. Free, no registration."
-        url="https://quicksidetool.com/qr-code-generator"
+        url="/qr-code-generator"
       />
 
       <div className="container section">

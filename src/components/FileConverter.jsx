@@ -95,6 +95,8 @@ const FileConverter = ({ initialMode = "pdf-to-word" }) => {
   const [status, setStatus] = useState("idle");
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
+  // Progress line while a scanned PDF is read page by page
+  const [stage, setStage] = useState("");
   // Ignore responses from a conversion the user has since replaced
   const requestId = useRef(0);
 
@@ -105,6 +107,56 @@ const FileConverter = ({ initialMode = "pdf-to-word" }) => {
     setStatus("converting");
     setResult(null);
     setError("");
+    setStage("");
+
+    // A scanned PDF has no text for the server to convert: read it with OCR
+    // on the device instead and build the Word file here (nothing uploaded)
+    if (conversion.id === "pdf-to-word") {
+      let scanned = false;
+      try {
+        const { isScannedPdf } = await import("../utils/pdfPages");
+        scanned = await isScannedPdf(inputFile);
+      } catch {
+        // Can't read it here (e.g. password-protected): the server explains
+      }
+      if (id !== requestId.current) return;
+      if (scanned) {
+        try {
+          const [
+            { renderPdfPages, MAX_PDF_PAGES },
+            { recognize },
+            { buildDocx },
+          ] = await Promise.all([
+            import("../utils/pdfPages"),
+            import("../utils/ocr"),
+            import("../utils/scanExport"),
+          ]);
+          const pages = [];
+          const total = await renderPdfPages(inputFile, async (canvas, n) => {
+            if (id !== requestId.current) throw new Error("replaced");
+            setStage(`Scanned PDF: reading page ${n} with OCR...`);
+            pages.push({ text: (await recognize(canvas, "eng")).text });
+          });
+          const blob = await buildDocx(pages);
+          if (id !== requestId.current) return;
+          setResult({
+            blob,
+            filename: inputFile.name.replace(/\.[^.]+$/, "") + ".docx",
+            ocr: true,
+            pagesRead: Math.min(total, MAX_PDF_PAGES),
+            totalPages: total,
+          });
+          setStatus("done");
+        } catch {
+          if (id !== requestId.current) return;
+          setError(
+            "Couldn't read this scanned PDF. Try the Scan to text tool.",
+          );
+          setStatus("error");
+        }
+        return;
+      }
+    }
 
     const formData = new FormData();
     formData.append("file", inputFile);
@@ -224,7 +276,7 @@ const FileConverter = ({ initialMode = "pdf-to-word" }) => {
       <SEO
         title={mode.seoTitle}
         description={mode.seoDescription}
-        url={`https://quicksidetool.com${mode.path}`}
+        url={mode.path}
       />
 
       <div className="container py-8 md:py-12">
@@ -288,7 +340,7 @@ const FileConverter = ({ initialMode = "pdf-to-word" }) => {
                   Converting {file?.name}...
                 </p>
                 <p className="text-sm text-[var(--color-text-muted)]">
-                  Large files can take up to a minute.
+                  {stage || "Large files can take up to a minute."}
                 </p>
               </div>
             )}
@@ -305,6 +357,21 @@ const FileConverter = ({ initialMode = "pdf-to-word" }) => {
                 <p className="text-sm text-[var(--color-text-muted)]">
                   {formatFileSize(result.blob.size)}
                 </p>
+                {result.ocr && (
+                  <p className="max-w-sm text-xs text-[var(--color-text-light)]">
+                    This PDF is a scan, so its text was read on your device with
+                    OCR (English). Check names and numbers.
+                    {result.totalPages > result.pagesRead &&
+                      ` Only the first ${result.pagesRead} of ${result.totalPages} pages were read.`}{" "}
+                    <Link
+                      to="/ocr-processor"
+                      onClick={(e) => e.stopPropagation()}
+                      className="link"
+                    >
+                      Other languages: Scan to text
+                    </Link>
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={(e) => {
@@ -321,7 +388,18 @@ const FileConverter = ({ initialMode = "pdf-to-word" }) => {
             {status === "error" && (
               <div className="flex flex-col items-center gap-3" role="alert">
                 <XCircle className="h-10 w-10 text-[var(--color-error)]" />
-                <p className="font-semibold text-[var(--color-error)]">{error}</p>
+                <p className="font-semibold text-[var(--color-error)]">
+                  {error}
+                </p>
+                {/scanned|OCR/i.test(error) && (
+                  <Link
+                    to="/ocr-processor"
+                    onClick={(e) => e.stopPropagation()}
+                    className="link text-sm font-semibold"
+                  >
+                    Open Scan to text
+                  </Link>
+                )}
                 {/password/i.test(error) && (
                   <Link
                     to="/unlock-pdf"
@@ -334,6 +412,13 @@ const FileConverter = ({ initialMode = "pdf-to-word" }) => {
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Drop another file to try again.
                 </p>
+                <Link
+                  to="/support?topic=bug&tool=file-converter"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs text-[var(--color-text-light)] underline hover:text-[var(--color-text-muted)]"
+                >
+                  Report this problem
+                </Link>
               </div>
             )}
 

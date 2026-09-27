@@ -26,6 +26,16 @@ const LEVELS = [
   { id: "high", label: "Smallest", hint: "Lower image quality" },
 ];
 
+// Names for the levels the server reports in X-Compression-Level
+const LEVEL_NAMES = {
+  low: "Best quality",
+  medium: "Balanced",
+  high: "Smallest",
+  tiny: "Extra small (lower image quality)",
+  minimum: "Minimum (low image quality)",
+  original: "Original (already small enough)",
+};
+
 // Below this, tell the user the PDF was already about as small as it gets
 const MEANINGFUL_SAVING = 0.03;
 
@@ -36,10 +46,13 @@ const PDFCompressor = () => {
   const [status, setStatus] = useState("idle");
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
+  // Optional size limit: typed text, and the limit in bytes once applied
+  const [limitMb, setLimitMb] = useState("");
+  const [appliedLimit, setAppliedLimit] = useState(null);
   // Ignore responses from a run the user has since replaced
   const requestId = useRef(0);
 
-  const compress = useCallback(async (pdf, compressionLevel) => {
+  const compress = useCallback(async (pdf, compressionLevel, limitBytes) => {
     const id = ++requestId.current;
     setStatus("compressing");
     setResult(null);
@@ -47,7 +60,9 @@ const PDFCompressor = () => {
 
     const formData = new FormData();
     formData.append("file", pdf);
-    formData.append("compression_level", compressionLevel);
+    // With a limit the server picks the best-quality level that fits
+    if (limitBytes) formData.append("target_bytes", String(limitBytes));
+    else formData.append("compression_level", compressionLevel);
 
     try {
       const response = await fetch(`${BACKEND_URL}/compress-pdf`, {
@@ -72,6 +87,9 @@ const PDFCompressor = () => {
       setResult({
         blob,
         filename: filenameFromResponse(response, `compressed_${pdf.name}`),
+        limitBytes,
+        targetMet: response.headers.get("X-Target-Met") !== "no",
+        levelUsed: response.headers.get("X-Compression-Level"),
       });
       setStatus("done");
     } catch {
@@ -95,9 +113,9 @@ const PDFCompressor = () => {
         return;
       }
       setFile(dropped);
-      compress(dropped, level);
+      compress(dropped, level, appliedLimit);
     },
-    [level, compress],
+    [level, appliedLimit, compress],
   );
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -109,19 +127,33 @@ const PDFCompressor = () => {
   });
 
   const chooseLevel = (id) => {
+    const hadLimit = appliedLimit !== null;
     setLevel(id);
+    // Picking a level switches back from "fit a size limit"
+    setAppliedLimit(null);
+    setLimitMb("");
     // Re-run on the same file so the user can compare levels without re-uploading
-    if (file && id !== level) compress(file, id);
+    if (file && (id !== level || hadLimit)) compress(file, id, null);
+  };
+
+  const applyLimit = () => {
+    const mb = parseFloat(limitMb);
+    const bytes = mb > 0 ? Math.round(mb * 1024 * 1024) : null;
+    if (bytes === appliedLimit) return;
+    setAppliedLimit(bytes);
+    if (file && status !== "compressing") compress(file, level, bytes);
   };
 
   const saved = result && file ? 1 - result.blob.size / file.size : 0;
+  // 99.7% would round to a misleading "100% smaller"
+  const percentSaved = Math.min(99, Math.round(saved * 100));
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       <SEO
         title="Compress PDF Online - Reduce PDF Size Without Losing Quality"
         description="Shrink a PDF for email or upload in seconds. Text stays sharp; only oversized images are reduced. Free, no signup, no watermark."
-        url="https://quicksidetool.com/pdf-compressor"
+        url="/pdf-compressor"
       />
 
       <div className="container py-8 md:py-12">
@@ -144,18 +176,18 @@ const PDFCompressor = () => {
                 key={id}
                 type="button"
                 role="radio"
-                aria-checked={level === id}
+                aria-checked={!appliedLimit && level === id}
                 disabled={status === "compressing"}
                 onClick={() => chooseLevel(id)}
                 className={`rounded-lg px-2 py-2 text-center transition-colors disabled:cursor-not-allowed ${
-                  level === id
+                  !appliedLimit && level === id
                     ? "bg-[var(--color-bg)] shadow-sm"
                     : "hover:bg-brand-rich-black/60"
                 }`}
               >
                 <span
                   className={`block text-sm font-semibold ${
-                    level === id
+                    !appliedLimit && level === id
                       ? "text-[var(--color-primary)]"
                       : "text-[var(--color-text)]"
                   }`}
@@ -168,6 +200,44 @@ const PDFCompressor = () => {
               </button>
             ))}
           </div>
+
+          {/* Optional size limit, e.g. "PDF must be under 2 MB" on application forms */}
+          <form
+            noValidate
+            className="mt-3 flex flex-wrap items-center justify-center gap-2 text-sm"
+            onSubmit={(e) => {
+              e.preventDefault();
+              applyLimit();
+            }}
+          >
+            <label
+              htmlFor="limit-mb"
+              className="text-[var(--color-text-muted)]"
+            >
+              Must be under
+            </label>
+            <input
+              id="limit-mb"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="any"
+              placeholder="e.g. 2"
+              value={limitMb}
+              onChange={(e) => setLimitMb(e.target.value)}
+              onBlur={applyLimit}
+              disabled={status === "compressing"}
+              className="input !w-24 py-1.5"
+            />
+            <span className="text-[var(--color-text-muted)]">
+              MB (optional)
+            </span>
+            {appliedLimit && (
+              <span className="w-full text-center text-xs text-[var(--color-text-light)]">
+                The best quality that fits is picked for you.
+              </span>
+            )}
+          </form>
 
           {/* Drop zone / progress / result */}
           <div
@@ -196,11 +266,32 @@ const PDFCompressor = () => {
                 className="flex flex-col items-center gap-3"
                 aria-live="polite"
               >
-                <CheckCircle className="h-10 w-10 text-[var(--color-success)]" />
-                {saved >= MEANINGFUL_SAVING ? (
+                <CheckCircle
+                  className={`h-10 w-10 ${result.targetMet ? "text-[var(--color-success)]" : "text-[var(--color-warning)]"}`}
+                />
+                {result.limitBytes ? (
                   <>
                     <p className="text-2xl font-semibold text-[var(--color-text)]">
-                      {Math.round(saved * 100)}% smaller
+                      {result.targetMet
+                        ? `Fits under ${formatFileSize(result.limitBytes)}`
+                        : `Couldn't get under ${formatFileSize(result.limitBytes)}`}
+                    </p>
+                    <p className="text-sm text-[var(--color-text-muted)]">
+                      {formatFileSize(file.size)} →{" "}
+                      {formatFileSize(result.blob.size)}
+                      {saved >= MEANINGFUL_SAVING &&
+                        ` · ${percentSaved}% smaller`}
+                    </p>
+                    <p className="text-xs text-[var(--color-text-light)]">
+                      {result.targetMet
+                        ? `Level used: ${LEVEL_NAMES[result.levelUsed] || result.levelUsed}`
+                        : "This is the smallest it can go. Removing pages or splitting the PDF would help."}
+                    </p>
+                  </>
+                ) : saved >= MEANINGFUL_SAVING ? (
+                  <>
+                    <p className="text-2xl font-semibold text-[var(--color-text)]">
+                      {percentSaved}% smaller
                     </p>
                     <p className="text-sm text-[var(--color-text-muted)]">
                       {formatFileSize(file.size)} →{" "}
@@ -235,7 +326,9 @@ const PDFCompressor = () => {
             {status === "error" && (
               <div className="flex flex-col items-center gap-3" role="alert">
                 <XCircle className="h-10 w-10 text-[var(--color-error)]" />
-                <p className="font-semibold text-[var(--color-error)]">{error}</p>
+                <p className="font-semibold text-[var(--color-error)]">
+                  {error}
+                </p>
                 {/password/i.test(error) && (
                   <Link
                     to="/unlock-pdf"
@@ -248,6 +341,13 @@ const PDFCompressor = () => {
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Drop another file to try again.
                 </p>
+                <Link
+                  to="/support?topic=bug&tool=pdf-compressor"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs text-[var(--color-text-light)] underline hover:text-[var(--color-text-muted)]"
+                >
+                  Report this problem
+                </Link>
               </div>
             )}
 
@@ -272,7 +372,7 @@ const PDFCompressor = () => {
               {file && status === "error" && (
                 <button
                   type="button"
-                  onClick={() => compress(file, level)}
+                  onClick={() => compress(file, level, appliedLimit)}
                   className="btn-secondary"
                 >
                   <RotateCcw className="h-4 w-4" /> Retry

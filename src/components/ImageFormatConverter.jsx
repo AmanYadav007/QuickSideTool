@@ -134,7 +134,7 @@ const ImageFormatConverter = () => {
       <SEO
         title="Free Image Format Converter - JPG, PNG, WebP"
         description="Convert images between JPG, PNG, and WebP in your browser. Batch conversion supported."
-        url="https://quicksidetool.com/image-tools/convert"
+        url="/image-tools/convert"
       />
 
       <div className="container section">

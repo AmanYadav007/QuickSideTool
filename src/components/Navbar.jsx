@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import Link from './PrefetchLink';
 import { Menu, X, Puzzle } from 'lucide-react';
 import Logo from './Logo';
 import { CHROME_EXTENSION_URL } from '../constants/links';
@@ -9,7 +10,7 @@ const NAV_LINKS = [
   { label: 'PDF', to: '/pdf-tool' },
   { label: 'Image', to: '/home#image-tools' },
   { label: 'QR Code', to: '/qr-tool' },
-  { label: 'Contact', to: '/contact' },
+  { label: 'Support', to: '/support' },
 ];
 
 const Navbar = () => {

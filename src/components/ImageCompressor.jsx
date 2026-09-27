@@ -4,6 +4,10 @@ import BackButton from './BackButton';
 import { useDropzone } from 'react-dropzone';
 import { Upload, Download, Image as ImageIcon, Trash2, X, Loader2 } from 'lucide-react';
 import JSZip from 'jszip';
+import { compressImage as compressInWorker } from '../utils/imageWorker';
+import { formatFileSize } from '../constants/api';
+
+const EXTENSIONS = { 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/png': 'png' };
 
 const mapWithConcurrency = async (items, limit, task) => {
   const results = new Array(items.length);
@@ -24,6 +28,12 @@ const ImageCompressor = () => {
   const [quality, setQuality] = useState(70);
   const [compressing, setCompressing] = useState(false);
   const [outputFormat, setOutputFormat] = useState('image/jpeg');
+  // 'quality' (slider) or 'target' (keep each file under targetKb)
+  const [mode, setMode] = useState('quality');
+  // Kept as typed so the field can be cleared and retyped; parsed when compressing
+  const [targetKb, setTargetKb] = useState('100');
+  const targetKbValue = parseFloat(targetKb);
+  const targetValid = targetKbValue >= 1;
 
   const onDrop = useCallback((acceptedFiles) => {
     const newImagesPromises = acceptedFiles.map(file => {
@@ -60,7 +70,8 @@ const ImageCompressor = () => {
     accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.gif'] }
   });
 
-  const compressImage = async (imageFile, compressionQuality, format) => {
+  // Fallback for browsers that can't run the worker (Safari < 16.4)
+  const compressInPage = async (imageFile, compressionQuality, format) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(imageFile);
@@ -72,6 +83,11 @@ const ImageCompressor = () => {
           canvas.width = img.width;
           canvas.height = img.height;
           const ctx = canvas.getContext('2d');
+          // JPEG has no transparency: without a background, clear pixels turn black
+          if (format === 'image/jpeg') {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, img.width, img.height);
+          }
           ctx.drawImage(img, 0, 0, img.width, img.height);
 
           let outputMimeType = format;
@@ -123,18 +139,38 @@ const ImageCompressor = () => {
     try {
       const compressedResults = await mapWithConcurrency(images, 4, async (img) => {
         try {
-          let compressedFile = await compressImage(img.original, quality, outputFormat);
+          const options = {
+            type: outputFormat,
+            quality: quality / 100,
+            targetBytes: mode === 'target' && outputFormat !== 'image/png' ? targetKbValue * 1024 : undefined,
+          };
+          let result;
+          try {
+            result = await compressInWorker(img.original, options);
+          } catch (error) {
+            if (error.code !== 'engine-unavailable') throw error;
+            if (options.targetBytes) {
+              throw new Error('Max file size needs a newer browser. Use the quality slider instead.');
+            }
+            result = { blob: await compressInPage(img.original, quality, outputFormat), ...img.dimensions };
+          }
 
+          const base = img.original.name.replace(/\.[^.]+$/, '');
+          const compressedFile = new File([result.blob], `${base}_compressed.${EXTENSIONS[result.blob.type] || 'jpg'}`, {
+            type: result.blob.type,
+            lastModified: Date.now(),
+          });
           if (img.compressedUrl) URL.revokeObjectURL(img.compressedUrl);
           return {
             ...img,
             compressed: compressedFile,
             compressedUrl: URL.createObjectURL(compressedFile),
+            info: { ...result, blob: undefined, targetKb: options.targetBytes ? targetKbValue : null },
             error: null,
           };
         } catch (error) {
           console.error(`Error compressing image ${img.original.name}:`, error);
-          return { ...img, compressed: null, compressedUrl: null, error: `Failed: ${error.message}` };
+          return { ...img, compressed: null, compressedUrl: null, info: null, error: error.message };
         }
       });
       setImages(compressedResults);
@@ -193,7 +229,8 @@ const ImageCompressor = () => {
     });
 
     try {
-      const content = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 9 } });
+      // Images are already compressed; deflating them again costs time and saves ~0%
+      const content = await zip.generateAsync({ type: "blob", compression: "STORE" });
       const link = document.createElement('a');
       const href = URL.createObjectURL(content);
       link.href = href;
@@ -231,7 +268,7 @@ const ImageCompressor = () => {
       <SEO
         title="Compress Image Online – JPG/PNG/WebP to Smaller Size"
         description="Reduce image size without big quality loss. Drag & drop. Free and fast."
-        url="https://quicksidetool.com/image-tools/compress"
+        url="/image-tools/compress"
       />
       <div className="container section">
         <header className="mb-8 flex items-start justify-between gap-3">
@@ -271,41 +308,95 @@ const ImageCompressor = () => {
               <div className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-alt)]">
                 <h2 className="text-sm font-semibold text-[var(--color-text)] mb-4">Compression Settings</h2>
                 
-                <div className="flex flex-col md:flex-row gap-4 items-center md:items-center">
-                  <div className="flex items-center gap-3 flex-1">
-                    <label className="text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">
-                      Quality: {outputFormat === 'image/png' ? 'n/a (lossless)' : `${quality}%`}
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div role="radiogroup" aria-label="Compress by" className="inline-flex rounded-full border border-[var(--color-border)] p-0.5">
+                      {[['quality', 'Quality'], ['target', 'Max file size']].map(([id, label]) => (
+                        <button
+                          key={id}
+                          type="button"
+                          role="radio"
+                          aria-checked={mode === id}
+                          onClick={() => setMode(id)}
+                          disabled={compressing}
+                          className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                            mode === id
+                              ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]'
+                              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)]">
+                      Format
+                      <select
+                        value={outputFormat}
+                        onChange={(e) => setOutputFormat(e.target.value)}
+                        className="input !w-auto py-2"
+                        disabled={compressing}
+                      >
+                        <option value="image/jpeg">JPEG</option>
+                        <option value="image/webp">WebP (smaller)</option>
+                        <option value="image/png">PNG (lossless)</option>
+                      </select>
                     </label>
-                    <input
-                      type="range"
-                      min="1"
-                      max="100"
-                      value={quality}
-                      onChange={(e) => setQuality(parseInt(e.target.value))}
-                      className="w-full max-w-md h-2 bg-[var(--color-border)] rounded-lg appearance-none cursor-pointer"
-                      disabled={compressing || outputFormat === 'image/png'}
-                      title={outputFormat === 'image/png' ? 'PNG is lossless' : `Compression Quality: ${quality}%`}
-                    />
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">Format:</label>
-                    <select
-                      value={outputFormat}
-                      onChange={(e) => setOutputFormat(e.target.value)}
-                      className="input sm:w-40"
-                      disabled={compressing}
-                    >
-                      <option value="image/jpeg">JPEG</option>
-                      <option value="image/png">PNG</option>
-                      <option value="image/webp">WebP</option>
-                    </select>
-                  </div>
+                  {mode === 'quality' ? (
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">
+                        Quality: {outputFormat === 'image/png' ? 'n/a (lossless)' : `${quality}%`}
+                      </label>
+                      <input
+                        type="range"
+                        min="1"
+                        max="100"
+                        value={quality}
+                        onChange={(e) => setQuality(parseInt(e.target.value))}
+                        className="w-full max-w-md h-2 bg-[var(--color-border)] rounded-lg appearance-none cursor-pointer"
+                        disabled={compressing || outputFormat === 'image/png'}
+                        title={outputFormat === 'image/png' ? 'PNG is lossless' : `Compression Quality: ${quality}%`}
+                      />
+                    </div>
+                  ) : outputFormat === 'image/png' ? (
+                    <p className="text-sm text-[var(--color-text-muted)]">
+                      PNG is lossless, so its size can't be targeted. Choose JPEG or WebP for a size limit.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label htmlFor="target-kb" className="text-sm font-medium text-[var(--color-text-muted)]">
+                        Keep each image under
+                      </label>
+                      <input
+                        id="target-kb"
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={targetKb}
+                        onChange={(e) => setTargetKb(e.target.value)}
+                        aria-invalid={!targetValid}
+                        className="input !w-24 py-2"
+                        disabled={compressing}
+                      />
+                      <span className="text-sm text-[var(--color-text-muted)]">KB</span>
+                      <span className="w-full text-xs text-[var(--color-text-light)]">
+                        Picks the best quality that fits; shrinks the image only if it has to. Handy for forms that ask for "under 50 KB".
+                      </span>
+                    </div>
+                  )}
+
+                  {outputFormat === 'image/webp' && (
+                    <p className="text-xs text-[var(--color-text-light)]">
+                      WebP files are about 30% smaller than JPEG at the same quality. A few older upload forms only accept JPEG.
+                    </p>
+                  )}
 
                   <button
                     onClick={compressImages}
-                    className="btn-primary w-full md:w-auto"
-                    disabled={compressing || images.length === 0}
+                    className="btn-primary w-full md:w-auto md:self-start"
+                    disabled={compressing || images.length === 0 || (mode === 'target' && (outputFormat === 'image/png' || !targetValid))}
                   >
                     {compressing ? (
                       <> <Loader2 className="h-4 w-4 animate-spin mr-2" /> Compressing... </>
@@ -343,7 +434,7 @@ const ImageCompressor = () => {
                             className="object-contain max-w-full max-h-full h-32 w-full"
                           />
                           <span className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
-                            {(img.original.size / (1024 * 1024)).toFixed(2)} MB
+                            {formatFileSize(img.original.size)}
                           </span>
                         </div>
                       </div>
@@ -363,7 +454,7 @@ const ImageCompressor = () => {
                           )}
                           {img.compressed && (
                             <span className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
-                              {(img.compressed.size / (1024 * 1024)).toFixed(2)} MB
+                              {formatFileSize(img.compressed.size)}
                             </span>
                           )}
                         </div>
@@ -387,8 +478,21 @@ const ImageCompressor = () => {
                         </button>
                       </div>
                     )}
+                    {img.info && (
+                      <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                        {img.info.unchanged
+                          ? 'Already well compressed, so the original was kept.'
+                          : [
+                              img.info.targetKb && !img.info.fits && `Couldn't get under ${img.info.targetKb} KB; this is the smallest version.`,
+                              img.info.targetKb && img.info.quality != null && `Quality ${Math.round(img.info.quality * 100)}%`,
+                              img.info.scaled && `resized to ${img.info.width}×${img.info.height}`,
+                            ]
+                              .filter(Boolean)
+                              .join(', ')}
+                      </p>
+                    )}
                     {img.error && (
-                      <p className="mt-3 text-sm text-[var(--color-error)]">Error: {img.error}</p>
+                      <p className="mt-3 text-sm text-[var(--color-error)]">{img.error}</p>
                     )}
                   </div>
                 ))}

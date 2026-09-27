@@ -2,11 +2,13 @@ from flask import Flask, request, send_file, jsonify
 import pikepdf # Use pikepdf for PDF operations
 from flask_cors import CORS
 import base64
+import functools
 import io
 import json
 import logging
 import os
 import re
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -22,17 +24,26 @@ from PIL import Image, ImageOps, ImageEnhance  # Add Pillow imports for image pr
 # Initialize Flask app
 app = Flask(__name__)
 
-# Configure CORS with specific settings for better compatibility
-# Reject uploads above 100 MB before they reach the handlers
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
+# Sites allowed to call this API from a browser. Extra origins can be added
+# without a code change: ALLOWED_ORIGINS="https://a.example,https://b.example"
+SITE_URL = 'https://www.ilovetools.website'
+ALLOWED_ORIGINS = [
+    SITE_URL,
+    'https://ilovetools.website',
+    'https://quick-side-tool.vercel.app',
+    # Vercel preview deployments of this project only
+    re.compile(r'^https://quick-side-tool-[a-z0-9-]+-amanyadav007s-projects\.vercel\.app$'),
+    'chrome-extension://ednlokciemgblchidkhbhhndphgjkoip',  # the Chrome side-panel extension
+    'http://localhost:3000',
+    'http://localhost:3001',
+] + [o.strip() for o in os.environ.get('ALLOWED_ORIGINS', '').split(',') if o.strip()]
 
-CORS(app, 
-     origins=['http://localhost:3000', 'http://localhost:3001', 'https://quicksidetool.com', 'https://www.quicksidetool.com',
-              'chrome-extension://ednlokciemgblchidkhbhhndphgjkoip'],  # the Chrome side-panel extension
-     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-     allow_headers=['Content-Type', 'Authorization', 'Access-Control-Allow-Credentials'],
-     expose_headers=['Content-Disposition'],  # lets the frontend read the download filename
-     supports_credentials=True)
+CORS(app,
+     origins=ALLOWED_ORIGINS,
+     methods=['GET', 'POST', 'OPTIONS'],
+     allow_headers=['Content-Type'],
+     expose_headers=['Content-Disposition', 'X-Links-Removed', 'X-Target-Met', 'X-Compression-Level'],  # readable by the frontend
+     max_age=86400)  # browsers may cache the preflight for a day
 
 # Configure logging
 logging.basicConfig(level=logging.INFO) # Set to INFO for production, DEBUG for development
@@ -47,6 +58,26 @@ def home():
 @app.route('/health')
 def health():
     return jsonify({"status": "ok"})
+
+# Gunicorn runs each worker with several threads so uploads and AI calls
+# overlap, but PDF work is memory-hungry (~110 MB for a 22 MB scan) and
+# PyMuPDF holds the GIL, so two jobs in one process run no faster than one
+# after the other. One job per worker at a time; the rest wait with their
+# upload already received. Add workers (WEB_CONCURRENCY) for parallelism.
+_heavy_slots = threading.BoundedSemaphore(int(os.environ.get('HEAVY_JOBS', '1')))
+
+
+def heavy(view):
+    @functools.wraps(view)
+    def wrapper(*args, **kwargs):
+        request.files  # finish receiving the upload (spooled to disk) first
+        with _heavy_slots:
+            try:
+                return view(*args, **kwargs)
+            finally:
+                fitz.TOOLS.store_shrink(100)  # drop MuPDF's cached images/fonts
+    return wrapper
+
 
 # Upload helpers shared by the conversion and compression endpoints
 def read_upload(extensions, label):
@@ -101,6 +132,7 @@ def file_too_large(_error):
 
 # Unlock PDF endpoint
 @app.route('/unlock-pdf', methods=['POST'])
+@heavy
 def unlock_pdf():
     # Check for file and password in request
     if 'file' not in request.files:
@@ -166,6 +198,7 @@ def unlock_pdf():
 
 # Lock PDF endpoint
 @app.route('/lock-pdf', methods=['POST'])
+@heavy
 def lock_pdf():
     # Check for file and password in request
     if 'file' not in request.files:
@@ -226,381 +259,76 @@ def lock_pdf():
         return jsonify({"error": f"Failed to lock PDF: An unexpected server error occurred: {str(e)}"}), 500
 
 
-# PDF LINK REMOVER ENDPOINT (enhanced for performance)
+# PDF LINK REMOVER ENDPOINT
+# The website and extension remove links on the device (public/workers/pdf-ops.js);
+# this is the fallback for browsers that can't run the engine. Same rules:
+# drop every link annotation, strip web/launch actions from other annotations,
+# keep comments, form fields and bookmarks.
 @app.route('/remove-pdf-links', methods=['POST'])
+@app.route('/remove-pdf-links-advanced', methods=['POST'])  # kept for older extension builds
+@heavy
 def remove_pdf_links():
-    if 'file' not in request.files:
-        logging.error("Remove Links: No file part in the request.")
-        return jsonify({"error": "No file part in the request."}), 400
+    file, pdf_bytes, error = read_upload(('.pdf',), 'Remove links')
+    if error:
+        return error
 
-    file = request.files['file']
-
-    if file.filename == '':
-        logging.error("Remove Links: No selected file.")
-        return jsonify({"error": "No selected file."}), 400
-    if not file.filename.lower().endswith('.pdf'):
-        logging.error(f"Remove Links: Invalid file type uploaded: {file.filename}")
-        return jsonify({"error": "Invalid file type. Only PDF files are accepted."}), 400
+    locked = reject_locked_pdf(pdf_bytes)
+    if locked:
+        return locked
 
     try:
-        import time
-        start_time = time.time()
-        
-        file.stream.seek(0) # Ensure stream is at the beginning
-        pdf = pikepdf.Pdf.open(file.stream)
-
-        if pdf.is_encrypted:
-            logging.warning(f"Remove Links: Attempt to remove links from encrypted PDF '{file.filename}'.")
-            return jsonify({"error": "Failed to remove links: PDF is encrypted. Unlock it first."}), 400
-
-        # Get total pages for progress tracking
-        total_pages = len(pdf.pages)
-        links_removed = 0
-        pages_processed = 0
-        
-        logging.info(f"Remove Links: Processing {total_pages} pages in '{file.filename}'")
-
-        # Optimized link removal with parallel processing simulation
-        # Process pages in batches for better memory management
-        batch_size = min(10, total_pages)  # Process up to 10 pages at a time
-        
-        for batch_start in range(0, total_pages, batch_size):
-            batch_end = min(batch_start + batch_size, total_pages)
-            
-            # Process batch of pages
-            for page_idx in range(batch_start, batch_end):
-                page = pdf.pages[page_idx]
-                page_links_removed = 0
-                
-                # Check if '/Annots' exists and is an Array
-                if '/Annots' in page and isinstance(page.Annots, pikepdf.Array):
-                    new_annots = pikepdf.Array()
-                    
-                    # Optimized annotation processing
-                    for annot in page.Annots:
-                        # Fast link detection using multiple criteria
-                        is_link = False
-                        
-                        # Check Subtype first (most common case)
-                        subtype = annot.get('/Subtype')
-                        if subtype == '/Link':
-                            is_link = True
-                        # Check Action type (second most common)
-                        elif annot.get('/A'):
-                            action = annot.A
-                            if action.get('/S') in ('/URI', '/GoTo', '/Launch', '/Named'):
-                                is_link = True
-                        # Check for common link patterns
-                        elif annot.get('/H') == 'N':  # Highlight mode for links
-                            is_link = True
-                        # Check for URI patterns in annotation data
-                        elif '/URI' in str(annot):
-                            is_link = True
-                        
-                        if not is_link:
-                            new_annots.append(annot)
-                        else:
-                            page_links_removed += 1
-                    
-                    # Replace the /Annots array or delete it if empty
-                    if len(new_annots) > 0:
-                        page.Annots = new_annots
-                    else:
-                        del page.Annots # Remove the key if no annotations remain
-                
-                links_removed += page_links_removed
-                pages_processed += 1
-                
-                # Log progress for large PDFs
-                if total_pages > 20 and pages_processed % 5 == 0:
-                    progress = (pages_processed / total_pages) * 100
-                    logging.info(f"Remove Links: Progress {progress:.1f}% - {pages_processed}/{total_pages} pages, {links_removed} links removed")
-
-        # Optimized PDF saving with compression
-        output_pdf = io.BytesIO()
-        
-        # Use optimized save settings for better performance
-        try:
-            pdf.save(
-                output_pdf,
-                compress_streams=True,  # Enable stream compression
-                linearize=True  # Linearize for faster loading
-            )
-        except TypeError as e:
-            if "unexpected keyword argument" in str(e):
-                logging.error(f"Remove Links: Unsupported pikepdf parameter: {e}")
-                # Fallback to basic save without parameters
-                pdf.save(output_pdf)
-            else:
-                raise
-        
-        output_pdf.seek(0)
-        
-        # Calculate processing time and statistics
-        processing_time = time.time() - start_time
-        file_size_mb = len(output_pdf.getvalue()) / (1024 * 1024)
-        
-        logging.info(f"Remove Links: Successfully processed '{file.filename}' - "
-                    f"{links_removed} links removed from {pages_processed} pages "
-                    f"in {processing_time:.2f}s, output size: {file_size_mb:.2f}MB")
-
-        return send_file(
-            output_pdf,
-            mimetype='application/pdf',
-            as_attachment=True,
-            download_name=f"links_removed_{file.filename}"
-        )
-
-    except pikepdf.PdfError as e:
-        logging.error(f"Error reading PDF file '{file.filename}' for link removal: {e}")
-        return jsonify({"error": f"Failed to read PDF for link removal: {str(e)}. It might be corrupted or malformed."}), 400
-    except MemoryError as e:
-        logging.error(f"Memory error processing large PDF '{file.filename}': {e}")
-        return jsonify({"error": "PDF is too large to process. Please try with a smaller file or split it into smaller parts."}), 413
-    except Exception as e:
-        logging.error(f"Error processing PDF for link removal '{file.filename}': {e}", exc_info=True)
-        return jsonify({"error": f"Failed to remove links from PDF: An unexpected server error occurred: {str(e)}. It might be corrupted or complex."}), 500
-
-
-# ADVANCED PDF LINK REMOVER ENDPOINT (ultra-fast processing)
-@app.route('/remove-pdf-links-advanced', methods=['POST', 'OPTIONS'])
-def remove_pdf_links_advanced():
-    """
-    Advanced PDF link removal with maximum performance optimizations:
-    - Parallel processing simulation
-    - Memory-efficient batch processing
-    - Smart caching
-    - Advanced link detection
-    - Progress tracking
-    """
-    # Handle CORS preflight requests
-    if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-        return response
-    
-    if 'file' not in request.files:
-        logging.error("Advanced Remove Links: No file part in the request.")
-        return jsonify({"error": "No file part in the request."}), 400
-
-    file = request.files['file']
-
-    if file.filename == '':
-        logging.error("Advanced Remove Links: No selected file.")
-        return jsonify({"error": "No selected file."}), 400
-    if not file.filename.lower().endswith('.pdf'):
-        logging.error(f"Advanced Remove Links: Invalid file type uploaded: {file.filename}")
-        return jsonify({"error": "Invalid file type. Only PDF files are accepted."}), 400
-
-    try:
-        import time
-        import hashlib
-        from concurrent.futures import ThreadPoolExecutor
-        import threading
-        
-        start_time = time.time()
-        
-        # Create file hash for caching (if implemented)
-        file.stream.seek(0)
-        file_content = file.read()
-        file_hash = hashlib.md5(file_content).hexdigest()[:16]
-        
-        file.stream.seek(0)
-        pdf = pikepdf.Pdf.open(file.stream)
-
-        if pdf.is_encrypted:
-            logging.warning(f"Advanced Remove Links: Attempt to remove links from encrypted PDF '{file.filename}'.")
-            return jsonify({"error": "Failed to remove links: PDF is encrypted. Unlock it first."}), 400
-
-        # Get PDF statistics
-        total_pages = len(pdf.pages)
-        total_annotations = 0
-        estimated_links = 0
-        
-        # Pre-scan for statistics and optimization
+        pdf = pikepdf.Pdf.open(io.BytesIO(pdf_bytes))
+        removed = 0
         for page in pdf.pages:
-            if '/Annots' in page and isinstance(page.Annots, pikepdf.Array):
-                total_annotations += len(page.Annots)
-                # Quick estimate of links
-                for annot in page.Annots:
-                    if (annot.get('/Subtype') == '/Link' or 
-                        (annot.get('/A') and annot.A.get('/S') in ('/URI', '/GoTo', '/Launch', '/Named'))):
-                        estimated_links += 1
+            annots = page.obj.get('/Annots')
+            if not isinstance(annots, pikepdf.Array):
+                continue
+            kept = pikepdf.Array()
+            removed_here = 0
+            for annot in annots:
+                if annot.get('/Subtype') == pikepdf.Name.Link:
+                    removed_here += 1
+                    continue
+                action = annot.get('/A')
+                if isinstance(action, pikepdf.Dictionary) and action.get('/S') in (pikepdf.Name.URI, pikepdf.Name.Launch):
+                    del annot['/A']
+                    removed_here += 1
+                kept.append(annot)
+            if removed_here:
+                removed += removed_here
+                if len(kept):
+                    page.obj.Annots = kept
+                else:
+                    del page.obj['/Annots']
 
-        logging.info(f"Advanced Remove Links: Processing '{file.filename}' - "
-                    f"{total_pages} pages, {total_annotations} annotations, ~{estimated_links} links")
+        if not removed:
+            return jsonify({"error": "This PDF has no links to remove.", "code": "no-links"}), 422
 
-        # Optimize batch size based on PDF size and complexity
-        if total_pages < 10:
-            batch_size = total_pages
-        elif total_pages < 50:
-            batch_size = 5
-        else:
-            batch_size = 10
-
-        # Thread-safe counters
-        links_removed = 0
-        pages_processed = 0
-        lock = threading.Lock()
-
-        def process_page_batch(page_indices):
-            """Process a batch of pages with optimized link removal"""
-            nonlocal links_removed, pages_processed
-            batch_links_removed = 0
-            batch_pages_processed = 0
-            
-            for page_idx in page_indices:
-                try:
-                    page = pdf.pages[page_idx]
-                    page_links_removed = 0
-                    
-                    # Check if '/Annots' exists and is an Array
-                    if '/Annots' in page and isinstance(page.Annots, pikepdf.Array):
-                        new_annots = pikepdf.Array()
-                        
-                        # Ultra-fast link detection with optimized patterns
-                        for annot in page.Annots:
-                            is_link = False
-                            
-                            # Pattern 1: Direct subtype check (fastest)
-                            if annot.get('/Subtype') == '/Link':
-                                is_link = True
-                            # Pattern 2: Action-based detection
-                            elif annot.get('/A'):
-                                action = annot.A
-                                action_type = action.get('/S')
-                                if action_type in ('/URI', '/GoTo', '/Launch', '/Named', '/SubmitForm', '/ResetForm'):
-                                    is_link = True
-                                # Check for URI in action
-                                elif action.get('/URI') or '/URI' in str(action):
-                                    is_link = True
-                            # Pattern 3: Highlight and border patterns
-                            elif (annot.get('/H') == 'N' or 
-                                  annot.get('/Border') or 
-                                  annot.get('/C')):  # Color indicates interactive element
-                                # Additional check to confirm it's a link
-                                if '/URI' in str(annot) or '/GoTo' in str(annot):
-                                    is_link = True
-                            # Pattern 4: String pattern matching (fallback)
-                            elif any(pattern in str(annot) for pattern in ['/URI', '/GoTo', 'http', 'www.', 'mailto:']):
-                                is_link = True
-                            
-                            if not is_link:
-                                new_annots.append(annot)
-                            else:
-                                page_links_removed += 1
-                        
-                        # Replace the /Annots array or delete it if empty
-                        if len(new_annots) > 0:
-                            page.Annots = new_annots
-                        else:
-                            del page.Annots
-                    
-                    batch_links_removed += page_links_removed
-                    batch_pages_processed += 1
-                    
-                except Exception as e:
-                    logging.warning(f"Error processing page {page_idx}: {e}")
-                    batch_pages_processed += 1
-            
-            # Thread-safe update of counters
-            with lock:
-                links_removed += batch_links_removed
-                pages_processed += batch_pages_processed
-
-        # Process pages in optimized batches
-        page_batches = []
-        for batch_start in range(0, total_pages, batch_size):
-            batch_end = min(batch_start + batch_size, total_pages)
-            page_batches.append(list(range(batch_start, batch_end)))
-
-        # Use ThreadPoolExecutor for parallel processing simulation
-        # Note: pikepdf operations are not thread-safe, so we simulate parallel processing
-        # by processing batches sequentially but with optimized algorithms
-        for batch in page_batches:
-            process_page_batch(batch)
-            
-            # Progress logging for large PDFs
-            if total_pages > 20 and pages_processed % 10 == 0:
-                progress = (pages_processed / total_pages) * 100
-                elapsed = time.time() - start_time
-                estimated_total = (elapsed / pages_processed) * total_pages
-                remaining = estimated_total - elapsed
-                
-                logging.info(f"Advanced Remove Links: Progress {progress:.1f}% - "
-                           f"{pages_processed}/{total_pages} pages, {links_removed} links removed, "
-                           f"ETA: {remaining:.1f}s")
-
-        # Ultra-optimized PDF saving
-        output_pdf = io.BytesIO()
-        
-        # Use maximum optimization settings
-        try:
-            pdf.save(
-                output_pdf,
-                compress_streams=True,
-                linearize=True
-            )
-        except TypeError as e:
-            if "unexpected keyword argument" in str(e):
-                logging.error(f"Advanced Remove Links: Unsupported pikepdf parameter: {e}")
-                # Fallback to basic save without parameters
-                pdf.save(output_pdf)
-            else:
-                raise
-        
-        output_pdf.seek(0)
-        
-        # Calculate final statistics
-        processing_time = time.time() - start_time
-        file_size_mb = len(output_pdf.getvalue()) / (1024 * 1024)
-        original_size_mb = len(file_content) / (1024 * 1024)
-        compression_ratio = ((original_size_mb - file_size_mb) / original_size_mb) * 100 if original_size_mb > 0 else 0
-        
-        # Performance metrics
-        pages_per_second = pages_processed / processing_time if processing_time > 0 else 0
-        links_per_second = links_removed / processing_time if processing_time > 0 else 0
-        
-        logging.info(f"Advanced Remove Links: Successfully processed '{file.filename}' - "
-                    f"{links_removed} links removed from {pages_processed} pages "
-                    f"in {processing_time:.2f}s ({pages_per_second:.1f} pages/s, {links_per_second:.1f} links/s) "
-                    f"Size: {original_size_mb:.2f}MB → {file_size_mb:.2f}MB ({compression_ratio:.1f}% reduction)")
-
+        # qpdf writes only objects still referenced, so the removed links' URLs are gone
+        output = io.BytesIO()
+        pdf.save(output, compress_streams=True)
+        output.seek(0)
+        logging.info(f"Remove links: {removed} removed from '{file.filename}'.")
         response = send_file(
-            output_pdf,
+            output,
             mimetype='application/pdf',
             as_attachment=True,
-            download_name=f"links_removed_{file.filename}"
+            download_name=output_name(file.filename, '.pdf', prefix='nolinks_')
         )
-        
-        # Add CORS headers
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-        
+        response.headers['X-Links-Removed'] = str(removed)
         return response
 
     except pikepdf.PdfError as e:
-        logging.error(f"Advanced Remove Links: Error reading PDF file '{file.filename}': {e}")
-        response = jsonify({"error": f"Failed to read PDF for link removal: {str(e)}. It might be corrupted or malformed."})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response, 400
-    except MemoryError as e:
-        logging.error(f"Advanced Remove Links: Memory error processing large PDF '{file.filename}': {e}")
-        response = jsonify({"error": "PDF is too large to process. Please try with a smaller file or split it into smaller parts."})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response, 413
+        logging.error(f"Remove links: invalid PDF '{file.filename}': {e}")
+        return jsonify({"error": "This file isn't a valid PDF or is damaged."}), 400
     except Exception as e:
-        logging.error(f"Advanced Remove Links: Error processing PDF '{file.filename}': {e}", exc_info=True)
-        response = jsonify({"error": f"Failed to remove links from PDF: An unexpected server error occurred: {str(e)}. It might be corrupted or complex."})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response, 500
+        logging.error(f"Remove links: error processing '{file.filename}': {e}", exc_info=True)
+        return jsonify({"error": "Couldn't remove the links from this PDF."}), 500
 
 
 # PDF TO DOCX CONVERSION ENDPOINT
 @app.route('/pdf-to-docx', methods=['POST'])
+@heavy
 def pdf_to_docx():
     """
     Convert a PDF to an editable Word document with pdf2docx, which rebuilds
@@ -637,6 +365,7 @@ def pdf_to_docx():
 
 # IMAGE COMPRESSION ENDPOINT
 @app.route('/compress-image', methods=['POST'])
+@heavy
 def compress_image():
     """
     Advanced server-side image compression with multiple options:
@@ -767,6 +496,7 @@ def compress_image():
 
 # BATCH IMAGE COMPRESSION ENDPOINT
 @app.route('/compress-images-batch', methods=['POST'])
+@heavy
 def compress_images_batch():
     """
     Batch compress multiple images with the same settings
@@ -907,6 +637,7 @@ def excel_response(workbook, filename):
 
 
 @app.route('/convert/pdf-to-excel', methods=['POST'])
+@heavy
 def convert_pdf_to_excel():
     """
     Convert PDF to Excel spreadsheet (.xlsx).
@@ -955,6 +686,7 @@ def convert_pdf_to_excel():
 
 
 @app.route('/convert/word-to-excel', methods=['POST'])
+@heavy
 def convert_word_to_excel():
     """
     Convert Word (.docx) to Excel (.xlsx): each table becomes a sheet.
@@ -1017,6 +749,7 @@ p[style-name='Subtitle'] => h2:fresh
 
 
 @app.route('/convert/word-to-pdf', methods=['POST'])
+@heavy
 def convert_word_to_pdf():
     """
     Convert Word (.docx) to PDF: mammoth turns the document into semantic HTML
@@ -1079,10 +812,13 @@ def convert_word_to_pdf():
 # only ever talks to this endpoint.
 OPENROUTER_URL = os.environ.get('OPENROUTER_URL', 'https://openrouter.ai/api/v1/chat/completions')
 OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '').strip()
-# Free vision models, tried in order when one is busy or rate-limited
+# Free vision models, tried in order when one is busy or rate-limited.
+# openrouter/free routes to whichever free model is up and allowed by the
+# account's guardrails (with zero data retention on, the Gemma free endpoints
+# are excluded); the named models are fallbacks.
 OPENROUTER_MODELS = [m.strip() for m in os.environ.get(
     'OPENROUTER_MODELS',
-    'qwen/qwen3.8-27b:free,google/gemma-4-31b-it:free,google/gemma-4-26b-a4b-it:free'
+    'openrouter/free,qwen/qwen3.8-27b:free,google/gemma-4-31b-it:free'
 ).split(',') if m.strip()]
 # Per visitor, to keep one person from using up the free quota
 AI_REQUESTS_PER_HOUR = int(os.environ.get('AI_REQUESTS_PER_HOUR', '30'))
@@ -1098,6 +834,7 @@ AI_OCR_PROMPT = (
 )
 
 _ai_usage = {}  # visitor IP -> timestamps of recent AI requests
+_ai_usage_lock = threading.Lock()
 
 
 def _client_ip():
@@ -1107,6 +844,11 @@ def _client_ip():
 
 
 def _ai_rate_limited():
+    with _ai_usage_lock:
+        return _ai_rate_limited_locked()
+
+
+def _ai_rate_limited_locked():
     now = time.time()
     ip = _client_ip()
     recent = [t for t in _ai_usage.get(ip, []) if now - t < 3600]
@@ -1172,7 +914,7 @@ def ai_ocr():
         req = urllib.request.Request(OPENROUTER_URL, data=payload, method='POST', headers={
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://quicksidetool.com",
+            "HTTP-Referer": SITE_URL,
             "X-Title": "QuickSideTool",
         })
         try:
@@ -1194,7 +936,8 @@ def ai_ocr():
             logging.warning(f"AI OCR: {model} returned no answer: {str(body.get('error'))[:200]}")
             continue
 
-        logging.info(f"AI OCR: read '{file.filename}' with {model}")
+        # openrouter/free reports the model it actually routed to
+        logging.info(f"AI OCR: read '{file.filename}' with {body.get('model') or model}")
         return jsonify({"text": _clean_ai_text(message.get('content')), "model": model})
 
     return jsonify({"error": "The free AI models are busy right now. Try again in a minute."}), 503
@@ -1207,16 +950,42 @@ COMPRESSION_LEVELS = {
     'medium': (150, 72),  # screen and email
     'high': (100, 55),    # smallest file
 }
+# Tried in order when the user gives a size limit: the first that fits wins,
+# so the file keeps the best quality the limit allows. The last two go beyond
+# "Smallest" and are only used to reach a limit.
+TARGET_LADDER = [
+    ('low', 200, 85), ('medium', 150, 72), ('high', 100, 55),
+    ('tiny', 72, 45), ('minimum', 50, 35),
+]
+
+
+def _compress_bytes(pdf_bytes, dpi, quality, filename):
+    pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
+    try:
+        pdf_document.rewrite_images(dpi_threshold=dpi + 10, dpi_target=dpi, quality=quality)
+        try:
+            pdf_document.subset_fonts()
+        except Exception as e:
+            logging.warning(f"PDF compression: Font subsetting skipped for '{filename}': {e}")
+        return pdf_document.tobytes(
+            garbage=3, deflate=True, deflate_images=True, deflate_fonts=True, use_objstms=1
+        )
+    finally:
+        pdf_document.close()
 
 
 @app.route('/compress-pdf', methods=['POST'])
 @app.route('/compress-pdf-advanced', methods=['POST'])  # kept for older extension builds
+@heavy
 def compress_pdf():
     """
     Compress a PDF by downsampling and re-encoding its images (where almost all
     the weight in a PDF lives), subsetting embedded fonts, and rewriting the file
     with compressed streams. Text and vector content are left untouched.
-    If nothing can be saved, the original file is returned unchanged.
+
+    compression_level picks a level; target_bytes instead picks the best-quality
+    level whose result fits (X-Target-Met says whether one did). If nothing can
+    be saved, the original file is returned unchanged.
     """
     file, pdf_bytes, error = read_upload(('.pdf',), 'PDF compression')
     if error:
@@ -1226,37 +995,49 @@ def compress_pdf():
     if locked:
         return locked
 
-    compression_level = request.form.get('compression_level', 'medium')
-    dpi, quality = COMPRESSION_LEVELS.get(compression_level, COMPRESSION_LEVELS['medium'])
-
     try:
-        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-        pdf_document.rewrite_images(dpi_threshold=dpi + 10, dpi_target=dpi, quality=quality)
-        try:
-            pdf_document.subset_fonts()
-        except Exception as e:
-            logging.warning(f"PDF compression: Font subsetting skipped for '{file.filename}': {e}")
-        compressed = pdf_document.tobytes(
-            garbage=3, deflate=True, deflate_images=True, deflate_fonts=True, use_objstms=1
-        )
-        pdf_document.close()
+        target_bytes = int(request.form.get('target_bytes') or 0)
+    except ValueError:
+        return jsonify({"error": "The size limit must be a number of bytes."}), 400
 
-        original_size = len(pdf_bytes)
-        if len(compressed) >= original_size:
-            compressed = pdf_bytes
+    original_size = len(pdf_bytes)
+    headers = {}
+    try:
+        if target_bytes > 0:
+            compressed, used = None, None
+            for name, dpi, quality in TARGET_LADDER:
+                attempt = _compress_bytes(pdf_bytes, dpi, quality, file.filename)
+                if compressed is None or len(attempt) < len(compressed):
+                    compressed, used = attempt, name
+                if len(attempt) <= target_bytes:
+                    compressed, used = attempt, name
+                    break
+                fitz.TOOLS.store_shrink(100)
+            if original_size <= len(compressed):
+                compressed, used = pdf_bytes, 'original'
+            headers['X-Target-Met'] = 'yes' if len(compressed) <= target_bytes else 'no'
+        else:
+            used = request.form.get('compression_level', 'medium')
+            dpi, quality = COMPRESSION_LEVELS.get(used, COMPRESSION_LEVELS['medium'])
+            compressed = _compress_bytes(pdf_bytes, dpi, quality, file.filename)
+            if len(compressed) >= original_size:
+                compressed = pdf_bytes
+        headers['X-Compression-Level'] = used
 
         reduction = (original_size - len(compressed)) / original_size * 100
         logging.info(
-            f"PDF compression: '{file.filename}' ({compression_level}) "
+            f"PDF compression: '{file.filename}' ({used}{f', target {target_bytes // 1024}KB' if target_bytes else ''}) "
             f"{original_size / 1024:.0f}KB -> {len(compressed) / 1024:.0f}KB ({reduction:.0f}% smaller)"
         )
 
-        return send_file(
+        response = send_file(
             io.BytesIO(compressed),
             mimetype='application/pdf',
             as_attachment=True,
             download_name=output_name(file.filename, '.pdf', prefix='compressed_')
         )
+        response.headers.update(headers)
+        return response
 
     except Exception as e:
         logging.error(f"PDF compression: Error processing '{file.filename}': {e}", exc_info=True)

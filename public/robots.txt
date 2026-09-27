@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://quicksidetool.com/sitemap.xml
+Sitemap: https://www.ilovetools.website/sitemap.xml
  
 # Crawl-delay
 Crawl-delay: 1 

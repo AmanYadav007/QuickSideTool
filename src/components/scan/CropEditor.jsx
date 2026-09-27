@@ -9,6 +9,8 @@ import { detectPage, fullImageQuad } from "../../utils/scan";
 const CropEditor = ({ source, quad, onApply, onCancel }) => {
   const [corners, setCorners] = useState(quad || fullImageQuad(source));
   const [imageUrl, setImageUrl] = useState(null);
+  // The handles are positioned over the photo, so wait until it has its size
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [notice, setNotice] = useState("");
   const svgRef = useRef(null);
   const dragging = useRef(null);
@@ -69,45 +71,51 @@ const CropEditor = ({ source, quad, onApply, onCancel }) => {
             alt="Page to crop"
             className="block max-h-[65vh] max-w-full"
             draggable={false}
+            onLoad={() => setImageLoaded(true)}
           />
         )}
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${source.width} ${source.height}`}
-          className="absolute inset-0 h-full w-full"
-          onPointerMove={onPointerMove}
-          onPointerUp={() => (dragging.current = null)}
-          onPointerCancel={() => (dragging.current = null)}
-        >
-          {/* Dim everything outside the page */}
-          <path
-            d={`M0,0 H${source.width} V${source.height} H0 Z M${outline.replace(/ /g, " L")} Z`}
-            fillRule="evenodd"
-            fill="rgba(0,0,0,0.5)"
-          />
-          <polygon
-            points={outline}
-            fill="none"
-            stroke="#00DF81"
-            strokeWidth={handle * 0.15}
-          />
-          {corners.map((c, i) => (
-            <circle
-              key={i}
-              cx={c.x}
-              cy={c.y}
-              r={handle}
-              fill="rgba(0,223,129,0.35)"
-              stroke="#fff"
-              strokeWidth={handle * 0.12}
-              className="cursor-grab"
-              onPointerDown={(e) => {
-                dragging.current = i;
-                svgRef.current.setPointerCapture(e.pointerId);
-              }}
+        {!imageLoaded && (
+          <div className="h-48 w-64 max-w-full animate-pulse rounded bg-[var(--color-bg-alt)]" />
+        )}
+        {imageLoaded && (
+          <svg
+            ref={svgRef}
+            viewBox={`0 0 ${source.width} ${source.height}`}
+            className="absolute inset-0 h-full w-full"
+            onPointerMove={onPointerMove}
+            onPointerUp={() => (dragging.current = null)}
+            onPointerCancel={() => (dragging.current = null)}
+          >
+            {/* Dim everything outside the page */}
+            <path
+              d={`M0,0 H${source.width} V${source.height} H0 Z M${outline.replace(/ /g, " L")} Z`}
+              fillRule="evenodd"
+              fill="rgba(0,0,0,0.5)"
             />
-          ))}
-        </svg>
+            <polygon
+              points={outline}
+              fill="none"
+              stroke="#00DF81"
+              strokeWidth={handle * 0.15}
+            />
+            {corners.map((c, i) => (
+              <circle
+                key={i}
+                cx={c.x}
+                cy={c.y}
+                r={handle}
+                fill="rgba(0,223,129,0.35)"
+                stroke="#fff"
+                strokeWidth={handle * 0.12}
+                className="cursor-grab"
+                onPointerDown={(e) => {
+                  dragging.current = i;
+                  svgRef.current.setPointerCapture(e.pointerId);
+                }}
+              />
+            ))}
+          </svg>
+        )}
       </div>
 
       {notice && (

@@ -3,7 +3,10 @@
   "name": "PDF Merger Tool",
   "version": "3.0",
   "description": "Manipulate PDFs directly in your browser",
-  "permissions": ["sidePanel", "storage"],
+  "permissions": [
+    "sidePanel",
+    "storage"
+  ],
   "background": {
     "service_worker": "background.js"
   },
@@ -20,11 +23,5 @@
   },
   "action": {
     "default_title": "Open PDF Merger"
-  },
-  "web_accessible_resources": [{
-    "resources": ["pdf.worker.min.js"],
-    "matches": ["<all_urls>"]
-  }]
+  }
 }
-
-
