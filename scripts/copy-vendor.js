@@ -1,6 +1,6 @@
-// Copies the OCR, PDF and image engine files into public/vendor so the app
-// serves them itself. The Chrome extension can't load scripts from a CDN
-// (Manifest V3 blocks remote code), so these must ship inside the build.
+// Copies the OCR, PDF and image engine files into public/vendor so the site
+// serves them itself: no dependency on a CDN being up, and the offline cache
+// (src/service-worker.js) can keep them.
 const fs = require("fs");
 const path = require("path");
 

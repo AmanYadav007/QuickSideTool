@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-// Offline cache for the website (not the extension, which ships its files).
+// Offline cache for the website, including inside the extension's side panel.
 // Built by Create React App with Workbox; registered in src/index.js.
 //
 // - App shell (main bundle, CSS, fonts) is precached: repeat visits start
