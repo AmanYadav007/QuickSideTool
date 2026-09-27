@@ -39,6 +39,6 @@ const outDir = path.join(root, "dist", "extension");
 const zip = path.join(outDir, `quick-side-tool-v${manifest.version}.zip`);
 fs.mkdirSync(outDir, { recursive: true });
 fs.rmSync(zip, { force: true });
-// -X: no macOS extra attributes; skip hidden files like .DS_Store
-execFileSync("zip", ["-r", "-X", "-q", zip, ".", "-x", ".*", "-x", "*/.*"], { cwd: source });
+// -X: no macOS extra attributes; skip hidden files like .DS_Store and docs
+execFileSync("zip", ["-r", "-X", "-q", zip, ".", "-x", ".*", "-x", "*/.*", "-x", "*.md"], { cwd: source });
 console.log(`package-extension: ${path.relative(root, zip)} (${Math.round(fs.statSync(zip).size / 1024)} KB)`);
