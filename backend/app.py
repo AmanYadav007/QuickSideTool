@@ -812,10 +812,13 @@ def convert_word_to_pdf():
 # only ever talks to this endpoint.
 OPENROUTER_URL = os.environ.get('OPENROUTER_URL', 'https://openrouter.ai/api/v1/chat/completions')
 OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '').strip()
-# Free vision models, tried in order when one is busy or rate-limited
+# Free vision models, tried in order when one is busy or rate-limited.
+# openrouter/free routes to whichever free model is up and allowed by the
+# account's guardrails (with zero data retention on, the Gemma free endpoints
+# are excluded); the named models are fallbacks.
 OPENROUTER_MODELS = [m.strip() for m in os.environ.get(
     'OPENROUTER_MODELS',
-    'qwen/qwen3.8-27b:free,google/gemma-4-31b-it:free,google/gemma-4-26b-a4b-it:free'
+    'openrouter/free,qwen/qwen3.8-27b:free,google/gemma-4-31b-it:free'
 ).split(',') if m.strip()]
 # Per visitor, to keep one person from using up the free quota
 AI_REQUESTS_PER_HOUR = int(os.environ.get('AI_REQUESTS_PER_HOUR', '30'))
@@ -933,7 +936,8 @@ def ai_ocr():
             logging.warning(f"AI OCR: {model} returned no answer: {str(body.get('error'))[:200]}")
             continue
 
-        logging.info(f"AI OCR: read '{file.filename}' with {model}")
+        # openrouter/free reports the model it actually routed to
+        logging.info(f"AI OCR: read '{file.filename}' with {body.get('model') or model}")
         return jsonify({"text": _clean_ai_text(message.get('content')), "model": model})
 
     return jsonify({"error": "The free AI models are busy right now. Try again in a minute."}), 503
