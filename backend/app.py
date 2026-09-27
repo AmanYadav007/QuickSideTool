@@ -33,7 +33,6 @@ ALLOWED_ORIGINS = [
     'https://quick-side-tool.vercel.app',
     # Vercel preview deployments of this project only
     re.compile(r'^https://quick-side-tool-[a-z0-9-]+-amanyadav007s-projects\.vercel\.app$'),
-    'chrome-extension://ednlokciemgblchidkhbhhndphgjkoip',  # the Chrome side-panel extension
     'http://localhost:3000',
     'http://localhost:3001',
 ] + [o.strip() for o in os.environ.get('ALLOWED_ORIGINS', '').split(',') if o.strip()]
@@ -260,12 +259,12 @@ def lock_pdf():
 
 
 # PDF LINK REMOVER ENDPOINT
-# The website and extension remove links on the device (public/workers/pdf-ops.js);
+# The site removes links on the device (public/workers/pdf-ops.js);
 # this is the fallback for browsers that can't run the engine. Same rules:
 # drop every link annotation, strip web/launch actions from other annotations,
 # keep comments, form fields and bookmarks.
 @app.route('/remove-pdf-links', methods=['POST'])
-@app.route('/remove-pdf-links-advanced', methods=['POST'])  # kept for older extension builds
+@app.route('/remove-pdf-links-advanced', methods=['POST'])  # kept for pages still open on the old version
 @heavy
 def remove_pdf_links():
     file, pdf_bytes, error = read_upload(('.pdf',), 'Remove links')
@@ -975,7 +974,7 @@ def _compress_bytes(pdf_bytes, dpi, quality, filename):
 
 
 @app.route('/compress-pdf', methods=['POST'])
-@app.route('/compress-pdf-advanced', methods=['POST'])  # kept for older extension builds
+@app.route('/compress-pdf-advanced', methods=['POST'])  # kept for pages still open on the old version
 @heavy
 def compress_pdf():
     """

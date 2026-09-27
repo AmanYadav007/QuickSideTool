@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import Link from './PrefetchLink';
-import { Menu, X, Puzzle } from 'lucide-react';
-import Logo from './Logo';
-import { CHROME_EXTENSION_URL } from '../constants/links';
+import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import Link from "./PrefetchLink";
+import { Menu, X, Puzzle } from "lucide-react";
+import Logo from "./Logo";
+import { CHROME_EXTENSION_URL } from "../constants/links";
+import { inExtension } from "../utils/appContext";
 
 const NAV_LINKS = [
-  { label: 'All Tools', to: '/home' },
-  { label: 'PDF', to: '/pdf-tool' },
-  { label: 'Image', to: '/home#image-tools' },
-  { label: 'QR Code', to: '/qr-tool' },
-  { label: 'Support', to: '/support' },
+  { label: "All Tools", to: "/home" },
+  { label: "PDF", to: "/pdf-tool" },
+  { label: "Image", to: "/home#image-tools" },
+  { label: "QR Code", to: "/qr-tool" },
+  { label: "Support", to: "/support" },
 ];
 
 const Navbar = () => {
@@ -37,15 +38,17 @@ const Navbar = () => {
             </Link>
           ))}
           {/* Shown from lg up so it never crowds the md breakpoint */}
-          <a
-            href={CHROME_EXTENSION_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden items-center gap-1.5 text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-primary)] lg:inline-flex"
-          >
-            <Puzzle className="h-4 w-4" aria-hidden="true" />
-            Extension
-          </a>
+          {!inExtension && (
+            <a
+              href={CHROME_EXTENSION_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden items-center gap-1.5 text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-primary)] lg:inline-flex"
+            >
+              <Puzzle className="h-4 w-4" aria-hidden="true" />
+              Extension
+            </a>
+          )}
           <Link
             to="/home"
             className="rounded-full bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors"
@@ -59,7 +62,7 @@ const Navbar = () => {
           className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-alt)] md:hidden"
           onClick={() => setMenuOpen((open) => !open)}
           aria-expanded={menuOpen}
-          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
         >
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -77,15 +80,17 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
-            <a
-              href={CHROME_EXTENSION_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-lg px-2 py-3 text-base font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-alt)] hover:text-[var(--color-primary)]"
-            >
-              <Puzzle className="h-4 w-4" aria-hidden="true" />
-              Chrome extension
-            </a>
+            {!inExtension && (
+              <a
+                href={CHROME_EXTENSION_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg px-2 py-3 text-base font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-alt)] hover:text-[var(--color-primary)]"
+              >
+                <Puzzle className="h-4 w-4" aria-hidden="true" />
+                Chrome extension
+              </a>
+            )}
             <Link
               to="/home"
               className="mt-2 rounded-full bg-[var(--color-primary)] px-4 py-3 text-center text-base font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors"

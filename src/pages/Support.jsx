@@ -15,6 +15,7 @@ import SEO from "../components/SEO";
 import Layout from "../components/Layout";
 import { categories } from "../components/ToolDirectory";
 import { SUPPORT_EMAIL, sendForm } from "../constants/links";
+import { inExtension } from "../utils/appContext";
 
 const TOPICS = [
   { id: "bug", label: "Something isn't working", icon: Bug },
@@ -44,7 +45,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const technicalDetails = () =>
   [
-    `App: ${window.location.protocol === "chrome-extension:" ? "Chrome extension" : "website"}`,
+    `App: ${inExtension ? "Chrome extension (side panel)" : "website"}`,
     `Browser: ${navigator.userAgent}`,
     `Screen: ${window.innerWidth}×${window.innerHeight} (${window.devicePixelRatio}x)`,
     `Language: ${navigator.language}`,

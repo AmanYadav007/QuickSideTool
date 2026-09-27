@@ -58,8 +58,8 @@ class ErrorBoundary extends React.Component {
                 Go to Homepage
               </button>
 
-              {/* A plain link: this screen sits outside the router, and in the
-                  extension the website's page is the one that exists */}
+              {/* A plain link: this screen sits outside the router. New tab, so
+                  it also works from the extension's side panel */}
               <a
                 href={`${SITE_URL}/support?topic=bug`}
                 target="_blank"

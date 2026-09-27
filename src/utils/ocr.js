@@ -1,8 +1,7 @@
 import { createWorker, OEM } from "tesseract.js";
 
-// Worker and engine are served from public/vendor (see scripts/copy-vendor.js):
-// the Chrome extension can't load them from a CDN. Language data is plain
-// data, so Tesseract still downloads it on first use and caches it.
+// Worker and engine are served from public/vendor (see scripts/copy-vendor.js)
+// rather than a CDN. Language data is still downloaded on first use and cached.
 const VENDOR = `${window.location.origin}${process.env.PUBLIC_URL}/vendor/tesseract`;
 
 export const OCR_LANGUAGES = [

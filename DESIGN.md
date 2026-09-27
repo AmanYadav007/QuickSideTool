@@ -64,8 +64,9 @@ first in `--font-sans` in `src/index.css` and `fontFamily.sans` in
 ## Logo
 
 Caribbean Green rounded panel with Rich Black side-rail and document
-(`src/components/Logo.jsx`, `public/logo.svg`). The extension PNGs in
-`public/icon*.png` are rendered from `logo.svg`.
+(`src/components/Logo.jsx`, `public/logo.svg`). The favicons in
+`public/icon*.png` and the extension's icons in `extension/` are rendered
+from `logo.svg`.
 
 ## Don'ts
 

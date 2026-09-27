@@ -10,6 +10,7 @@
 
 # production
 /build
+/dist
 
 # copied from node_modules by scripts/copy-vendor.js
 /public/vendor
