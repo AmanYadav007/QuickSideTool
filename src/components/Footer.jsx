@@ -34,6 +34,7 @@ const COLUMNS = [
     heading: 'Company',
     links: [
       { label: 'About', to: '/about' },
+      { label: 'Support', to: '/support' },
       { label: 'Contact', to: '/contact' },
       { label: 'Privacy', to: '/privacy-policy' },
       { label: 'Terms', to: '/terms-of-service' },

@@ -71,8 +71,8 @@ const LandingPage = () => {
             </div>
             <p className="mt-10 text-center text-sm text-[var(--color-text-muted)]">
               Still stuck?{" "}
-              <Link to="/contact" className="link font-semibold">
-                Get in touch
+              <Link to="/support" className="link font-semibold">
+                Get support
               </Link>
               .
             </p>

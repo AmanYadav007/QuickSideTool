@@ -412,6 +412,13 @@ const FileConverter = ({ initialMode = "pdf-to-word" }) => {
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Drop another file to try again.
                 </p>
+                <Link
+                  to="/support?topic=bug&tool=file-converter"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs text-[var(--color-text-light)] underline hover:text-[var(--color-text-muted)]"
+                >
+                  Report this problem
+                </Link>
               </div>
             )}
 

@@ -70,11 +70,11 @@ const Help = () => {
             <aside className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-alt)] p-5">
               <h2 className="font-semibold text-[var(--color-text)]">Need help?</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-                If something feels unclear or broken, send a short message and
-                include the tool name.
+                If something feels unclear or broken, tell us which tool and
+                what happened.
               </p>
               <Link
-                to="/contact"
+                to="/support"
                 className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 font-semibold text-[var(--color-on-primary)] transition hover:bg-[var(--color-primary-hover)]"
               >
                 <MessageSquare className="h-4 w-4" />

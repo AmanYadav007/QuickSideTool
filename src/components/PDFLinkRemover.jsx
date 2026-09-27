@@ -207,6 +207,13 @@ const PDFLinkRemover = () => {
                     Unlock the PDF first
                   </Link>
                 )}
+                <Link
+                  to="/support?topic=bug&tool=pdf-link-remove"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs text-[var(--color-text-light)] underline hover:text-[var(--color-text-muted)]"
+                >
+                  Report this problem
+                </Link>
               </div>
             )}
 

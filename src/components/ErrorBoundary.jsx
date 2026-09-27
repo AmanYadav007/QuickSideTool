@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { SITE_URL } from "../constants/links";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -56,6 +57,17 @@ class ErrorBoundary extends React.Component {
               >
                 Go to Homepage
               </button>
+
+              {/* A plain link: this screen sits outside the router, and in the
+                  extension the website's page is the one that exists */}
+              <a
+                href={`${SITE_URL}/support?topic=bug`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link inline-block text-sm font-semibold"
+              >
+                Report this problem
+              </a>
             </div>
 
             {process.env.NODE_ENV === "development" && this.state.error && (

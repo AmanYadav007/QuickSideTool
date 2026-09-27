@@ -10,7 +10,7 @@ const NAV_LINKS = [
   { label: 'PDF', to: '/pdf-tool' },
   { label: 'Image', to: '/home#image-tools' },
   { label: 'QR Code', to: '/qr-tool' },
-  { label: 'Contact', to: '/contact' },
+  { label: 'Support', to: '/support' },
 ];
 
 const Navbar = () => {

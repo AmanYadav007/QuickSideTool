@@ -2,10 +2,8 @@ import React, { useState } from "react";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import SEO from "../components/SEO";
 import Layout from "../components/Layout";
-import { SUPPORT_EMAIL } from "../constants/links";
-
-const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycby6IncKBU68LN7ZxWkBIEQJV_S_m18G1CSgPi1o4jUZ093FUSHTF-QS87BAOyepP1Vu/exec";
+import { Link } from "react-router-dom";
+import { SUPPORT_EMAIL, sendForm } from "../constants/links";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -22,14 +20,7 @@ const Contact = () => {
     setSubmitStatus(null);
 
     try {
-      const response = await fetch(SCRIPT_URL, {
-        method: "POST",
-        mode: "cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(formData),
-      });
-      const result = await response.json();
-      if (result.result !== "success") throw new Error(result.error || "Unknown error");
+      await sendForm({ form: "contact", ...formData });
       setSubmitStatus("success");
       setFormData({ name: "", email: "", message: "" });
     } catch (error) {
@@ -55,7 +46,8 @@ const Contact = () => {
           <section className="text-center mb-10">
             <h1 className="h1">Tell us what you need</h1>
             <p className="mt-4 text-[var(--color-text-muted)] max-w-xl mx-auto leading-relaxed">
-              Found a bug, want a new tool, or need help with a workflow? Send a short note and we'll use it to improve QuickSideTool.
+              Feedback, partnerships or anything else: send a short note. Problem with a tool?{" "}
+              <Link to="/support" className="link font-semibold">Get support</Link> instead so we can fix it faster.
             </p>
           </section>
 

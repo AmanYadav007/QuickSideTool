@@ -30,6 +30,7 @@ const {
   toolkit: Toolkit,
   about: About,
   contact: Contact,
+  support: Support,
   help: Help,
   blog: Blog,
   privacy: PrivacyPolicy,
@@ -52,6 +53,7 @@ function App() {
                 <Route path="/home" element={<LandingPage />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/support" element={<Support />} />
                 <Route path="/help" element={<Help />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/toolkit" element={<Toolkit />} />
